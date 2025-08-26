@@ -19,6 +19,7 @@ namespace subsystems
 
     private:
         CommandSwerveDrivetrain *m_drivetrain;
+        frc2::CommandXboxController *m_joystick;
 
         enum Position
         {
@@ -48,12 +49,10 @@ namespace subsystems
 
         int path_generation_failed = 0; // 路径生成失败的次数
 
-        frc2::CommandXboxController joystick{0};
-
         std::optional<frc2::CommandPtr> vision_follow_command; // 当前正在执行的对齐Command
 
     public:
-        AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain);
+        AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain, frc2::CommandXboxController *joystick);
         void Periodic() override;
         void getJoystickInput();
         frc::Pose2d getNearestTag();

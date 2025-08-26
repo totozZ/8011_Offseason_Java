@@ -2,7 +2,8 @@
 
 using namespace subsystems;
 
-AutoAlignSubsystem::AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain) : m_drivetrain(drivetrain)
+AutoAlignSubsystem::AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain, frc2::CommandXboxController *joystick)
+    : m_drivetrain(drivetrain), m_joystick(joystick)
 {
     // 根据DriverStation的Alliance判断使用哪些Tag
     if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed)
@@ -24,24 +25,24 @@ void AutoAlignSubsystem::Periodic()
 // 获取手柄输入（Left Bumper, Right Bumper, POVLeft）
 void AutoAlignSubsystem::getJoystickInput()
 {
-    if ((joystick.LeftBumper().Get() || joystick.RightBumper().Get() || joystick.POVLeft().Get()) && !has_command)
+    if ((m_joystick->LeftBumper().Get() || m_joystick->RightBumper().Get() || m_joystick->POVLeft().Get()) && !has_command)
     {
         // 对齐左边Reef
-        if (joystick.LeftBumper().Get())
+        if (m_joystick->LeftBumper().Get())
         {
             vision_follow_command = followPathCommand(Position::LEFT);
             vision_follow_command->Schedule();
         }
 
         // 对齐右边Reef
-        if (joystick.RightBumper().Get())
+        if (m_joystick->RightBumper().Get())
         {
             vision_follow_command = followPathCommand(Position::RIGHT);
             vision_follow_command->Schedule();
         }
 
         // 对齐中间
-        if (joystick.POVLeft().Get())
+        if (m_joystick->POVLeft().Get())
         {
             vision_follow_command = followPathCommand(Position::CENTER);
             vision_follow_command->Schedule();
