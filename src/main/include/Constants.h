@@ -14,3 +14,10 @@ namespace LocalizationConstants
     static constexpr double XY_DEV = 0.01;                  // X和Y的权重
     static constexpr double THETA_DEV = 0.03;               // Yaw的权重
 }
+
+namespace RobotConstants
+{
+    static constexpr std::array<int, 12> ALL_VALID_APRILTAGS = {6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
+    static constexpr std::array<int, 6> RED_VALID_APRILTAGS = {6, 7, 8, 9, 10, 11};
+    
+}
