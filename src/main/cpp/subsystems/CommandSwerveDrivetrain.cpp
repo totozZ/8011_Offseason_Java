@@ -60,17 +60,3 @@ void CommandSwerveDrivetrain::Periodic()
         }
     }
 }
-
-void CommandSwerveDrivetrain::StartSimThread()
-{
-    m_lastSimTime = utils::GetCurrentTime();
-    m_simNotifier = std::make_unique<frc::Notifier>([this] {
-        units::second_t const currentTime = utils::GetCurrentTime();
-        auto const deltaTime = currentTime - m_lastSimTime;
-        m_lastSimTime = currentTime;
-
-        /* use the measured time delta, get battery voltage from WPILib */
-        UpdateSimState(deltaTime, frc::RobotController::GetBatteryVoltage());
-    });
-    m_simNotifier->StartPeriodic(kSimLoopPeriod);
-}
