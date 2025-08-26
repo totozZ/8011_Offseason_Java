@@ -35,7 +35,7 @@ void LocalizationSubsystem::setIMUMode(int mode)
 bool LocalizationSubsystem::shouldRejectMT2(const LimelightHelpers::PoseEstimate &poseEstimate)
 {
   // 检查角速度是否过高
-  if (current_angular_velocity > 360)
+  if (current_angular_velocity > LocalizationConstants::MAX_ANGULAR_VELOCITY)
   {
     frc::SmartDashboard::PutString("MT2_Reject_Reason", "High Angular Velocity");
     return true;
@@ -49,7 +49,7 @@ bool LocalizationSubsystem::shouldRejectMT2(const LimelightHelpers::PoseEstimate
   }
 
   // 检查Tag是否过远（通过Tag面积判断）
-  if (poseEstimate.avgTagArea < 0.1)
+  if (poseEstimate.avgTagArea < LocalizationConstants::MIN_AVG_TAG_AREA)
   {
     frc::SmartDashboard::PutString("MT2_Reject_Reason", "Tags Too Far");
     return true;
@@ -70,14 +70,14 @@ bool LocalizationSubsystem::shouldRejectMT1(const LimelightHelpers::PoseEstimate
   }
 
   // 检查模糊度是否过高
-  if (poseEstimate.rawFiducials[0].ambiguity > 0.7)
+  if (poseEstimate.rawFiducials[0].ambiguity > LocalizationConstants::MAX_AMBIGUITY)
   {
     frc::SmartDashboard::PutString("MT1_Reject_Reason", "High Ambiguity");
     return true;
   }
 
   // 检查距离是否过远
-  if (poseEstimate.rawFiducials[0].distToCamera > 3)
+  if (poseEstimate.rawFiducials[0].distToCamera > LocalizationConstants::MAX_DISTANCE_TO_CAMERA)
   {
     frc::SmartDashboard::PutString("MT1_Reject_Reason", "DistToCamera");
     return true;
@@ -138,8 +138,8 @@ void LocalizationSubsystem::updatePoseEstimator()
 
     // 使用Distance计算权重，Distance越大，越不相信视Limelight结果
     avg_distance = mt2_left.avgTagDist;
-    xy_dev = 0.01 * std::pow(avg_distance, 1.2);
-    theta_dev = 0.03 * std::pow(avg_distance, 1.2);
+    xy_dev = LocalizationConstants::XY_DEV * std::pow(avg_distance, 1.2);
+    theta_dev = LocalizationConstants::THETA_DEV * std::pow(avg_distance, 1.2);
 
     std::array<double, 3> estStdDevs = {xy_dev, xy_dev, theta_dev};
     if (is_using_mt1_yaw)
@@ -172,7 +172,7 @@ void LocalizationSubsystem::updatePoseEstimator()
 // 选择更新方法
 void LocalizationSubsystem::switchVisionMode()
 {
-  if ((mt2_left.rawFiducials[0].distToCamera < 1) && !shouldRejectMT1(mt1_left))
+  if ((mt2_left.rawFiducials[0].distToCamera < LocalizationConstants::DISTANCE_SWITCH_TO_MT1_YAW) && !shouldRejectMT1(mt1_left))
   {
     // Tag到底盘时小于1米，同时不拒绝MT1时，使用MT2 Pose + MT1 Yaw
     is_using_mt1_yaw = true;
