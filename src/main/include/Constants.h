@@ -24,9 +24,9 @@ namespace AutoAlignConstants
         frc::Pose2d{193.10_in, 129.97_in, 120_deg}   // ID22
     }; // 全部蓝色Tag位置
 
-    static constexpr units::meter_t LEFT_TO_TAG_POS = 0.5_m;   // Reef每一侧左边到Tag的距离
-    static constexpr units::meter_t RIGHT_TO_TAG_POS = -0.5_m; // Reef每一侧右边到Tag的距离
-    static constexpr units::meter_t CENTER_TO_TAG_POS = 0.3_m; // Reef每一侧中间到Tag的距离
+    static constexpr units::meter_t LEFT_TO_TAG_POS = 0.19_m;     // Reef每一侧左边到Tag的距离
+    static constexpr units::meter_t RIGHT_TO_TAG_POS = -0.165_m;  // Reef每一侧右边到Tag的距离
+    static constexpr units::meter_t CENTER_TO_TAG_POS = 0.0075_m; // Reef每一侧中间到Tag的距离
 }
 
 namespace RobotInfoConstants
