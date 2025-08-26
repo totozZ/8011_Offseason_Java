@@ -19,5 +19,5 @@ namespace RobotConstants
 {
     static constexpr std::array<int, 12> ALL_VALID_APRILTAGS = {6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
     static constexpr std::array<int, 6> RED_VALID_APRILTAGS = {6, 7, 8, 9, 10, 11};
-    
+    static constexpr std::array<int, 6> BLUE_VALID_APRILTAGS = {17, 18, 19, 20, 21, 22};
 }
