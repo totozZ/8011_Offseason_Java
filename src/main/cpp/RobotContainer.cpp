@@ -9,7 +9,7 @@
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
-RobotContainer::RobotContainer()
+RobotContainer::RobotContainer() : localization{&drivetrain}
 {
     autoChooser = pathplanner::AutoBuilder::buildAutoChooser("Tests");
     frc::SmartDashboard::PutData("Auto Mode", &autoChooser);
@@ -23,25 +23,24 @@ void RobotContainer::ConfigureBindings()
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.SetDefaultCommand(
         // Drivetrain will execute this command periodically
-        drivetrain.ApplyRequest([this]() -> auto&& {
-            return drive.WithVelocityX(-joystick.GetLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                .WithVelocityY(-joystick.GetLeftX() * MaxSpeed) // Drive left with negative X (left)
-                .WithRotationalRate(-joystick.GetRightX() * MaxAngularRate); // Drive counterclockwise with negative X (left)
-        })
-    );
+        drivetrain.ApplyRequest([this]() -> auto &&
+                                {
+                                    return drive.WithVelocityX(-joystick.GetLeftY() * MaxSpeed)      // Drive forward with negative Y (forward)
+                                        .WithVelocityY(-joystick.GetLeftX() * MaxSpeed)              // Drive left with negative X (left)
+                                        .WithRotationalRate(-joystick.GetRightX() * MaxAngularRate); // Drive counterclockwise with negative X (left)
+                                }));
 
     // Idle while the robot is disabled. This ensures the configured
     // neutral mode is applied to the drive motors while disabled.
     frc2::RobotModeTriggers::Disabled().WhileTrue(
-        drivetrain.ApplyRequest([] {
-            return swerve::requests::Idle{};
-        }).IgnoringDisable(true)
-    );
+        drivetrain.ApplyRequest([]
+                                { return swerve::requests::Idle{}; })
+            .IgnoringDisable(true));
 
-    joystick.A().WhileTrue(drivetrain.ApplyRequest([this]() -> auto&& { return brake; }));
-    joystick.B().WhileTrue(drivetrain.ApplyRequest([this]() -> auto&& {
-        return point.WithModuleDirection(frc::Rotation2d{-joystick.GetLeftY(), -joystick.GetLeftX()});
-    }));
+    joystick.A().WhileTrue(drivetrain.ApplyRequest([this]() -> auto &&
+                                                   { return brake; }));
+    joystick.B().WhileTrue(drivetrain.ApplyRequest([this]() -> auto &&
+                                                   { return point.WithModuleDirection(frc::Rotation2d{-joystick.GetLeftY(), -joystick.GetLeftX()}); }));
 
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
@@ -51,9 +50,11 @@ void RobotContainer::ConfigureBindings()
     (joystick.Start() && joystick.X()).WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
 
     // reset the field-centric heading on left bumper press
-    joystick.LeftBumper().OnTrue(drivetrain.RunOnce([this] { drivetrain.SeedFieldCentric(); }));
+    joystick.LeftBumper().OnTrue(drivetrain.RunOnce([this]
+                                                    { drivetrain.SeedFieldCentric(); }));
 
-    drivetrain.RegisterTelemetry([this](auto const &state) { logger.Telemeterize(state); });
+    drivetrain.RegisterTelemetry([this](auto const &state)
+                                 { logger.Telemeterize(state); });
 }
 
 frc2::Command *RobotContainer::GetAutonomousCommand()
