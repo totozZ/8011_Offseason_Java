@@ -10,7 +10,7 @@ AutoAlignSubsystem::AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain, frc2
     {
         all_tag_pos = AutoAlignConstants::RED_TAG_POS;
     }
-    else
+    else if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue)
     {
         all_tag_pos = AutoAlignConstants::BLUE_TAG_POS;
     }
@@ -173,7 +173,7 @@ std::shared_ptr<PathPlannerPath> AutoAlignSubsystem::generatePath(frc::Pose2d en
     auto path = std::make_shared<PathPlannerPath>(
         waypoints,
         constraints,
-        IdealStartingState(v * 1_mps, current_angle),
+        IdealStartingState(v * 1_mps, start_heading),
         GoalEndState(0_mps, target_angle) // 默认结束速度永远为0
     );
 
