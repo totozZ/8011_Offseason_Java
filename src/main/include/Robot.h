@@ -8,11 +8,14 @@
 
 #include <frc/TimedRobot.h>
 #include <frc2/command/CommandPtr.h>
-
+#include "LimelightHelpers.h"
 #include "RobotContainer.h"
+#include "Constants.h"
+#include <frc/DriverStation.h>
 
-class Robot : public frc::TimedRobot {
- public:
+class Robot : public frc::TimedRobot
+{
+public:
   Robot();
   void RobotPeriodic() override;
   void DisabledInit() override;
@@ -28,10 +31,8 @@ class Robot : public frc::TimedRobot {
   void TestPeriodic() override;
   void TestExit() override;
 
- private:
+private:
   frc2::Command *m_autonomousCommand;
 
   RobotContainer m_container;
-
-  static constexpr bool kUseLimelight = false;
 };

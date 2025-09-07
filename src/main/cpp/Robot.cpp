@@ -13,7 +13,11 @@ void Robot::RobotPeriodic()
   frc2::CommandScheduler::GetInstance().Run();
 }
 
-void Robot::DisabledInit() {}
+void Robot::DisabledInit()
+{
+  nt::NetworkTableInstance::GetDefault().GetTable("limelight-left")->PutNumber("throttle_set", 200);
+  nt::NetworkTableInstance::GetDefault().GetTable("limelight-back")->PutNumber("throttle_set", 200);
+}
 
 void Robot::DisabledPeriodic() {}
 

@@ -8,6 +8,7 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
 #include "subsystems/CommandSwerveDrivetrain.h"
+#include "subsystems/LocalizationSubsystem.h"
 #include "Telemetry.h"
 #include "subsystems/AutoAlignSubsystem.h"
 
@@ -36,6 +37,7 @@ private:
 public:
     subsystems::CommandSwerveDrivetrain drivetrain{TunerConstants::CreateDrivetrain()};
     subsystems::AutoAlignSubsystem autoAlign;
+    subsystems::LocalizationSubsystem localization;
 
 private:
     /* Path follower */

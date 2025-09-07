@@ -9,7 +9,7 @@
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
-RobotContainer::RobotContainer() : autoAlign(&drivetrain, &joystick)
+RobotContainer::RobotContainer() : autoAlign(&drivetrain, &joystick), localization{&drivetrain}
 {
     autoChooser = pathplanner::AutoBuilder::buildAutoChooser("Tests");
     frc::SmartDashboard::PutData("Auto Mode", &autoChooser);
