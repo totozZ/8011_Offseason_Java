@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 #pragma once
 
 #include <frc/smartdashboard/SendableChooser.h>
@@ -11,6 +7,7 @@
 #include "subsystems/LocalizationSubsystem.h"
 #include "Telemetry.h"
 #include "subsystems/AutoAlignSubsystem.h"
+#include "subsystems/GPDetection.h"
 
 class RobotContainer
 {
@@ -38,6 +35,7 @@ public:
     subsystems::CommandSwerveDrivetrain drivetrain{TunerConstants::CreateDrivetrain()};
     subsystems::AutoAlignSubsystem autoAlign;
     subsystems::LocalizationSubsystem localization;
+    subsystems::GPDetection gpDetection;
 
 private:
     /* Path follower */

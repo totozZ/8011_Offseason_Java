@@ -9,29 +9,30 @@ LocalizationSubsystem::LocalizationSubsystem(CommandSwerveDrivetrain *drivetrain
 
 void LocalizationSubsystem::Periodic()
 {
+  updateAngularVelocity();
   switchVisionMode();
   setRobotOrientation();
   updatePoseEstimator();
 }
 
-// 对Limelight设置当前Yaw
+// 对 Limelight 设置当前 Yaw
 void LocalizationSubsystem::setRobotOrientation()
 {
   LimelightHelpers::SetRobotOrientation("limelight-left", m_drivetrain->GetState().Pose.Rotation().Degrees().value(), current_angular_velocity, 0, 0, 0, 0);
 }
 
-// 设置IMU模式
+// 设置 IMU 模式
 void LocalizationSubsystem::setIMUMode(int mode)
 {
-  // Mode 0：使用外部IMU
-  // Mode 1：使用外部IMU播种内部IMU
-  // Mode 2：使用内部IMU
-  // Mode 3: 使用内部IMU，并使用MT1辅助收敛
+  // Mode 0：使用外部 IMU
+  // Mode 1：使用外部 IMU 播种内部 IMU
+  // Mode 2：使用内部 IMU
+  // Mode 3: 使用内部 IMU，并使用 MT1 辅助收敛
   // Mode 4：使用内部IMU，并使用外部IMU辅助收敛
   LimelightHelpers::setLimelightNTDouble("limelight-left", "imumode_set", mode);
 }
 
-// 判断是否拒绝MT2的结果
+// 判断是否拒绝 MT2 的结果
 bool LocalizationSubsystem::shouldRejectMT2(const LimelightHelpers::PoseEstimate &poseEstimate)
 {
   // 检查角速度是否过高
@@ -41,14 +42,14 @@ bool LocalizationSubsystem::shouldRejectMT2(const LimelightHelpers::PoseEstimate
     return true;
   }
 
-  // 检查是否有Tag
+  // 检查是否有 Tag
   if (poseEstimate.tagCount == 0)
   {
     frc::SmartDashboard::PutString("MT2_Reject_Reason", "No Tags");
     return true;
   }
 
-  // 检查Tag是否过远（通过Tag面积判断）
+  // 检查 Tag 是否过远（通过 Tag 面积判断）
   if (poseEstimate.avgTagArea < LocalizationConstants::MIN_AVG_TAG_AREA)
   {
     frc::SmartDashboard::PutString("MT2_Reject_Reason", "Tags Too Far");
@@ -59,25 +60,27 @@ bool LocalizationSubsystem::shouldRejectMT2(const LimelightHelpers::PoseEstimate
   return false;
 }
 
-// 判断是否拒绝MT1的结果
+// 判断是否拒绝 MT1 的结果
 bool LocalizationSubsystem::shouldRejectMT1(const LimelightHelpers::PoseEstimate &poseEstimate)
 {
-  // 检查是否有Tag
+  // 检查是否有 Tag
   if (poseEstimate.tagCount == 0)
   {
     frc::SmartDashboard::PutString("MT1_Reject_Reason", "No Tags");
     return true;
   }
 
-  // 检查模糊度是否过高
-  if (poseEstimate.rawFiducials[0].ambiguity > LocalizationConstants::MAX_AMBIGUITY)
+  // 检查模糊度是否过高（模糊度越高，越不相信视 Limelight 结果）
+  if (poseEstimate.rawFiducials.size() > 0 &&
+      poseEstimate.rawFiducials[0].ambiguity > LocalizationConstants::MAX_AMBIGUITY)
   {
     frc::SmartDashboard::PutString("MT1_Reject_Reason", "High Ambiguity");
     return true;
   }
 
-  // 检查距离是否过远
-  if (poseEstimate.rawFiducials[0].distToCamera > LocalizationConstants::MAX_DISTANCE_TO_CAMERA)
+  // 检查距离是否过远（距离越远，越不相信视 Limelight 结果）
+  if (poseEstimate.rawFiducials.size() > 0 &&
+      poseEstimate.rawFiducials[0].distToCamera > LocalizationConstants::MAX_DISTANCE_TO_CAMERA)
   {
     frc::SmartDashboard::PutString("MT1_Reject_Reason", "DistToCamera");
     return true;
@@ -119,24 +122,24 @@ void LocalizationSubsystem::updateAngularVelocity()
   last_yaw_update_time = current_time;
 }
 
-// 更新当前位置（使用Pose Estimator）
+// 更新当前位置（使用 Pose Estimator）
 void LocalizationSubsystem::updatePoseEstimator()
 {
-  // 储存MT1和MT2的结果
+  // 储存 MT1 和 MT2 的结果
   mt1_left = LimelightHelpers::getBotPoseEstimate_wpiBlue("limelight-left");
   mt2_left = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
 
-  // 判断是否已经初始位置
+  // 判断是否已经初始化位置
   if (!location_init_flag)
   {
     locationInit();
   }
   else if (!shouldRejectMT2(mt2_left))
   {
-    // 使用Limelight更新时LED State为1
+    // 使用 Limelight 更新时 LED State 为 1
     LED_state = 1;
 
-    // 使用Distance计算权重，Distance越大，越不相信视Limelight结果
+    // 使用 Distance 计算权重，Distance 越大，越不相信视 Limelight 结果
     avg_distance = mt2_left.avgTagDist;
     xy_dev = LocalizationConstants::XY_DEV * std::pow(avg_distance, 1.2);
     theta_dev = LocalizationConstants::THETA_DEV * std::pow(avg_distance, 1.2);
@@ -144,7 +147,7 @@ void LocalizationSubsystem::updatePoseEstimator()
     std::array<double, 3> estStdDevs = {xy_dev, xy_dev, theta_dev};
     if (is_using_mt1_yaw)
     {
-      // 使用MT2 Pose + MT1 Yaw
+      // 使用 MT2 Pose + MT1 Yaw
       mt_mix_left = frc::Pose2d{mt2_left.pose.Translation(), mt1_left.pose.Rotation()};
       m_drivetrain->AddVisionMeasurement(
           mt_mix_left,
@@ -153,8 +156,8 @@ void LocalizationSubsystem::updatePoseEstimator()
     }
     else
     {
-      // 使用MT2 Pose + Yaw
-      // MT2依赖来自Robot Pose的Yaw，不需要通过视觉更新，所以把Yaw的权重调到很大
+      // 使用 MT2 Pose + Yaw
+      // MT2 依赖来自 Robot Pose 的 Yaw，不需要通过视觉更新，所以把 Yaw 的权重调到很大
       estStdDevs[2] = 1000000;
       m_drivetrain->AddVisionMeasurement(
           mt2_left.pose,
@@ -164,7 +167,7 @@ void LocalizationSubsystem::updatePoseEstimator()
   }
   else
   {
-    // 不使用Limelight更新时LED State为0
+    // 不使用 Limelight 更新时 LED State 为 0
     LED_state = 0;
   }
 }
@@ -172,9 +175,11 @@ void LocalizationSubsystem::updatePoseEstimator()
 // 选择更新方法
 void LocalizationSubsystem::switchVisionMode()
 {
-  if ((mt2_left.rawFiducials[0].distToCamera < LocalizationConstants::DISTANCE_SWITCH_TO_MT1_YAW) && !shouldRejectMT1(mt1_left))
+  if (mt2_left.rawFiducials.size() > 0 &&
+      (mt2_left.rawFiducials[0].distToCamera < LocalizationConstants::DISTANCE_SWITCH_TO_MT1_YAW) &&
+      !shouldRejectMT1(mt1_left))
   {
-    // Tag到底盘时小于1米，同时不拒绝MT1时，使用MT2 Pose + MT1 Yaw
+    // Tag 到底盘时小于 1 米，同时不拒绝 MT1 时，使用 MT2 Pose + MT1 Yaw
     is_using_mt1_yaw = true;
   }
   else
@@ -190,7 +195,7 @@ void LocalizationSubsystem::locationInit()
 {
   if (location_init_flag == 0)
   {
-    // 使用首个有效的MT1值作为初始值
+    // 使用首个有效的 MT1 值作为初始值
     if (!shouldRejectMT1(mt1_left))
     {
       m_drivetrain->ResetPose(mt1_left.pose);

@@ -5,67 +5,95 @@ using namespace subsystems;
 AutoAlignSubsystem::AutoAlignSubsystem(CommandSwerveDrivetrain *drivetrain, frc2::CommandXboxController *joystick)
     : m_drivetrain(drivetrain), m_joystick(joystick)
 {
-    // 根据DriverStation的Alliance判断使用哪些Tag
+    // 根据 DriverStation 的 Alliance 判断使用哪些 Tag
     if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed)
     {
         all_tag_pos = AutoAlignConstants::RED_TAG_POS;
+        is_red = true;
     }
     else if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue)
     {
         all_tag_pos = AutoAlignConstants::BLUE_TAG_POS;
+        is_red = false;
+    }
+
+    m_inst = nt::NetworkTableInstance::GetDefault();
+
+    for (int i = 0; i < 12; i++)
+    {
+        std::string topic_name = "Client/4/" + std::to_string(i);
+        m_clientSubscribers[i] = m_inst.GetBooleanTopic(topic_name).Subscribe(false);
     }
 }
 
 void AutoAlignSubsystem::Periodic()
 {
-    // // 获取手柄输入（Left Bumper, Right Bumper, POVLeft）
+    // 获取手柄输入（Left Bumper, Right Bumper, POVLeft），执行对应的 Command
     getJoystickInput();
 }
 
-// 获取手柄输入（Left Bumper, Right Bumper, POVLeft）
+// 获取手柄输入（Left Bumper, Right Bumper, POVLeft），执行对应的 Command
 void AutoAlignSubsystem::getJoystickInput()
 {
-    if ((m_joystick->LeftBumper().Get() || m_joystick->RightBumper().Get() || m_joystick->POVLeft().Get()) && !has_command)
+    if (m_joystick->GetHID().GetLeftBumperButton() || m_joystick->GetHID().GetRightBumperButton() || m_joystick->GetHID().GetPOV() == 180 || m_joystick->GetHID().GetAButton())
     {
-        // 对齐左边Reef
-        if (m_joystick->LeftBumper().Get())
+        if (!has_command)
         {
-            vision_follow_command = followPathCommand(Position::LEFT);
-            vision_follow_command->Schedule();
-        }
+            if (m_joystick->GetHID().GetAButton())
+            {
+                frc::SmartDashboard::PutString("texting", "2");
+                Position result = checkAvailable();
+                if (result != Position::NONE)
+                {
+                    vision_follow_command = followPathCommand(result);
+                    vision_follow_command->Schedule();
+                }
+                else
+                {
+                    frc::SmartDashboard::PutString("Available Position", "No valid position");
+                }
+            }
 
-        // 对齐右边Reef
-        if (m_joystick->RightBumper().Get())
-        {
-            vision_follow_command = followPathCommand(Position::RIGHT);
-            vision_follow_command->Schedule();
+            // 对齐右边 Reef
+            if (m_joystick->GetHID().GetRightBumperButton())
+            {
+                vision_follow_command = followPathCommand(Position::RIGHT);
+                vision_follow_command->Schedule();
+            }
+            // 对齐左边 Reef
+            else if (m_joystick->GetHID().GetLeftBumperButton())
+            {
+                vision_follow_command = followPathCommand(Position::LEFT);
+                vision_follow_command->Schedule();
+            }
+            // 对齐中间
+            else if (m_joystick->GetHID().GetPOV() == 180)
+            {
+                vision_follow_command = followPathCommand(Position::CENTER);
+                vision_follow_command->Schedule();
+            }
+            // has_command 为 true 时不会再次执行 Command，防止多个 Command 同时执行
+            if (vision_follow_command && vision_follow_command->IsScheduled())
+            {
+                has_command = true;
+            }
         }
-
-        // 对齐中间
-        if (m_joystick->POVLeft().Get())
-        {
-            vision_follow_command = followPathCommand(Position::CENTER);
-            vision_follow_command->Schedule();
-        }
-
-        // has_command为true时不会再次执行Command，防止多个Command同时执行
-        has_command = true;
     }
     else
     {
-        // 如果Command正在执行，取消当前Command
+        // 如果 Command 正在执行，取消当前 Command
         if (vision_follow_command && vision_follow_command->IsScheduled())
         {
             frc2::CommandScheduler::GetInstance().Cancel(vision_follow_command.value());
         }
-        // 松开按键时重置has_command
         has_command = false;
+        // 松开按键时重置 has_command
         vision_follow_command.reset();
     }
 }
 
 /**
- * \brief 执行对应的Command
+ * \brief 执行对应的 Command
  *
  * \param position 预期方位（LEFT, RIGHT, CENTER）
  * \param max_speed   最大速度（m/s），默认2.5m/s，用于PathPlanner限制
@@ -75,9 +103,10 @@ frc2::CommandPtr AutoAlignSubsystem::followPathCommand(Position position, double
 {
     // 根据预期方位（LEFT, RIGHT, CENTER）计算具体位置
     target_pos = calculateTargetPos(position);
+
     // 生成路径
     auto goal_path = generatePath(target_pos, max_speed, max_acc);
-    // 如果生成的路径不符合条件，generatePath()会传回nullPtr，不执行路径
+    // 如果生成的路径不符合条件，generatePath() 会传回 nullPtr，不执行路径
     if (goal_path == nullptr)
     {
         return frc2::cmd::RunOnce([this]
@@ -106,7 +135,7 @@ frc::Pose2d AutoAlignSubsystem::calculateTargetPos(Position position)
     default:
         break;
     }
-    // 获取最近的Tag位置
+    // 获取最近的 Tag 位置
     nearest_tag_pos = getNearestTag();
     return frc::Pose2d{
         units::meter_t{nearest_tag_pos.Translation().X().value() -
@@ -119,10 +148,27 @@ frc::Pose2d AutoAlignSubsystem::calculateTargetPos(Position position)
             units::degree_t{nearest_tag_pos.Rotation().Degrees().value()}}};
 }
 
-// 获取最近的Tag位置
+// 获取最近的 Tag 位置
 frc::Pose2d AutoAlignSubsystem::getNearestTag()
 {
     return m_drivetrain->GetState().Pose.Nearest(all_tag_pos);
+}
+
+int AutoAlignSubsystem::getNearestTagId()
+{
+    frc::Pose2d nearest_pose = getNearestTag();
+
+    auto it = std::find(all_tag_pos.begin(), all_tag_pos.end(), nearest_pose);
+    int index = std::distance(all_tag_pos.begin(), it);
+
+    if (is_red)
+    {
+        return RobotConstants::RED_VALID_APRILTAGS[index];
+    }
+    else
+    {
+        return RobotConstants::BLUE_VALID_APRILTAGS[index];
+    }
 }
 
 // 生成路径
@@ -136,34 +182,27 @@ std::shared_ptr<PathPlannerPath> AutoAlignSubsystem::generatePath(frc::Pose2d en
         return nullptr;
     }
 
-    // 如果Rotation2d为{0, 0}，认为时PathPlanner错误，不生产路径
-    if (end_point.Rotation() == frc::Rotation2d{0, 0} || current_pos.Rotation() == frc::Rotation2d{0, 0})
-    {
-        return nullptr;
-    }
-
-    current_angle = current_pos.Rotation();
+    // current_angle = current_pos.Rotation();
     target_angle = end_point.Rotation();
 
     // 计算线性速度
-    vx = m_drivetrain->GetState().Speeds.vx();
-    vy = m_drivetrain->GetState().Speeds.vy();
-    v = sqrt(vx * vx + vy * vy);
+    // vx = m_drivetrain->GetState().Speeds.vx();
+    // vy = m_drivetrain->GetState().Speeds.vy();
+    // v = sqrt(vx * vx + vy * vy);
 
     // 使用线性速度计算当前轮子的朝向，作为起始方向
-    start_heading = frc::Rotation2d{units::radian_t{atan2(vy, vx)}};
+    // start_heading = frc::Rotation2d{units::radian_t{atan2(vy, vx)}};
 
-    // 整合起始点
-    start_point = frc::Pose2d{
-        current_pos.Translation(),
-        start_heading};
+    frc::Pose2d center_point = frc::Pose2d{(current_pos.Translation().X().value() + end_point.Translation().X().value()) / 2 * 1_m, (current_pos.Translation().Y().value() + end_point.Translation().Y().value()) / 2 * 1_m, target_angle};
 
-    // 使用起始点和结束点创建poses
-    std::vector<frc::Pose2d> poses = {
-        start_point,
-        end_point};
+    // 使用起始点和结束点创建 poses
+    std::vector<frc::Pose2d>
+        poses = {
+            current_pos,
+            center_point,
+            end_point};
 
-    // 使用poses创建waypoints，用于传入path
+    // 使用 poses 创建 waypoints，用于传入 path
     std::vector<Waypoint> waypoints = PathPlannerPath::waypointsFromPoses(poses);
 
     // 路径限制
@@ -173,15 +212,66 @@ std::shared_ptr<PathPlannerPath> AutoAlignSubsystem::generatePath(frc::Pose2d en
     auto path = std::make_shared<PathPlannerPath>(
         waypoints,
         constraints,
-        IdealStartingState(v * 1_mps, start_heading),
-        GoalEndState(0_mps, target_angle) // 默认结束速度永远为0
+        std::nullopt,
+        GoalEndState(0_mps, target_angle) // 默认结束速度永远为 0
     );
 
     // 防止路径在正确的坐标下被翻转
     path->preventFlipping = true;
 
-    frc::SmartDashboard::PutNumberArray("start_point", std::vector<double>{start_point.Translation().X().value(), start_point.Translation().Y().value(), start_point.Rotation().Degrees().value()});
+    frc::SmartDashboard::PutNumberArray("start_point", std::vector<double>{current_pos.Translation().X().value(), current_pos.Translation().Y().value(), current_pos.Rotation().Degrees().value()});
     frc::SmartDashboard::PutNumberArray("end_point", std::vector<double>{end_point.Translation().X().value(), end_point.Translation().Y().value(), end_point.Rotation().Degrees().value()});
 
     return path;
+}
+
+AutoAlignSubsystem::Position AutoAlignSubsystem::checkAvailable()
+{
+    int nearest_tag_id = getNearestTagId();
+    std::array<int, 2> client_index = {12, 12};
+
+    frc::SmartDashboard::PutString("texting", "1");
+
+    switch (nearest_tag_id)
+    {
+    case 10:
+    case 21:
+        client_index = {0, 1};
+        break;
+    case 9:
+    case 22:
+        client_index = {2, 3};
+        break;
+    case 8:
+    case 17:
+        client_index = {4, 5};
+        break;
+    case 7:
+    case 18:
+        client_index = {6, 7};
+        break;
+    case 6:
+    case 19:
+        client_index = {8, 9};
+        break;
+    case 11:
+    case 20:
+        client_index = {10, 11};
+        break;
+    default:
+        break;
+    }
+
+    if (client_index[0] != 12 && m_clientSubscribers[client_index[0]].Get(false))
+    {
+        return Position::RIGHT;
+    }
+    else if (client_index[1] != 12 && m_clientSubscribers[client_index[1]].Get(false))
+    {
+        return Position::LEFT;
+    }
+    else
+    {
+        return Position::RIGHT;
+    }
 }
