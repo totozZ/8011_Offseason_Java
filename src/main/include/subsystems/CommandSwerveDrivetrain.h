@@ -7,7 +7,9 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
-
+#include <frc/RobotController.h>
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 #include "generated/TunerConstants.h"
 
 using namespace ctre::phoenix6;
@@ -207,6 +209,7 @@ namespace subsystems
         }
 
         void Periodic() override;
+        void SimulationPeriodic() override;
 
         /**
          * \brief Runs the SysId Quasistatic test in the given direction for the routine

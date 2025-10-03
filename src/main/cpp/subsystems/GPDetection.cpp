@@ -1,8 +1,4 @@
 #include "subsystems/GPDetection.h"
-#include "subsystems/CommandSwerveDrivetrain.h"
-#include "ctre/phoenix6/swerve/SwerveDrivetrain.hpp"
-#include <iostream>
-
 using namespace subsystems;
 
 std::map<std::string, GPDetection *> GPDetection::limelight_controls;
@@ -38,5 +34,5 @@ void GPDetection::Periodic()
 
 double GPDetection::angleToRadius(double angle)
 {
-  return angle * M_PI / 180.0;
+  return angle * std::numbers::pi / 180.0;
 }

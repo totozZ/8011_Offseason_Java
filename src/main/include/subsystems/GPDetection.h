@@ -11,6 +11,8 @@
 #include "Constants.h"
 #include <networktables/NetworkTableInstance.h>
 #include "subsystems/CommandSwerveDrivetrain.h"
+#include "ctre/phoenix6/swerve/SwerveDrivetrain.hpp"
+#include <iostream>
 
 namespace subsystems
 {

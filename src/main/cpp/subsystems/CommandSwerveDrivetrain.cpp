@@ -1,7 +1,4 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
-#include <frc/RobotController.h>
-#include <pathplanner/lib/auto/AutoBuilder.h>
-#include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 
 using namespace subsystems;
 
@@ -62,5 +59,17 @@ void CommandSwerveDrivetrain::Periodic()
                     : kBlueAlliancePerspectiveRotation);
             m_hasAppliedOperatorPerspective = true;
         }
+    }
+}
+
+void CommandSwerveDrivetrain::SimulationPeriodic()
+{
+    units::second_t currentTime = frc::Timer::GetFPGATimestamp();
+    units::second_t deltaTime = currentTime - m_lastSimTime;
+
+    if (deltaTime >= kSimLoopPeriod)
+    {
+        UpdateSimState(deltaTime, frc::RobotController::GetBatteryVoltage()); // Pass time step and battery voltage
+        m_lastSimTime = currentTime;
     }
 }
