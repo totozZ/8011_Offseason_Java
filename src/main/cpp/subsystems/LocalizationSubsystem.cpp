@@ -15,10 +15,13 @@ void LocalizationSubsystem::Periodic()
   updatePoseEstimator();
 }
 
-// 对 Limelight 设置当前 Yaw
+// 对 LL 设置当前 Yaw
 void LocalizationSubsystem::setRobotOrientation()
 {
-  LimelightHelpers::SetRobotOrientation("limelight-left", m_drivetrain->GetState().Pose.Rotation().Degrees().value(), current_angular_velocity, 0, 0, 0, 0);
+  for (const auto &ll_name : LLConstants::LOCALIZATION_LL_NAMES)
+  {
+    LimelightHelpers::SetRobotOrientation(std::string(ll_name), m_drivetrain->GetState().Pose.Rotation().Degrees().value(), current_angular_velocity, 0, 0, 0, 0);
+  }
 }
 
 // 设置 IMU 模式
@@ -29,7 +32,10 @@ void LocalizationSubsystem::setIMUMode(int mode)
   // Mode 2：使用内部 IMU
   // Mode 3: 使用内部 IMU，并使用 MT1 辅助收敛
   // Mode 4：使用内部IMU，并使用外部IMU辅助收敛
-  LimelightHelpers::setLimelightNTDouble("limelight-left", "imumode_set", mode);
+  for (const auto &ll_name : LLConstants::LOCALIZATION_LL_NAMES)
+  {
+    LimelightHelpers::setLimelightNTDouble(std::string(ll_name), "imumode_set", mode);
+  }
 }
 
 // 判断是否拒绝 MT2 的结果
@@ -70,7 +76,7 @@ bool LocalizationSubsystem::shouldRejectMT1(const LimelightHelpers::PoseEstimate
     return true;
   }
 
-  // 检查模糊度是否过高（模糊度越高，越不相信视 Limelight 结果）
+  // 检查模糊度是否过高（模糊度越高，越不相信视 LL 结果）
   if (poseEstimate.rawFiducials.size() > 0 &&
       poseEstimate.rawFiducials[0].ambiguity > LocalizationConstants::MAX_AMBIGUITY)
   {
@@ -78,7 +84,7 @@ bool LocalizationSubsystem::shouldRejectMT1(const LimelightHelpers::PoseEstimate
     return true;
   }
 
-  // 检查距离是否过远（距离越远，越不相信视 Limelight 结果）
+  // 检查距离是否过远（距离越远，越不相信视 LL 结果）
   if (poseEstimate.rawFiducials.size() > 0 &&
       poseEstimate.rawFiducials[0].distToCamera > LocalizationConstants::MAX_DISTANCE_TO_CAMERA)
   {
@@ -123,11 +129,15 @@ void LocalizationSubsystem::updateAngularVelocity()
 }
 
 // 更新当前位置（使用 Pose Estimator）
+// https://github.com/team581/2025-beta/blob/main/src/main/java/frc/robot/vision/limelight/Limelight.java
 void LocalizationSubsystem::updatePoseEstimator()
 {
   // 储存 MT1 和 MT2 的结果
-  mt1_left = LimelightHelpers::getBotPoseEstimate_wpiBlue("limelight-left");
-  mt2_left = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+  for (const auto &ll_name : LLConstants::LOCALIZATION_LL_NAMES)
+  {
+    mt1_left = LimelightHelpers::getBotPoseEstimate_wpiBlue(std::string(ll_name));
+    mt2_left = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2(std::string(ll_name));
+  }
 
   // 判断是否已经初始化位置
   if (!location_init_flag)
@@ -136,10 +146,10 @@ void LocalizationSubsystem::updatePoseEstimator()
   }
   else if (!shouldRejectMT2(mt2_left))
   {
-    // 使用 Limelight 更新时 LED State 为 1
+    // 使用 LL 更新时 LED State 为 1
     LED_state = 1;
 
-    // 使用 Distance 计算权重，Distance 越大，越不相信视 Limelight 结果
+    // 使用 Distance 计算权重，Distance 越大，越不相信视 LL 结果
     avg_distance = mt2_left.avgTagDist;
     xy_dev = LocalizationConstants::XY_DEV * std::pow(avg_distance, 1.2);
     theta_dev = LocalizationConstants::THETA_DEV * std::pow(avg_distance, 1.2);
@@ -152,7 +162,7 @@ void LocalizationSubsystem::updatePoseEstimator()
       m_drivetrain->AddVisionMeasurement(
           mt_mix_left,
           ctre::phoenix6::utils::FPGAToCurrentTime(mt2_left.timestampSeconds),
-          std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
+          estStdDevs);
     }
     else
     {
@@ -162,12 +172,12 @@ void LocalizationSubsystem::updatePoseEstimator()
       m_drivetrain->AddVisionMeasurement(
           mt2_left.pose,
           ctre::phoenix6::utils::FPGAToCurrentTime(mt2_left.timestampSeconds),
-          std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
+          estStdDevs);
     }
   }
   else
   {
-    // 不使用 Limelight 更新时 LED State 为 0
+    // 不使用 LL 更新时 LED State 为 0
     LED_state = 0;
   }
 }
@@ -199,7 +209,10 @@ void LocalizationSubsystem::locationInit()
     if (!shouldRejectMT1(mt1_left))
     {
       m_drivetrain->ResetPose(mt1_left.pose);
-      LimelightHelpers::SetRobotOrientation("limelight-left", mt1_left.pose.Rotation().Degrees().value(), 0, 0, 0, 0, 0);
+      for (const auto &ll_name : LLConstants::LOCALIZATION_LL_NAMES)
+      {
+        LimelightHelpers::SetRobotOrientation(std::string(ll_name), mt1_left.pose.Rotation().Degrees().value(), 0, 0, 0, 0, 0);
+      }
       location_init_flag = 1;
     }
   }

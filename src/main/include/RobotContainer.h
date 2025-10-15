@@ -41,6 +41,8 @@ private:
     /* Path follower */
     frc::SendableChooser<frc2::Command *> autoChooser;
 
+    std::optional<frc2::CommandPtr> pid_align_command; // 当前正在执行的PID对齐Command
+
 public:
     RobotContainer();
 

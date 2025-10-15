@@ -12,7 +12,8 @@
 
 #include "subsystems/CommandSwerveDrivetrain.h"
 
-class Telemetry {
+class Telemetry
+{
 private:
     units::meters_per_second_t MaxSpeed;
 
@@ -50,14 +51,10 @@ private:
     };
     /* A direction changing and length constant ligament for module direction */
     std::array<frc::MechanismLigament2d *, 4> m_moduleDirections{
-        m_moduleMechanisms[0].GetRoot("RootDirection", 0.5, 0.5)
-            ->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
-        m_moduleMechanisms[1].GetRoot("RootDirection", 0.5, 0.5)
-            ->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
-        m_moduleMechanisms[2].GetRoot("RootDirection", 0.5, 0.5)
-            ->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
-        m_moduleMechanisms[3].GetRoot("RootDirection", 0.5, 0.5)
-            ->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
+        m_moduleMechanisms[0].GetRoot("RootDirection", 0.5, 0.5)->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
+        m_moduleMechanisms[1].GetRoot("RootDirection", 0.5, 0.5)->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
+        m_moduleMechanisms[2].GetRoot("RootDirection", 0.5, 0.5)->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
+        m_moduleMechanisms[3].GetRoot("RootDirection", 0.5, 0.5)->Append<frc::MechanismLigament2d>("Direction", 0.1, 0_deg, 0, frc::Color8Bit{frc::Color::kWhite}),
     };
 
 public:

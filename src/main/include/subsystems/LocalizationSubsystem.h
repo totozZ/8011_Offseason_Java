@@ -40,9 +40,9 @@ namespace subsystems
     units::second_t current_time = 0_s;         // 当前时间
     units::second_t last_yaw_update_time = 0_s; // 上一次Yaw更新时间
     units::second_t deltaTime = 0_s;            // 当前时间 - 上一次Yaw更新时间
-    double avg_distance;                        // 所有Tag到机器人的平均距离
+    double avg_distance;                        // 所有Tag到机器的平均距离
 
-    frc::Pose2d current_pose; // 当前机器人位置
+    frc::Pose2d current_pose; // 当前机器位置
 
     double xy_dev;     // X和Y的权重
     double theta_dev;  // Yaw的权重

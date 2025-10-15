@@ -6,12 +6,14 @@
 #include <networktables/GenericEntry.h>
 #include <frc/DriverStation.h>
 #include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Pose3d.h>
 #include <frc/Timer.h>
 #include <vector>
 #include "Constants.h"
 #include <networktables/NetworkTableInstance.h>
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "ctre/phoenix6/swerve/SwerveDrivetrain.hpp"
+#include <networktables/StructTopic.h>
 #include <iostream>
 
 namespace subsystems
@@ -21,20 +23,22 @@ namespace subsystems
   private:
     CommandSwerveDrivetrain *m_drivetrain;
 
-    std::shared_ptr<nt::NetworkTable> NT_table;
-    static std::map<std::string, GPDetection *> limelight_controls;
+    std::shared_ptr<nt::NetworkTable> LL_NT_table;
+    std::shared_ptr<nt::NetworkTable> GP_detection_NT_table;
 
     std::string object_seen;
 
-    double GP_width_pixels = 0;
     double ty = 0;
+    double tx = 0;
     double angle = 0;
-    double distance1 = 0;
-    double distance2 = 0;
+    double distance = 0;
+    frc::Pose2d result;
 
   public:
     void Periodic() override;
-    GPDetection(std::string name, CommandSwerveDrivetrain *drivetrain);
+    GPDetection(CommandSwerveDrivetrain *drivetrain);
     double angleToRadius(double angle);
+    double caculateDistance(double ty);
+    frc::Pose2d caculateTargetPose(double distance, double tx);
   };
 }

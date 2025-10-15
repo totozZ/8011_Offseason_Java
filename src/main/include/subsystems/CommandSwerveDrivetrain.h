@@ -11,6 +11,13 @@
 #include <pathplanner/lib/auto/AutoBuilder.h>
 #include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 #include "generated/TunerConstants.h"
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/StructTopic.h>
+// Simulation includes
+#include <frc/smartdashboard/Field2d.h>
+#include <frc/Timer.h>
+#include "simulation/SimulationManager.h"
+#include "simulation/SwerveSimulation.h"
 
 using namespace ctre::phoenix6;
 
@@ -106,6 +113,9 @@ namespace subsystems
 
         /* The SysId routine to test */
         frc2::sysid::SysIdRoutine *m_sysIdRoutineToApply = &m_sysIdRoutineTranslation;
+
+        // 仿真组件
+        std::unique_ptr<simulation::SwerveSimulation> m_swerveSimulation;
 
     public:
         /**
@@ -209,6 +219,7 @@ namespace subsystems
         }
 
         void Periodic() override;
+        void SimulationInit();
         void SimulationPeriodic() override;
 
         /**
@@ -237,6 +248,13 @@ namespace subsystems
 
     private:
         void ConfigureAutoBuilder();
+        void ConfigureSimulation();
+
+        // Unit conversion helper methods for simulation
+        units::meter_t RotationsToMeters(units::turn_t rotations);
+        units::turn_t MetersToRotations(units::meter_t meters);
+        units::meters_per_second_t RotationsToMetersVel(units::turns_per_second_t rotations);
+        units::turns_per_second_t MetersToRotationsVel(units::meters_per_second_t meters);
     };
 
 } // namespace subsystems
