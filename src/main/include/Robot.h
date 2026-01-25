@@ -1,49 +1,47 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 #pragma once
 
-#include <optional>
+#include "ctre/phoenix6/HootAutoReplay.hpp"
 
+#include <frc/smartdashboard/Field2d.h>
 #include <frc/TimedRobot.h>
 #include <frc2/command/CommandPtr.h>
-#include "LimelightHelpers.h"
-#include "RobotContainer.h"
-#include "Constants.h"
-#include <frc/DriverStation.h>
-#include <frc/geometry/Pose2d.h>
-#include <frc/geometry/Pose3d.h>
-#include <frc/geometry/Rotation3d.h>
-#include <frc/Timer.h>
-#include <frc2/command/CommandScheduler.h>
-#include <networktables/StructTopic.h>
-#include <networktables/StructArrayTopic.h>
-#include <networktables/StringTopic.h>
-#include <networktables/NetworkTableInstance.h>
+#include <optional>
 
-class Robot : public frc::TimedRobot
-{
+#include "RobotContainer.h"
+
+class Robot : public frc::TimedRobot {
 public:
-  Robot();
-  void RobotPeriodic() override;
-  void DisabledInit() override;
-  void DisabledPeriodic() override;
-  void DisabledExit() override;
-  void AutonomousInit() override;
-  void AutonomousPeriodic() override;
-  void AutonomousExit() override;
-  void TeleopInit() override;
-  void TeleopPeriodic() override;
-  void TeleopExit() override;
-  void TestInit() override;
-  void TestPeriodic() override;
-  void TestExit() override;
-  void SimulationInit() override;
+    Robot();
+    void RobotPeriodic() override;
+    void DisabledInit() override;
+    void DisabledPeriodic() override;
+    void DisabledExit() override;
+    void AutonomousInit() override;
+    void AutonomousPeriodic() override;
+    void AutonomousExit() override;
+    void TeleopInit() override;
+    void TeleopPeriodic() override;
+    void TeleopExit() override;
+    void TestInit() override;
+    void TestPeriodic() override;
+    void TestExit() override;
+    void SimulationInit() override;
+    void SimulationPeriodic() override;
 
 private:
-  frc2::Command *m_autonomousCommand;
+    static constexpr bool kUseLimelight = false;
 
-  RobotContainer m_container;
+    frc2::Command *m_autonomousCommand;
 
-  std::shared_ptr<nt::NetworkTable> PIDTable = nt::NetworkTableInstance::GetDefault().GetTable("Simulation");
+    RobotContainer m_container;
+    frc::Field2d m_simField;
 
-  nt::StructArrayPublisher<frc::Pose3d> zeroed_component_pose = PIDTable->GetStructArrayTopic<frc::Pose3d>("ZeroedComponentPose").Publish();
-  nt::StructPublisher<frc::Pose3d> final_component_pose = PIDTable->GetStructTopic<frc::Pose3d>("FinalComponentPose").Publish();
+    /* log and replay timestamp and joystick data */
+    ctre::phoenix6::HootAutoReplay m_timeAndJoystickReplay = ctre::phoenix6::HootAutoReplay{}
+        .WithTimestampReplay()
+        .WithJoystickReplay();
 };

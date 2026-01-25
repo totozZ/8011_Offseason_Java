@@ -1,7 +1,7 @@
 plugins {
     id "cpp"
     id "google-test-test-suite"
-    id "edu.wpi.first.GradleRIO" version "2026.1.1"
+    id "edu.wpi.first.GradleRIO" version "2026.2.1"
 }
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
@@ -41,7 +41,7 @@ def deployArtifact = deploy.targets.roborio.artifacts.frcCpp
 def includeDesktopSupport = true
 
 // Set to true to run simulation in debug mode
-wpi.cpp.debugSimulation = true
+wpi.cpp.debugSimulation = false
 
 // Default enable simgui
 wpi.sim.addGui().defaultEnabled = true
