@@ -22,6 +22,7 @@ void Robot::RobotPeriodic() {
 void Robot::DisabledInit() {
   // Seed IMU
   m_container.clientSub.PubRobotInit(0);
+  m_container.visionSub.disable_mix = 1;
 }
 
 void Robot::DisabledPeriodic() {}
@@ -57,6 +58,8 @@ void Robot::TeleopInit() {
   if (m_autonomousCommand) {
     frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand);
   }
+  m_container.visionSub.disable_mix = 0;
+
 }
 
 void Robot::TeleopPeriodic() {

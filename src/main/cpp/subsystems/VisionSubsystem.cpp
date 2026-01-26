@@ -46,13 +46,10 @@ void VisionSubsystem::Periodic() {
   try {
 
   apriltags.GetVisionInfo();
-  // Cal_Vision_pos();
-  Get_tagpos();
-  CalTarget_posleft();
-  CalTarget_posright();
   LimelightMeasurement();
   LED_control();
   frc::SmartDashboard::PutNumber("vision_mode", vision_mode_);
+
   } catch (const std::exception& e) {
     std::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
 }
@@ -63,91 +60,6 @@ void VisionSubsystem::SimulationPeriodic() {
 
   // Implementation of subsystem simulation periodic method goes here.
 
-}
-
-
-
-
-void VisionSubsystem::Get_tagpos() {
-// right�?2 17;left: 20 19
-  // 根据视觉识别结果来确定tag的位�?
-  switch(static_cast<int>(apriltags.Getapriltag_id())) {
-    case 17:
-      tag_pos = frc::Pose2d(pos_x2, pos_y2, frc::Rotation2d(60_deg));
-      // tag_pos = frc::Pose2d(pos_x1, pos_y1, frc::Rotation2d(0_deg));
-      break;
-      case 8:
-      tag_pos = frc::Pose2d(17.55_m - pos_x2, 8.05_m - pos_y2, frc::Rotation2d(-120_deg));
-      // tag_pos = frc::Pose2d(pos_x1, pos_y1, frc::Rotation2d(0_deg));
-      break;
-    case 18:
-      tag_pos = frc::Pose2d(pos_x1, pos_y1, frc::Rotation2d(0_deg));
-      break;
-    case 7:
-      // tag_pos = frc::Pose2d(pos_x2, pos_y2, frc::Rotation2d(60_deg));
-      tag_pos = frc::Pose2d(17.55_m - pos_x1, 8.05_m - pos_y1, frc::Rotation2d(180_deg));
-      break;
-    case 19:
-      tag_pos = frc::Pose2d(pos_x2, pos_y3, frc::Rotation2d(-60_deg));
-      break;
-      case 6:
-      tag_pos = frc::Pose2d(17.55_m - pos_x2, 8.05_m - pos_y3, frc::Rotation2d(120_deg)); // -60
-      break;
-    case 20:
-      tag_pos = frc::Pose2d(pos_x3, pos_y3, frc::Rotation2d(-120_deg));
-      break;
-    case 11:
-      tag_pos = frc::Pose2d(17.55_m - pos_x3, 8.05_m - pos_y3, frc::Rotation2d(60_deg));
-      break;
-    case 21:
-      tag_pos = frc::Pose2d(pos_x4, pos_y1, frc::Rotation2d(180_deg));
-      break;
-    case 10:
-    tag_pos = frc::Pose2d(17.55_m - pos_x4, 8.05_m - pos_y1, frc::Rotation2d(0_deg));
-    break;
-    case 22:
-      tag_pos = frc::Pose2d(pos_x3, pos_y2, frc::Rotation2d(120_deg));
-    break;
-    case 9:
-      tag_pos = frc::Pose2d(17.55_m - pos_x3, 8.05_m - pos_y2, frc::Rotation2d(-60_deg));
-    break;
-      default:
-      tag_pos = tag_pos;
-      break;
-  }; 
-}
-
-frc::Pose2d VisionSubsystem::CalTarget_posleft() {
-
-
-  Target_pos_left = frc::Pose2d{
-    units::meter_t{tag_pos.Translation().X().value() - 
-                  std::cos(tag_pos.Rotation().Radians().value()) * distance.value() - std::sin(tag_pos.Rotation().Radians().value()) * balldistance.value()},
-                  
-    units::meter_t{tag_pos.Translation().Y().value() - 
-                  std::sin(tag_pos.Rotation().Radians().value()) * distance.value() + std::cos(tag_pos.Rotation().Radians().value()) * balldistance.value()},
-    
-    frc::Rotation2d{units::degree_t{tag_pos.Rotation().Degrees().value()}}
-
-  };
-
-  return Target_pos_left;
-}
-
-frc::Pose2d VisionSubsystem::CalTarget_posright() {
-         
-// 右边，左边球则第四个项相�?底盘中心最终的目标位姿，要减去底盘中心的距离以及左右珊瑚礁的偏�?
-Target_pos_right = frc::Pose2d{
-    units::meter_t{tag_pos.Translation().X().value() - 
-                  std::cos(tag_pos.Rotation().Radians().value()) * distance.value() + std::sin(tag_pos.Rotation().Radians().value()) * balldistance_right.value()},
-                  
-    units::meter_t{tag_pos.Translation().Y().value() - 
-                  std::sin(tag_pos.Rotation().Radians().value()) * distance.value() - std::cos(tag_pos.Rotation().Radians().value()) * balldistance_right.value()},
-                  
-    tag_pos.Rotation()
-};
-
-  return Target_pos_right;
 }
 
 
@@ -231,13 +143,13 @@ void VisionSubsystem::UpdateVisionMode() {
   }
 
   // 检查混合模式条�?
-  if (mt2_left_pose_.rawFiducials[0].distToCamera < swiitch_distance_ &&
+  if (mt2_left_pose_.rawFiducials[0].distToCamera < switch_distance_ &&
       !ShouldRejectMetatagPose(mt1_left_pose_)) {
     vision_mode_ = 2;  // 混合模式
   } else {
     vision_mode_ = 1;  // 仅使�?mt2
   }
-
+      
 
 }
 
@@ -275,18 +187,21 @@ void VisionSubsystem::UpdateVisionMode() {
           estStdDevs[2] = 10000000; // 使用外部imu时不信任limelight的yaw�?
           drivetrain_->AddVisionMeasurement(
               mt2_left_pose_.pose,
-              ctre::phoenix6::utils::FPGAToCurrentTime(mt2_left_pose_.timestampSeconds),
+              mt2_left_pose_.timestampSeconds,
               std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
           break;
 
         case 2: {// 混合模式
+          if (disable_mix) {
           auto mt_left_mix = frc::Pose2d{mt2_left_pose_.pose.Translation(), mt1_left_pose_.pose.Rotation()};
           drivetrain_->AddVisionMeasurement(
               mt_left_mix,
-              ctre::phoenix6::utils::FPGAToCurrentTime(mt2_left_pose_.timestampSeconds),
+              mt2_left_pose_.timestampSeconds,
               std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
-          break;
         }
+      }      
+          break;
+        
         default:
           break;
       }
@@ -295,19 +210,19 @@ void VisionSubsystem::UpdateVisionMode() {
 }
 
 void VisionSubsystem::LED_control() {
-      if (vision_mode_ == 0) {
-      ledsub_->SetLEDState(LEDSubsystem::AnimationType::Blue);
-      }
-      else if (vision_mode_ == 1) {
-        if (gpdetection_ && gpdetection_->GetValid()) {
-        ledsub_->SetLEDState(LEDSubsystem::AnimationType::Green);
-        } else {
-        ledsub_->SetLEDState(LEDSubsystem::AnimationType::Red);
-        }
-        }
-      else if (vision_mode_ == 2) {
-      ledsub_->SetLEDState(LEDSubsystem::AnimationType::Purple);
-      }
+      // if (vision_mode_ == 0) {
+      // ledsub_->SetLEDState(LEDSubsystem::AnimationType::Blue);
+      // }
+      // else if (vision_mode_ == 1) {
+      //   if (gpdetection_ && gpdetection_->GetValid()) {
+      //   ledsub_->SetLEDState(LEDSubsystem::AnimationType::Green);
+      //   } else {
+      //   ledsub_->SetLEDState(LEDSubsystem::AnimationType::Red);
+      //   }
+      //   }
+      // else if (vision_mode_ == 2) {
+      // ledsub_->SetLEDState(LEDSubsystem::AnimationType::Purple);
+      // }
 }
 
 

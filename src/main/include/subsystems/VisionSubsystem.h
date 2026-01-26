@@ -80,7 +80,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
 
   int mt_mode_ = 2; // 默认使用 mt2
   int vision_mode_ = 1; // 0视觉不更新，1更新mt2, 2更新混合
-  double swiitch_distance_ = 0.8; // 1米，距离阈值，低于此距离使用混合模式
+  double switch_distance_ = 1.3; // 1米，距离阈值，低于此距离使用混合模式
 
    // IMU 模式
     enum class LimelightIMUMode {
@@ -92,7 +92,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
 
     LimelightIMUMode currentIMUMode = LimelightIMUMode::ExternalIMU;
   
-  std::string limelight_left_name_ = "limelight-left"; // Limelight 的名称
+  std::string limelight_left_name_ = "limelight-back"; // Limelight 的名称
     
   // 信任度阈值常量
   const double kMaxAngularVelocity_ = 360.0; // 超过 360度/秒 则不信任视觉
@@ -173,7 +173,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
   double button_id = 0.0; // 触摸屏传输的标志位
 
   public:
-
+    bool disable_mix = 0;
   frc::Pose2d Gettag_pos() {
     return tag_pos;
   }
