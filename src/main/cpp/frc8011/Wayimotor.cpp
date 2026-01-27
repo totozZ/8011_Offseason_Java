@@ -1,11 +1,14 @@
 #include "frc8011/Wayimotor.h"
+#include <frc/RobotBase.h>
 
 void Wayimotor::Control()
 {
+  // 模拟器中跳过电机控制，避免崩溃
   if (frc::RobotBase::IsSimulation())
   {
     return;
   }
+
   // 电机控制
   switch (wayiconfig.mode)
   {
@@ -55,10 +58,12 @@ void Wayimotor::Control()
 
 void Wayimotor::Receive()
 {
+  // 模拟器中跳过电机数据接收，避免崩溃
   if (frc::RobotBase::IsSimulation())
   {
     return;
   }
+
   // 电机数据接收
   wayiconfig.currentPosition =
       (motor.GetPosition().GetValueAsDouble() - wayiconfig.offset) / wayiconfig.gearRatio * wayiconfig.invert;

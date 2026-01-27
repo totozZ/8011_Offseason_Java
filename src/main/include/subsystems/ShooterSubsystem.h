@@ -11,16 +11,17 @@
 #include <ctre/phoenix6/TalonFX.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
 
+#include "subsystems/ExampleSubsystem.h"
 #include "frc8011/Wayimotor.h"
 #include "frc8011/BallSolver.h"
 #include "Constants.h"
 
 namespace subsystems
 {
-class ShooterSubsystem : public frc2::SubsystemBase
+class ShooterSubsystem : public ExampleSubsystem
 {
 public:
-  ShooterSubsystem(frc2::CommandXboxController& joystick_) : frc2::SubsystemBase(), joystick_(joystick_)
+  ShooterSubsystem(frc2::CommandXboxController& m_joystick) : ExampleSubsystem(m_joystick)
   {
     Initialization();
   }
@@ -36,8 +37,6 @@ public:
 
 private:
   void Initialization();
-  ctre::phoenix6::CANBus kCANBus{ "rio" };
-  frc2::CommandXboxController& joystick_;
 
   BallSolver ball_solver_;
   Wayimotor shooter_left_{ ShooterConstants::ShooterLeftMotorID, kCANBus };    // 发射左电机

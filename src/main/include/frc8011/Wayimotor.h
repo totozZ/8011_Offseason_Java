@@ -22,7 +22,6 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include <ctre/phoenix6/controls/MotionMagicVelocityTorqueCurrentFOC.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
-#include <frc/RobotBase.h>
 
 using namespace ctre::phoenix6;
 

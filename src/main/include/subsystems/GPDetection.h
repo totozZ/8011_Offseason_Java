@@ -1,44 +1,60 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 #pragma once
 
-#include <frc2/command/CommandPtr.h>
-#include <frc2/command/SubsystemBase.h>
-#include <frc/smartdashboard/SmartDashboard.h>
-#include <networktables/GenericEntry.h>
-#include <frc/DriverStation.h>
 #include <frc/geometry/Pose2d.h>
-#include <frc/geometry/Pose3d.h>
-#include <frc/Timer.h>
-#include <vector>
-#include "Constants.h"
-#include <networktables/NetworkTableInstance.h>
-#include "subsystems/CommandSwerveDrivetrain.h"
-#include "ctre/phoenix6/swerve/SwerveDrivetrain.hpp"
-#include <networktables/StructTopic.h>
-#include <iostream>
+#include <frc/geometry/Transform2d.h>
+#include <frc2/command/SubsystemBase.h>
+#include <networktables/NetworkTable.h>
 
-namespace subsystems
-{
-  class GPDetection : public frc2::SubsystemBase
-  {
-  private:
-    CommandSwerveDrivetrain *m_drivetrain;
+#include <deque>
+#include <memory>
+#include <string>
 
-    std::shared_ptr<nt::NetworkTable> LL_NT_table;
-    std::shared_ptr<nt::NetworkTable> GP_detection_NT_table;
+namespace subsystems {
 
-    std::string object_seen;
+class CommandSwerveDrivetrain;
 
-    double ty = 0;
-    double tx = 0;
-    double angle = 0;
-    double distance = 0;
-    frc::Pose2d result;
+class GPDetection : public frc2::SubsystemBase {
+ public:
+  GPDetection(std::string name, CommandSwerveDrivetrain* drivetrain);
 
-  public:
-    void Periodic() override;
-    GPDetection(CommandSwerveDrivetrain *drivetrain);
-    double angleToRadius(double angle);
-    double caculateDistance(double ty);
-    frc::Pose2d caculateTargetPose(double distance, double tx);
-  };
-}
+  void Periodic() override;
+
+  bool GetValid() const { return m_valid; }
+  const frc::Pose2d& GetFilteredPose() const { return m_gamepieceFieldPose; }
+  
+  bool HasValidFieldPose() const { return m_hasValidFieldPose; }
+
+ private:
+  double CalculateDistanceTriangulation(double ty_degrees) const;
+  double CalculateDistancePixelSize(double ty_degrees, double objectWidthPixels,
+                                    double objectHeightPixels) const;
+  double CalculateFusedDistance(double ty_degrees, double objectWidthPixels,
+                                double objectHeightPixels,
+                                double targetArea) const;
+  double ApplyMedianFilterPose(std::deque<double>& samples, double newValue);
+  frc::Pose2d ComputeObjectPoseFromDistance(const frc::Pose2d& cameraPose,
+                                            double distance,
+                                            double txnc_degrees,
+                                            frc::Pose2d* relativePose) const;
+  void ComputeFusionWeights(double ty_degrees, double objectWidthPixels,
+                            double objectHeightPixels, double targetArea,
+                            double d_tri, double d_pix, double& triWeight,
+                            double& pixWeight) const;
+
+  frc::Pose2d m_gamepieceFieldPose;
+  frc::Transform2d m_robotToCam{frc::Translation2d{-0.32559_m, 0_m},
+                                frc::Rotation2d{180_deg}};
+  bool m_hasValidFieldPose = false;
+  bool m_valid = false;
+  double m_azimuthAverage = 209.0;
+  std::shared_ptr<nt::NetworkTable> m_tablePtr;
+  std::deque<double> m_fieldPoseXSamples;
+  std::deque<double> m_fieldPoseYSamples;
+  CommandSwerveDrivetrain* m_drivetrain = nullptr;
+};
+
+}  // namespace subsystems

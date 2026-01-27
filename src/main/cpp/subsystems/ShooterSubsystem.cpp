@@ -112,18 +112,18 @@ void ShooterSubsystem::Periodic()
   frc::SmartDashboard::PutNumber("Shooter/Motor target Velocity:",
                                  shoot_vel_ / (2 * M_PI * ShooterConstants::ShootWheelRadius) /
                                      speed_conversion_efficiency_ / shooter_left_.Getdata().gearRatio);
-  if (joystick_.LeftBumper().Get())
+  if (m_joystick.LeftBumper().Get())
   {
     SetShootVelocity(shoot_vel_ / (2 * M_PI * ShooterConstants::ShootWheelRadius) / speed_conversion_efficiency_ /
                      shooter_left_.Getdata().gearRatio);
   }
 
-  if (joystick_.RightBumper().Get())
+  if (m_joystick.RightBumper().Get())
   {
     // Shoot(shoot_vel_, shoot_pitch_angle_);
     SetPitchPosition((ShooterConstants::PitchMaxAngle - shoot_pitch_angle_) *
                      ShooterConstants::PitchDisplacementPerDegree);
-    if (joystick_.A().Get())
+    if (m_joystick.A().Get())
     {
       SetShootVelocity(shoot_vel_ / (2 * M_PI * ShooterConstants::ShootWheelRadius) /
                        ShooterConstants::SpeedConversionEfficiency /
@@ -131,7 +131,7 @@ void ShooterSubsystem::Periodic()
                        shooter_left_.Getdata().gearRatio);
     }
   }
-  else if (joystick_.X().Get())
+  else if (m_joystick.X().Get())
   {
     Stop();
     SetPitchPosition(ShooterConstants::PitchMinPosition);
