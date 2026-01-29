@@ -27,10 +27,12 @@ public:
   }
 
   frc2::CommandPtr TeleopControlCommand();
-  frc2::CommandPtr SetPitchPositionCommand(double position);
+  frc2::CommandPtr SetPitchPositionCommandPtr(double position);
+  frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
   void SetPitchPosition(double position);
   void SetShootVelocity(double velocity);
   double GetShootVelocity();
+  double GetPitchPosition();
   void Shoot(double shoot_vel, double shoot_angle);
   void Stop();
   void Periodic() override;

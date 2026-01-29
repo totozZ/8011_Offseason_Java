@@ -154,9 +154,24 @@ void ShooterSubsystem::SetShootVelocity(double velocity)
   shooter_left_.setvelocity(velocity);
 }
 
+frc2::CommandPtr ShooterSubsystem::SetPitchPositionCommandPtr(double position)
+{
+  return frc2::cmd::RunOnce([this, position] { SetPitchPosition(position); });
+}
+
+frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity)
+{
+  return frc2::cmd::RunOnce([this, velocity] { SetShootVelocity(velocity); });
+}
+
 double ShooterSubsystem::GetShootVelocity()
 {
   return shooter_left_.Getdata().currentVelocity;
+}
+
+double ShooterSubsystem::GetPitchPosition()
+{
+  return pitch_.Getdata().currentPosition;
 }
 
 void ShooterSubsystem::Shoot(double shoot_vel, double shoot_angle)
