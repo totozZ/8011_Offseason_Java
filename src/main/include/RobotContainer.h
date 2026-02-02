@@ -1,4 +1,4 @@
-// Copyright (c) FIRST and other WPILib contributors.
+﻿// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
@@ -11,10 +11,10 @@
 #include "Constants.h"
 #include "Telemetry.h"
 #include "commands/ComplexCommand.h"
-#include "subsystems/ClientSubsystem.h"
+#include "frc8011/ClientSubsystem.h"
 #include "subsystems/CommandSwerveDrivetrain.h"
-#include "subsystems/GPDetection.h"
-#include "subsystems/LEDSubsystem.h"
+#include "frc8011/GPDetection.h"
+#include "frc8011/LEDSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
 
 class RobotContainer {
@@ -49,3 +49,4 @@ class RobotContainer {
  private:
   void ConfigureBindings();
 };
+

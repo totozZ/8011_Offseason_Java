@@ -1,4 +1,4 @@
-#include "subsystems/CommandSwerveDrivetrain.h"
+﻿#include "subsystems/CommandSwerveDrivetrain.h"
 
 #include <frc/RobotController.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
@@ -7,7 +7,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "subsystems/GPDetection.h"
+#include "frc8011/GPDetection.h"
 using namespace subsystems;
 
 void CommandSwerveDrivetrain::ConfigureAutoBuilder() {
@@ -594,4 +594,5 @@ std::shared_ptr<PathPlannerPath> CommandSwerveDrivetrain::GeneratePath(
 
   return path;
 }
+
 
