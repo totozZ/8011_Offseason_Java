@@ -20,12 +20,6 @@ class ComplexCommand
   frc2::CommandPtr AutoFollowPathCommand(frc::Pose2d targetPos, double maxspeed,
                                          double maxacc);
 
-  frc2::CommandPtr VisionLeftFollow();
-  frc2::CommandPtr VisionRightFollow();
-  frc2::CommandPtr VisionMiddleFollow();
-  frc2::CommandPtr AutoVisionLeftFollow();
-  frc2::CommandPtr AutoVisionRightFollow();
-
   frc2::CommandPtr autoFollow(frc::Pose2d targetPos);
 
  private:

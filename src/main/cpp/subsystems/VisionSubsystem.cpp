@@ -6,10 +6,13 @@
 
 #include "frc8011/GPDetection.h"
 
+#include <frc/DriverStation.h>
 #include <iostream>
+#include <networktables/NetworkTable.h>
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/StructTopic.h>
 
 using namespace subsystems;
-using namespace posConstants;
 
 VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
                                  LEDSubsystem* ledsub,
@@ -27,25 +30,13 @@ VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
         throw std::runtime_error("VisionSubsystem: gpdetection pointer cannot be null!");
     }
 
-  apriltags.April_Init();
+    vision_table_ = nt::NetworkTableInstance::GetDefault().GetTable("Vision");
 
-}
-
-frc2::CommandPtr VisionSubsystem::VisionMethodCommand() {
-  // Inline construction of command goes here.
-  // Subsystem::RunOnce implicitly requires `this` subsystem.
-  return RunOnce([/* this */] { /* one-time action goes here */ });
-}
-
-bool VisionSubsystem::VisionCondition() {
-  // Query some boolean state, such as a digital sensor.
-  return false;
 }
 
 void VisionSubsystem::Periodic() {
   try {
 
-  apriltags.GetVisionInfo();
   LimelightMeasurement();
   LED_control();
   frc::SmartDashboard::PutNumber("vision_mode", vision_mode_);
@@ -55,15 +46,6 @@ void VisionSubsystem::Periodic() {
 }
 
 }
-
-void VisionSubsystem::SimulationPeriodic() {
-
-  // Implementation of subsystem simulation periodic method goes here.
-
-}
-
-
-
 
   void VisionSubsystem::UpdateAngularVelocity() {
     // 不使用机器人角度进行计算，而直接调用陀螺仪
@@ -94,9 +76,10 @@ void VisionSubsystem::SetLimelightIMUMode(std::string limelightname_, LimelightI
     break;
   }
 
-  if (currentIMUMode == LimelightIMUMode::ExternalIMU) {
-    LimelightHelpers::SetRobotOrientation(limelightname_, drivetrain_->GetcurrentPose().Rotation().Degrees().value(), currentAngularVelocity_, 0, 0, 0, 0);
-  }
+  LimelightHelpers::SetRobotOrientation(
+      limelightname_,
+      drivetrain_->GetcurrentPose().Rotation().Degrees().value(),
+      0, 0, 0, 0, 0);
 }
 
 
@@ -158,7 +141,12 @@ void VisionSubsystem::UpdateVisionMode() {
     UpdateAngularVelocity();
     
     // 设置当前 IMU 模式
+    currentIMUMode = frc::DriverStation::IsDisabled()
+                         ? LimelightIMUMode::SeedingMode
+                         : LimelightIMUMode::FusedIMU;
     SetLimelightIMUMode(limelight_left_name_, currentIMUMode);
+    frc::SmartDashboard::PutNumber("limelight_imu_mode",
+                                   static_cast<int>(currentIMUMode));
 
     // 获取 Limelight 数据
     // 左边limelight
@@ -169,6 +157,11 @@ void VisionSubsystem::UpdateVisionMode() {
             limelight_left_name_);
     mt1_left_pose_ = mt1_left_optional.value_or(LimelightHelpers::PoseEstimate{});
     mt2_left_pose_ = mt2_left_optional.value_or(LimelightHelpers::PoseEstimate{});
+
+
+    if(mt1_left_optional.has_value()) {
+    Test(mt1_left_pose_, mt2_left_pose_.pose);
+  }
 
     UpdateVisionMode();
 
@@ -191,14 +184,21 @@ void VisionSubsystem::UpdateVisionMode() {
               std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
           break;
 
-        case 2: {// 混合模式
+        case 2: {// 混合模式，在近处disable下使用mt1的yaw进行校准
           if (disable_mix) {
           auto mt_left_mix = frc::Pose2d{mt2_left_pose_.pose.Translation(), mt1_left_pose_.pose.Rotation()};
           drivetrain_->AddVisionMeasurement(
               mt_left_mix,
               mt2_left_pose_.timestampSeconds,
               std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
-        }
+            }
+            else {
+                  estStdDevs[2] = 10000000; // 使用外部imu时不信任limelight的yaw�?
+              drivetrain_->AddVisionMeasurement(
+                  mt2_left_pose_.pose,
+                  mt2_left_pose_.timestampSeconds,
+                  std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
+            }
       }      
           break;
         
@@ -227,4 +227,65 @@ void VisionSubsystem::LED_control() {
 
 
 
+
+void VisionSubsystem::Test(LimelightHelpers::PoseEstimate mt1, frc::Pose2d mt2) {
+  static constexpr size_t kYawWindow = 100;
+  static std::array<double, kYawWindow> mt1_samples{};
+  static std::array<double, kYawWindow> mt2_samples{};
+  static size_t mt1_index = 0;
+  static size_t mt2_index = 0;
+  static size_t mt1_count = 0;
+  static size_t mt2_count = 0;
+
+  auto push_sample = [](std::array<double, kYawWindow> &samples,
+                        size_t &index, size_t &count, double value) {
+    const size_t window = samples.size();
+    samples[index] = value;
+    index = (index + 1) % window;
+    if (count < window) {
+      ++count;
+    }
+  };
+
+  auto stddev = [](const std::array<double, kYawWindow> &samples,
+                   size_t count) -> double {
+    if (count == 0) {
+      return 0.0;
+    }
+    double sum = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+      sum += samples[i];
+    }
+    double mean = sum / static_cast<double>(count);
+    double acc = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+      double d = samples[i] - mean;
+      acc += d * d;
+    }
+    return std::sqrt(acc / static_cast<double>(count));
+  };
+
+  (void)mt1;
+  double mt1_yaw = mt1_left_pose_.pose.Rotation().Degrees().value();
+  double mt2_yaw = drivetrain_->GetcurrentPose().Rotation().Degrees().value();
+
+  push_sample(mt1_samples, mt1_index, mt1_count, mt1_yaw);
+  push_sample(mt2_samples, mt2_index, mt2_count, mt2_yaw);
+
+  frc::SmartDashboard::PutNumber("mt1_yaw", mt1_yaw);
+  frc::SmartDashboard::PutNumber("mt1_yaw_stddev",
+                                 stddev(mt1_samples, mt1_count));
+  frc::SmartDashboard::PutNumber("mt2_yaw_stddev",
+                                 stddev(mt2_samples, mt2_count));
+
+  frc::SmartDashboard::PutNumber(
+      "pigeon_yaw",
+      drivetrain_->GetcurrentPose().Rotation().Degrees().value());
+
+  if (vision_table_) {
+    vision_table_->GetStructTopic<frc::Pose2d>("MT2Pose").Publish().Set(mt2);
+    vision_table_->GetStructTopic<frc::Pose2d>("MT1Pose").Publish().Set(mt1_left_pose_.pose);
+
+  }
+}
 

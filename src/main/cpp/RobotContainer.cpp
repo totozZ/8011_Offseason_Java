@@ -32,23 +32,23 @@ void RobotContainer::ConfigureBindings()
   // and Y is defined as to the left according to WPILib convention.
   drivetrain.SetDefaultCommand(
       drivetrain.ApplyRequest([this]() -> auto && {
-        return drive.WithVelocityX(-joystick.GetLeftY() * MaxSpeed *
-                                   OperatorConstants::SpeedRate)
+        auto &request = useClosedLoop ? driveClosed : drive;
+        return request
+            .WithVelocityX(-joystick.GetLeftY() * MaxSpeed *
+                           OperatorConstants::SpeedRate)
             .WithVelocityY(-joystick.GetLeftX() * MaxSpeed *
                            OperatorConstants::SpeedRate)
             .WithRotationalRate(-joystick.GetRightX() * MaxAngularRate *
                                 OperatorConstants::AngularSpeedRate);
       }));
 
-  joystick.LeftBumper().ToggleOnTrue(frc2::cmd::DeferredProxy([this]() {
-    return drivetrain.followPathCommand(visionSub.GetTarget_posleft(),
-                                        frc2::cmd::None());
+  joystick.LeftBumper().OnTrue(frc2::cmd::RunOnce([this] {
+    useClosedLoop = !useClosedLoop;
+    frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop);
   }));
 
-  joystick.RightBumper().ToggleOnTrue(frc2::cmd::DeferredProxy([this]() {
-    return drivetrain.followPathCommand(visionSub.GetTarget_posright(),
-                                        frc2::cmd::None());
-  }));
+
+
 
   drivetrain.RegisterTelemetry(
       [this](auto const& state) { logger.Telemeterize(state); });

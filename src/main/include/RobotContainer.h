@@ -23,9 +23,17 @@ class RobotContainer {
   units::radians_per_second_t MaxAngularRate = 0.75_tps;
 
   swerve::requests::FieldCentric drive = swerve::requests::FieldCentric{}
-      .WithDeadband(MaxSpeed * 0.05)
-      .WithRotationalDeadband(MaxAngularRate * 0.05)
+      .WithDeadband(MaxSpeed * 0.1)
+      .WithRotationalDeadband(MaxAngularRate * 0.1)
       .WithDriveRequestType(swerve::DriveRequestType::OpenLoopVoltage);
+
+  swerve::requests::FieldCentric driveClosed = swerve::requests::FieldCentric{}
+      .WithDeadband(MaxSpeed * 0.1)
+      .WithRotationalDeadband(MaxAngularRate * 0.1)
+      .WithDriveRequestType(swerve::DriveRequestType::Velocity)
+      .WithSteerRequestType(swerve::SteerRequestType::Position);
+
+  bool useClosedLoop = false;
 
   Telemetry logger{MaxSpeed};
 
