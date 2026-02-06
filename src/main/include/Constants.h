@@ -237,3 +237,27 @@ namespace auto_Con
     // 3.153 3.85 0
 }
 
+
+namespace SolverConstants
+{
+inline constexpr double ResistanceCoefficient = 0.01;
+inline constexpr double G = 9.81;
+inline constexpr double DT = 0.1;
+inline constexpr double Timeout = 5.0;
+inline constexpr double Delay = 0.2;
+inline constexpr double MaxIterations = 30;
+inline constexpr double ErrorTolerance = 0.001;
+inline constexpr double ShooterMinSpeed = 3.0;
+inline constexpr double ShooterMaxSpeed = 10.0;
+inline constexpr double MaxFlightTime = 2.0;
+inline constexpr double AdjustSpeed = 0.4;
+}  // namespace SolverConstants
+
+namespace LinearServoConstants
+{
+    //0-12.5 125-60
+    // 46.2mm
+inline constexpr double MaxPositionMm = 125.0;
+}  // namespace LinearServoConstants
+
+

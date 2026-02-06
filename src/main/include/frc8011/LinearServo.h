@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <units/time.h>
-
 #include <frc/Servo.h>
 
 class LinearServo : public frc::Servo {
@@ -13,14 +11,8 @@ class LinearServo : public frc::Servo {
   LinearServo(int channel, double length_mm, double speed_mm_per_s);
 
   void SetPositionMm(double setpoint_mm);
-  void UpdateCurPos();
-  double GetPositionMm() const;
-  bool IsFinished() const;
 
  private:
-  double m_speed_mm_per_s = 0.0;
   double m_length_mm = 0.0;
   double m_setPos_mm = 0.0;
-  double m_curPos_mm = 0.0;
-  units::second_t m_lastTime_s{0.0};
 };

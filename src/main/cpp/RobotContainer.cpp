@@ -9,7 +9,8 @@
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
 RobotContainer::RobotContainer()
-    : visionSub(&drivetrain, &m_ledsubsystem, &gpdetection, &joystick),
+    : visionSub(&drivetrain, &m_ledsubsystem, &gpdetection),
+      shooterSub(joystick),
       clientSub(&drivetrain),
       gpdetection("GPDetection", &drivetrain),
       complexcommand(&drivetrain, &visionSub)

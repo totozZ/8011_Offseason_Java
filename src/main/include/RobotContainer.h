@@ -15,6 +15,7 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "frc8011/GPDetection.h"
 #include "frc8011/LEDSubsystem.h"
+#include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
 
 class RobotContainer {
@@ -43,6 +44,7 @@ class RobotContainer {
 
   subsystems::CommandSwerveDrivetrain drivetrain{TunerConstants::CreateDrivetrain()};
   subsystems::VisionSubsystem visionSub;
+  subsystems::ShooterSubsystem shooterSub;
   subsystems::ClientSubsystem clientSub;
   subsystems::GPDetection gpdetection;
   ComplexCommand complexcommand;

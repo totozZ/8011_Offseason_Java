@@ -6,10 +6,9 @@
 
 #include "frc8011/GPDetection.h"
 
-#include <frc2/command/button/CommandXboxController.h>
-#include <algorithm>
+#include <array>
+#include <cmath>
 #include <frc/DriverStation.h>
-#include <frc/Timer.h>
 #include <iostream>
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
@@ -19,12 +18,10 @@ using namespace subsystems;
 
 VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
                                  LEDSubsystem* ledsub,
-                                 GPDetection* gpdetection,
-                                 frc2::CommandXboxController* joystick)
+                                 GPDetection* gpdetection)
     : drivetrain_(drivetrain),
     ledsub_(ledsub),
-      gpdetection_(gpdetection),
-      joystick_(joystick){  // 修改：m_drivetrain -> drivetrain_
+      gpdetection_(gpdetection){  // 修改：m_drivetrain -> drivetrain_
     if (!drivetrain_) {
         throw std::runtime_error("VisionSubsystem: drivetrain pointer cannot be null!");
     }
@@ -33,9 +30,6 @@ VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
     }
     if (!gpdetection_) {
         throw std::runtime_error("VisionSubsystem: gpdetection pointer cannot be null!");
-    }
-    if (!joystick_) {
-        throw std::runtime_error("VisionSubsystem: joystick pointer cannot be null!");
     }
 
     vision_table_ = nt::NetworkTableInstance::GetDefault().GetTable("Vision");
@@ -46,63 +40,12 @@ void VisionSubsystem::Periodic() {
   try {
 
   LimelightMeasurement();
-  {
-    double left_axis = -joystick_->GetLeftY();
-    double right_axis = -joystick_->GetRightY();
-    double now_s = frc::Timer::GetFPGATimestamp().value();
-    double dt_s = (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
-    last_servo_update_s_ = now_s;
-
-    linear_servo_left_target_mm_ = std::clamp(
-        linear_servo_left_target_mm_ + left_axis * kLinearServoSpeedMmPerS * dt_s,
-        0.0, kLinearServoLengthMm);
-    linear_servo_right_target_mm_ = std::clamp(
-        linear_servo_right_target_mm_ + right_axis * kLinearServoSpeedMmPerS * dt_s,
-        0.0, kLinearServoLengthMm);
-
-    SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
-    SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
-    frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm",
-                                   linear_servo_left_target_mm_);
-    frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm",
-                                   linear_servo_right_target_mm_);
-  }
-  UpdateLinearServoPositions();
   LED_control();
   frc::SmartDashboard::PutNumber("vision_mode", vision_mode_);
 
   } catch (const std::exception& e) {
     std::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
   }
-}
-
-void VisionSubsystem::SetLinearServoLeftPositionMm(double position_mm) {
-  linear_servo_left_.SetPositionMm(position_mm);
-}
-
-void VisionSubsystem::SetLinearServoRightPositionMm(double position_mm) {
-  linear_servo_right_.SetPositionMm(position_mm);
-}
-
-void VisionSubsystem::UpdateLinearServoPositions() {
-  linear_servo_left_.UpdateCurPos();
-  linear_servo_right_.UpdateCurPos();
-}
-
-double VisionSubsystem::GetLinearServoLeftPositionMm() const {
-  return linear_servo_left_.GetPositionMm();
-}
-
-double VisionSubsystem::GetLinearServoRightPositionMm() const {
-  return linear_servo_right_.GetPositionMm();
-}
-
-bool VisionSubsystem::IsLinearServoLeftAtTarget() const {
-  return linear_servo_left_.IsFinished();
-}
-
-bool VisionSubsystem::IsLinearServoRightAtTarget() const {
-  return linear_servo_right_.IsFinished();
 }
 
   void VisionSubsystem::UpdateAngularVelocity() {

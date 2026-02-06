@@ -13,14 +13,10 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "LimelightHelpers.h"
 #include "frc8011/LEDSubsystem.h"
-#include "frc8011/LinearServo.h"
 namespace subsystems {
     class CommandSwerveDrivetrain;
     class GPDetection;
 } // 前向声明
-namespace frc2 {
-    class CommandXboxController;
-}
 namespace nt {
     class NetworkTable;
 }
@@ -32,37 +28,14 @@ class VisionSubsystem : public frc2::SubsystemBase {
 
     explicit VisionSubsystem(CommandSwerveDrivetrain* drivetrain_,
                              LEDSubsystem* ledsub_,
-                             GPDetection* gpdetection_,
-                             frc2::CommandXboxController* joystick_);
+                             GPDetection* gpdetection_);
 
   /**
    * Will be called periodically whenever the CommandScheduler runs.
    */
   void Periodic() override;
 
-  void SetLinearServoLeftPositionMm(double position_mm);
-  void SetLinearServoRightPositionMm(double position_mm);
-  void UpdateLinearServoPositions();
-  double GetLinearServoLeftPositionMm() const;
-  double GetLinearServoRightPositionMm() const;
-  bool IsLinearServoLeftAtTarget() const;
-  bool IsLinearServoRightAtTarget() const;
-
-
-
  private:
-  static constexpr int kLinearServoLeftPwm = 5;
-  static constexpr int kLinearServoRightPwm = 8;
-  static constexpr double kLinearServoLengthMm = 140.0;
-  static constexpr double kLinearServoSpeedMmPerS = 30.0;    // update to actuator spec
-  LinearServo linear_servo_left_{kLinearServoLeftPwm, kLinearServoLengthMm,
-                                 kLinearServoSpeedMmPerS};
-  LinearServo linear_servo_right_{kLinearServoRightPwm, kLinearServoLengthMm,
-                                  kLinearServoSpeedMmPerS};
-  double linear_servo_left_target_mm_ = 0.0;
-  double linear_servo_right_target_mm_ = 0.0;
-  double last_servo_update_s_ = 0.0;
-
   // Components (e.g. motor controllers and sensors) should generally be
   // declared private and exposed only through public methods.
 
@@ -70,7 +43,6 @@ class VisionSubsystem : public frc2::SubsystemBase {
     CommandSwerveDrivetrain* drivetrain_;
     LEDSubsystem* ledsub_;
     GPDetection* gpdetection_;
-    frc2::CommandXboxController* joystick_;
 
   // 当前机器人角速度
   double currentAngularVelocity_ = 0.0;
