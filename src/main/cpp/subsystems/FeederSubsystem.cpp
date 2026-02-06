@@ -53,14 +53,14 @@ void FeederSubsystem::Initialization()
   }
 }
 
-void FeederSubsystem::SetBackwardFeederVelocity(double velocity)
+void FeederSubsystem::SetBackwardFeederVelocity(double duty)
 {
-  backward_feeder_.setvelocity(velocity);
+  backward_feeder_.setNormalizedDutyCircle(duty);  // 使用占空比，范围-1到1
 }
 
-void FeederSubsystem::SetUpwardFeederVelocity(double velocity)
+void FeederSubsystem::SetUpwardFeederVelocity(double duty)
 {
-  upward_feeder_.setvelocity(velocity);
+  upward_feeder_.setNormalizedDutyCircle(duty);  // 使用占空比，范围-1到1
 }
 
 frc2::CommandPtr FeederSubsystem::SetBackwardFeederVelocityCommandPtr(double velocity)

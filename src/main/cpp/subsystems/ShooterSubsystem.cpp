@@ -12,30 +12,33 @@ using namespace subsystems;
 
 void ShooterSubsystem::Initialization()
 {
-  configs::TalonFXConfiguration shooter_left_front_config{};
-  shooter_left_front_config.MotorOutput.Inverted = 1;
-  /* slot0 PID槽*/
-  configs::Slot0Configs& shooter_left_front_slot0 = shooter_left_front_config.Slot0;
-  shooter_left_front_slot0.kG = 0.;          // Gear ratio of 1:2, 0.5 rotations per rotor rotation
-  shooter_left_front_slot0.kS = 0.12;        // Add 0.25 V output to overcome static friction
-  shooter_left_front_slot0.kV = 0.12;        // A velocity target of 1 rps results in 0.12 V output
-  shooter_left_front_slot0.kA = 0;           // An acceleration of 1 rps/s requires 0.01 V output
-  shooter_left_front_slot0.kP = 0.03;        // A position error of 0.2 rotations results in 12 V output
-  shooter_left_front_slot0.kI = 0;           // No output for integrated error
-  shooter_left_front_slot0.kD = 0.;          // A velocity error of 1 rps results in 0.5 V output
-  shooter_left_front_slot0.GravityType = 0;  // elevator重力补偿
+  // 配置右电机为主电机（使用VelocityTorqueCurrentFOC）
+  configs::TalonFXConfiguration shooter_right_config{};
+  shooter_right_config.MotorOutput.Inverted = 0;  // 不反转
 
-  /* Retry config apply up to 5 times, report if failure */
-  ctre::phoenix::StatusCode shooter_left_front_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
+  // Slot0 PID 参数
+  configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
+  shooter_right_slot0.kG = 0.;
+  shooter_right_slot0.kS = 7;
+  shooter_right_slot0.kV = 0.06;
+  shooter_right_slot0.kA = 3.5;
+  shooter_right_slot0.kP = 1.2;
+  shooter_right_slot0.kI = 0;
+  shooter_right_slot0.kD = 0.;
+  shooter_right_slot0.GravityType = 0;
+
+  // 应用配置（重试5次）
+  ctre::phoenix::StatusCode shooter_right_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i)
   {
-    shooter_left_front_status = shooter_left_front_.Applyconfig(shooter_left_front_config);
-    if (shooter_left_front_status.IsOK())
+    shooter_right_status = shooter_right_.Applyconfig(shooter_right_config);
+    if (shooter_right_status.IsOK())
       break;
   }
 
-  shooter_left_back_.setfollowControl(shooter_left_front_.Getdata().deviceId, true);
-  shooter_right_.setfollowControl(shooter_left_front_.Getdata().deviceId, false);
+  // 左电机跟随右电机（反转）
+  shooter_left_front_.setfollowControl(shooter_right_.Getdata().deviceId, true);
+  shooter_left_back_.setfollowControl(shooter_right_.Getdata().deviceId, true);
 }
 
 void ShooterSubsystem::Periodic()
@@ -70,7 +73,7 @@ void ShooterSubsystem::SetLinearServoRightPositionMm(double position_mm)
 
 void ShooterSubsystem::SetShootVelocity(double velocity)
 {
-  shooter_left_front_.setvelocity(velocity);
+  shooter_right_.setvelocitytorquecurrent(velocity);  // 使用VelocityTorqueCurrentFOC
 }
 
 frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity)
@@ -80,7 +83,7 @@ frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity)
 
 double ShooterSubsystem::GetShootVelocity()
 {
-  return shooter_left_front_.Getdata().currentVelocity;
+  return shooter_right_.Getdata().currentVelocity;  // 从主电机读取
 }
 
 void ShooterSubsystem::Stop()

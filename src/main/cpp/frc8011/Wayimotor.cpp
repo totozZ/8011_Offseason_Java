@@ -51,6 +51,10 @@ void Wayimotor::Control()
     case 8:
       motor.SetControl(controls::Follower{ wayiconfig.followerId, wayiconfig.follow_invert });
       break;
+    case 9:
+      wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
+      motor.SetControl(velocitytorquecurrent.WithVelocity(wayiconfig.Veloutput));
+      break;
     default:
       break;
   }

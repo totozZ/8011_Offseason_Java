@@ -21,6 +21,7 @@
 #pragma once
 #include "ctre/phoenix6/TalonFX.hpp"
 #include <ctre/phoenix6/controls/MotionMagicVelocityTorqueCurrentFOC.hpp>
+#include <ctre/phoenix6/controls/VelocityTorqueCurrentFOC.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
 
 using namespace ctre::phoenix6;
@@ -93,6 +94,9 @@ private:
   controls::MotionMagicVelocityTorqueCurrentFOC motionmagicvelocity =
       controls::MotionMagicVelocityTorqueCurrentFOC{ 0_tps }.WithUpdateFreqHz(500_Hz).WithSlot(
           0);  // motionmagic控制速度
+
+  controls::VelocityTorqueCurrentFOC velocitytorquecurrent =
+      controls::VelocityTorqueCurrentFOC{ 0_tps }.WithUpdateFreqHz(500_Hz).WithSlot(0);  // 速度电流FOC控制
 
   controls::PositionVoltage position = controls::PositionVoltage{ 0_tr }.WithSlot(0);  // 位置闭环控制
 
@@ -202,6 +206,12 @@ public:
     setmode(5);
     wayiconfig.targetVelocity = targetVelocity;
   }  // 设置motionmagic速度
+
+  void setvelocitytorquecurrent(double targetVelocity)
+  {
+    setmode(9);
+    wayiconfig.targetVelocity = targetVelocity;
+  }  // 设置速度电流FOC控制
 
   void setfollowControl(int _followID, bool _follow_invert)
   {
