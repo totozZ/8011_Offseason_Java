@@ -22,13 +22,12 @@
 #include <frc/DigitalInput.h>
 #include <ctre/phoenix6/CANdi.hpp>
 
-
-class ExampleSubsystem : public frc2::SubsystemBase {
- public:
-
-  ExampleSubsystem(frc2::CommandXboxController& m_joystick
-) : m_joystick(m_joystick) {
-      Init(); // 构造时自动初始化
+class ExampleSubsystem : public frc2::SubsystemBase
+{
+public:
+  ExampleSubsystem(frc2::CommandXboxController& joystick_) : joystick_(joystick_)
+  {
+    Init();  // 构造时自动初始化
   }
   virtual ~ExampleSubsystem() = default;
 
@@ -37,13 +36,11 @@ class ExampleSubsystem : public frc2::SubsystemBase {
    */
   void Periodic() override;
 
-
-
-protected: // 子类可以访问
+protected:  // 子类可以访问
   // 一些常用的Subsystem会用到的变量
-  ctre::phoenix6::CANBus kCANBus{"rio"}; // CAN总线名称,除了底盘基本都是rio
+  ctre::phoenix6::CANBus kCANBus{ "rio" };  // CAN总线名称,除了底盘基本都是rio
 
-  frc2::CommandXboxController& m_joystick; // 子系统遥控器
+  frc2::CommandXboxController& joystick_;  // 子系统遥控器
 
   // 猎鹰/海妖电机配置config
   configs::TalonFXConfiguration config1{};
@@ -51,22 +48,18 @@ protected: // 子类可以访问
   configs::TalonFXConfiguration config3{};
   configs::TalonFXConfiguration config4{};
   configs::TalonFXConfiguration config5{};
-  
 
   // 传感器、电机相关初始化，子类需要重写
-  virtual void Init() {
-    }
+  virtual void Init()
+  {
+  }
 
   // 电机复位函数，取零点
-  virtual void Reset() {
-
+  virtual void Reset()
+  {
   }
-  
-  
+
 private:
-  
-  
-  
-    // Components (e.g. motor controllers and sensors) should generally be
+  // Components (e.g. motor controllers and sensors) should generally be
   // declared private and exposed only through public methods.
 };

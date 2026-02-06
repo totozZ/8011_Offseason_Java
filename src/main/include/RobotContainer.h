@@ -18,45 +18,50 @@
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
 
-class RobotContainer {
- private:
+class RobotContainer
+{
+private:
   units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts;
   units::radians_per_second_t MaxAngularRate = 0.75_tps;
 
+  /* Setting up bindings for necessary control of the swerve drive platform */
   swerve::requests::FieldCentric drive = swerve::requests::FieldCentric{}
-      .WithDeadband(MaxSpeed * 0.1)
-      .WithRotationalDeadband(MaxAngularRate * 0.1)
-      .WithDriveRequestType(swerve::DriveRequestType::OpenLoopVoltage);
+                                             .WithDeadband(MaxSpeed * 0.1)
+                                             .WithRotationalDeadband(MaxAngularRate * 0.1)
+                                             .WithDriveRequestType(swerve::DriveRequestType::OpenLoopVoltage);
 
   swerve::requests::FieldCentric driveClosed = swerve::requests::FieldCentric{}
-      .WithDeadband(MaxSpeed * 0.1)
-      .WithRotationalDeadband(MaxAngularRate * 0.1)
-      .WithDriveRequestType(swerve::DriveRequestType::Velocity)
-      .WithSteerRequestType(swerve::SteerRequestType::Position);
+                                                   .WithDeadband(MaxSpeed * 0.1)
+                                                   .WithRotationalDeadband(MaxAngularRate * 0.1)
+                                                   .WithDriveRequestType(swerve::DriveRequestType::Velocity)
+                                                   .WithSteerRequestType(swerve::SteerRequestType::Position);
 
   bool useClosedLoop = false;
 
-  Telemetry logger{MaxSpeed};
+  Telemetry logger{ MaxSpeed };
 
- public:
-  frc2::CommandXboxController joystick{0};
+  frc2::CommandXboxController joystick{ 0 };
   LEDSubsystem m_ledsubsystem;
 
-  subsystems::CommandSwerveDrivetrain drivetrain{TunerConstants::CreateDrivetrain()};
+public:
+  subsystems::CommandSwerveDrivetrain drivetrain{ TunerConstants::CreateDrivetrain() };
   subsystems::VisionSubsystem visionSub;
   subsystems::ShooterSubsystem shooterSub;
   subsystems::ClientSubsystem clientSub;
   subsystems::GPDetection gpdetection;
   ComplexCommand complexcommand;
 
- private:
-  frc::SendableChooser<frc2::Command *> autoChooser;
+private:
+  /* Path follower */
+  frc::SendableChooser<frc2::Command*> autoChooser;
 
- public:
+  std::optional<frc2::CommandPtr> pid_align_command;  // 当前正在执行的PID对齐Command
+
+public:
   RobotContainer();
-  frc2::Command *GetAutonomousCommand();
 
- private:
+  frc2::Command* GetAutonomousCommand();
+
+private:
   void ConfigureBindings();
 };
-
