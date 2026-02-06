@@ -53,6 +53,11 @@ void FeederSubsystem::Initialization()
   }
 }
 
+void FeederSubsystem::Periodic()
+{
+
+}
+
 void FeederSubsystem::SetBackwardFeederVelocity(double duty)
 {
   backward_feeder_.setNormalizedDutyCircle(duty);  // 使用占空比，范围-1到1

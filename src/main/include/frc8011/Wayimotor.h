@@ -22,6 +22,7 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include <ctre/phoenix6/controls/MotionMagicVelocityTorqueCurrentFOC.hpp>
 #include <ctre/phoenix6/controls/VelocityTorqueCurrentFOC.hpp>
+#include <ctre/phoenix6/controls/VoltageOut.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
 
 using namespace ctre::phoenix6;
@@ -110,6 +111,8 @@ private:
       controls::MotionMagicExpoTorqueCurrentFOC{ 0_tr }.WithUpdateFreqHz(500_Hz).WithSlot(0);  // motionmagic控制位置
 
   controls::DutyCycleOut DutyCircle = controls::DutyCycleOut{ 0.0 }.WithUpdateFreqHz(500_Hz);  // 速度环占空比输出
+
+  controls::VoltageOut voltageOut = controls::VoltageOut{ 0_V }.WithUpdateFreqHz(500_Hz);  // 电压输出（用于SysId）
 
 public:
   void Control();              // 下发控制信号
@@ -212,6 +215,12 @@ public:
     setmode(9);
     wayiconfig.targetVelocity = targetVelocity;
   }  // 设置速度电流FOC控制
+
+  void setVoltage(units::volt_t voltage)
+  {
+    setmode(10);
+    motor.SetControl(voltageOut.WithOutput(voltage));
+  }  // 设置电压输出（用于SysId）
 
   void setfollowControl(int _followID, bool _follow_invert)
   {

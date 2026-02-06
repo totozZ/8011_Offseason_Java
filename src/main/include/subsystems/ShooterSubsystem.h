@@ -6,6 +6,7 @@
 
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/button/CommandXboxController.h>
+#include <frc2/command/sysid/SysIdRoutine.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 
 #include "Constants.h"
@@ -33,6 +34,16 @@ public:
   void SetLinearServoLeftPositionMm(double position_mm);
   void SetLinearServoRightPositionMm(double position_mm);
 
+  // SysId 方法
+  frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction)
+  {
+    return m_sysIdRoutine.Quasistatic(direction);
+  }
+  frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction)
+  {
+    return m_sysIdRoutine.Dynamic(direction);
+  }
+
 private:
   void Initialization();
 
@@ -53,6 +64,24 @@ private:
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
+
+  // SysId routine for shooter
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{
+      frc2::sysid::Config{
+          std::nullopt,  // 默认斜坡率 (1 V/s)
+          4_V,           // 动态电压
+          std::nullopt,  // 默认超时 (10 s)
+          nullptr },
+      frc2::sysid::Mechanism{
+          [this](units::volt_t output) { shooter_right_.setVoltage(output); },
+          [this](frc::sysid::SysIdRoutineLog* log) {
+            log->Motor("shooter")
+                .voltage(shooter_right_.Getmotor().GetMotorVoltage().GetValue())
+                .position(shooter_right_.Getmotor().GetPosition().GetValue())
+                .velocity(shooter_right_.Getmotor().GetVelocity().GetValue());
+          },
+          this }
+  };
 };
 
 }  // namespace subsystems

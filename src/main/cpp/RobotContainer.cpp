@@ -6,11 +6,13 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/Commands.h>
+#include <frc2/command/WaitCommand.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
 RobotContainer::RobotContainer()
   : visionSub(&drivetrain, &m_ledsubsystem, &gpdetection)
   , shooterSub(joystick)
+  , feederSub(joystick)
   , clientSub(&drivetrain)
   , gpdetection("GPDetection", &drivetrain)
   , complexcommand(&drivetrain, &visionSub)
@@ -41,6 +43,38 @@ void RobotContainer::ConfigureBindings()
     useClosedLoop = !useClosedLoop;
     frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop);
   }));
+
+  joystick.A().WhileTrue(
+      frc2::cmd::Sequence(
+          frc2::cmd::RunOnce([this] { shooterSub.SetShootVelocity(38); }),
+          frc2::WaitCommand(0.5_s).ToPtr(),
+          frc2::cmd::Run([this] {
+            feederSub.SetBackwardFeederVelocity(-0.6);
+            feederSub.SetUpwardFeederVelocity(0.7);
+          }))
+          .FinallyDo([this] {
+            shooterSub.Stop();
+            feederSub.Stop();
+          }));
+
+          
+  // //底盘 SysId
+  // joystick.A().WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kForward));
+  // joystick.B().WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
+  // joystick.X().WhileTrue(drivetrain.SysIdDynamic(frc2::sysid::Direction::kForward));
+  // joystick.Y().WhileTrue(drivetrain.SysIdDynamic(frc2::sysid::Direction::kReverse));
+
+  // // Shooter SysId
+  // joystick.A().WhileTrue(shooterSub.SysIdQuasistatic(frc2::sysid::Direction::kForward));
+  // joystick.B().WhileTrue(shooterSub.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
+  // joystick.X().WhileTrue(shooterSub.SysIdDynamic(frc2::sysid::Direction::kForward));
+  // joystick.Y().WhileTrue(shooterSub.SysIdDynamic(frc2::sysid::Direction::kReverse));
+
+  // // Feeder SysId
+  // joystick.A().WhileTrue(feederSub.SysIdQuasistatic(frc2::sysid::Direction::kForward));
+  // joystick.B().WhileTrue(feederSub.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
+  // joystick.X().WhileTrue(feederSub.SysIdDynamic(frc2::sysid::Direction::kForward));
+  // joystick.Y().WhileTrue(feederSub.SysIdDynamic(frc2::sysid::Direction::kReverse));
 
   drivetrain.RegisterTelemetry([this](auto const& state) { logger.Telemeterize(state); });
 }

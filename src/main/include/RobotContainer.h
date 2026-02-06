@@ -13,6 +13,7 @@
 #include "commands/ComplexCommand.h"
 #include "frc8011/ClientSubsystem.h"
 #include "subsystems/CommandSwerveDrivetrain.h"
+#include "subsystems/FeederSubsystem.h"
 #include "frc8011/GPDetection.h"
 #include "frc8011/LEDSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
@@ -47,6 +48,7 @@ public:
   subsystems::CommandSwerveDrivetrain drivetrain{ TunerConstants::CreateDrivetrain() };
   subsystems::VisionSubsystem visionSub;
   subsystems::ShooterSubsystem shooterSub;
+  subsystems::FeederSubsystem feederSub;
   subsystems::ClientSubsystem clientSub;
   subsystems::GPDetection gpdetection;
   ComplexCommand complexcommand;
