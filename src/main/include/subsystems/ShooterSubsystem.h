@@ -25,14 +25,8 @@ public:
   }
   void Periodic() override;
 
-  frc2::CommandPtr SetBackwardFeederVelocityCommandPtr(double velocity);
-  frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
-  void SetBackwardFeederVelocity(double velocity);
-  void SetUpwardFeederVelocity(double velocity);
   void SetShootVelocity(double velocity);
-  double GetBackwardFeederVelocity();
-  double GetUpwardFeederVelocity();
   double GetShootVelocity();
   void Stop();
 
@@ -56,8 +50,6 @@ private:
   double linear_servo_right_target_mm_ = 0.0;
   double last_servo_update_s_ = 0.0;
 
-  Wayimotor backward_feeder_{ ShooterConstants::BackwardFeederMotorID, kCANBus };       // 反进料电机
-  Wayimotor upward_feeder_{ ShooterConstants::UpwardFeederMotorID, kCANBus };           // 上进料电机
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
