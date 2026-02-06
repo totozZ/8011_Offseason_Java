@@ -27,12 +27,9 @@ public:
   }
 
   frc2::CommandPtr TeleopControlCommand();
-  frc2::CommandPtr SetPitchPositionCommandPtr(double position);
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
-  void SetPitchPosition(double position);
   void SetShootVelocity(double velocity);
   double GetShootVelocity();
-  double GetPitchPosition();
   void Shoot(double shoot_vel, double shoot_angle);
   void Stop();
   void Periodic() override;
@@ -41,9 +38,9 @@ private:
   void Initialization();
 
   BallSolver ball_solver_;
-  Wayimotor shooter_left_{ ShooterConstants::ShooterLeftMotorID, kCANBus };    // 发射左电机
-  Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };  // 发射右电机
-  Wayimotor pitch_{ ShooterConstants::PitchMotorID, kCANBus };                 // 发射机构俯仰电机
+  Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
+  Wayimotor shoter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };     // 发射左电机
+  Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
   double speed_conversion_efficiency_ = 0;
 
   double shoot_vel_, shoot_pitch_angle_, shoot_yaw_angle_ = 0.;

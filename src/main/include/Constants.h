@@ -222,21 +222,12 @@ static constexpr auto angle_Coral1_red_pre = 180_deg + (-28_deg);
 
 namespace ShooterConstants
 {
-inline constexpr int ShooterLeftMotorID = 11;
-inline constexpr int ShooterRightMotorID = 12;
-inline constexpr int PitchMotorID = 13;
+inline constexpr int ShooterLeftFrontMotorID = 11;
+inline constexpr int ShooterLeftBackMotorID = 12;
+inline constexpr int ShooterRightMotorID = 13;
 
-inline constexpr double PitchMinPosition = 0.0;
-inline constexpr double ExitHorizontalPitchPosition = 0.0;
-inline constexpr double PitchMaxPosition = 7.0;
-inline constexpr double PitchMinAngle = 20.0;
-inline constexpr double PitchMaxAngle = 60;
-
-inline constexpr double PitchDisplacementPerDegree =
-    (PitchMaxPosition - PitchMinPosition) / (PitchMaxAngle - PitchMinAngle);
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
-
 inline constexpr double TargetHeight = 1.8796;
 inline constexpr double ShooterHeight = 0.75;
 }  // namespace ShooterConstants
