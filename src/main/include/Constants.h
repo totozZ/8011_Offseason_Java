@@ -237,9 +237,11 @@ inline constexpr double AdjustSpeed = 0.4;
 
 namespace ShooterConstants
 {
-inline constexpr int ShooterLeftFrontMotorID = 11;
-inline constexpr int ShooterLeftBackMotorID = 12;
-inline constexpr int ShooterRightMotorID = 13;
+inline constexpr int ShooterLeftFrontMotorID = 110;
+inline constexpr int ShooterLeftBackMotorID = 120;
+inline constexpr int ShooterRightMotorID = 130;
+inline constexpr int BackwardFeederMotorID = 140;
+inline constexpr int UpwardFeederMotorID = 150;
 
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
