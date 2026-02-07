@@ -252,6 +252,6 @@ inline constexpr double ShooterHeight = 0.75;
 namespace LinearServoConstants
 {
 // 0-12.5 125-60
-//  70mm
+//  70mm  100mm
 inline constexpr double MaxPositionMm = 125.0;
 }  // namespace LinearServoConstants

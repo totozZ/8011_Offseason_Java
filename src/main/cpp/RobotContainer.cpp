@@ -44,18 +44,22 @@ void RobotContainer::ConfigureBindings()
     frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop);
   }));
 
-  joystick.A().WhileTrue(
-      frc2::cmd::Sequence(
-          frc2::cmd::RunOnce([this] { shooterSub.SetShootVelocity(38); }),
-          frc2::WaitCommand(0.5_s).ToPtr(),
-          frc2::cmd::Run([this] {
-            feederSub.SetBackwardFeederVelocity(-0.6);
-            feederSub.SetUpwardFeederVelocity(0.7);
-          }))
-          .FinallyDo([this] {
-            shooterSub.Stop();
-            feederSub.Stop();
-          }));
+  // joystick.A().WhileTrue(
+  //     frc2::cmd::Sequence(
+  //         frc2::cmd::RunOnce([this] { shooterSub.SetShootVelocity(45); }),
+  //         frc2::WaitCommand(3_s).ToPtr(),
+  //         frc2::cmd::Run([this] {
+  //           feederSub.SetBackwardFeederVelocity(0.54);
+  //           feederSub.SetUpwardFeederVelocity(0.7);
+  //         }))
+  //         .FinallyDo([this] {
+  //           shooterSub.Stop();
+  //           feederSub.Stop();
+  //         }));
+
+  joystick.B().WhileTrue(
+      frc2::cmd::Run([this] { shooterSub.SetShootVelocity(39); }))
+      .WhileFalse(frc2::cmd::RunOnce([this] { shooterSub.Stop(); }));
 
           
   // //底盘 SysId

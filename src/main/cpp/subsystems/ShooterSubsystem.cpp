@@ -13,22 +13,22 @@ using namespace subsystems;
 
 void ShooterSubsystem::Initialization()
 {
-  // 配置右电机为主电机（使用VelocityTorqueCurrentFOC）
+  
   configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0;  // 不反转
+  shooter_right_config.MotorOutput.Inverted = 0; 
 
-  // Slot0 PID 参数
+  // Slot0 PID 
   configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
   shooter_right_slot0.kG = 0.;
   shooter_right_slot0.kS = 7;
   shooter_right_slot0.kV = 0.06;
   shooter_right_slot0.kA = 3.5;
-  shooter_right_slot0.kP = 1.2;
+  shooter_right_slot0.kP = 5;
   shooter_right_slot0.kI = 0;
   shooter_right_slot0.kD = 0.;
   shooter_right_slot0.GravityType = 0;
 
-  // 应用配置（重试5次）
+
   ctre::phoenix::StatusCode shooter_right_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i)
   {
@@ -37,9 +37,13 @@ void ShooterSubsystem::Initialization()
       break;
   }
 
-  // 左电机跟随右电机（反转）
+  // follow
   shooter_left_front_.setfollowControl(shooter_right_.Getdata().deviceId, true);
   shooter_left_back_.setfollowControl(shooter_right_.Getdata().deviceId, true);
+
+  // Power-on default actuator position
+  SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
+  SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
 }
 void ShooterSubsystem::Periodic()
 {
@@ -66,6 +70,9 @@ void ShooterSubsystem::Periodic()
 
   frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm", linear_servo_left_target_mm_);
   frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm", linear_servo_right_target_mm_);
+  shooter_right_.Control();
+  shooter_left_back_.Control();
+  shooter_left_front_.Control();
 }
 
 void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm)
@@ -95,5 +102,5 @@ double ShooterSubsystem::GetShootVelocity()
 
 void ShooterSubsystem::Stop()
 {
-  SetShootVelocity(0.);
+  SetShootVelocity(0.0);
 }

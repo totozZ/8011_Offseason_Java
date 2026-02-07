@@ -59,14 +59,15 @@ private:
                                                           LinearServoConstants::MaxPositionMm :
                                                           kLinearServoLengthMm;
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
+  static constexpr double kLinearServoInitialPositionMm = 100.0;
 
   rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
   LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
                                   kLinearServoSpeedMmPerS };
   LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm,
                                    kLinearServoSpeedMmPerS };
-  double linear_servo_left_target_mm_ = 0.0;
-  double linear_servo_right_target_mm_ = 0.0;
+  double linear_servo_left_target_mm_ = kLinearServoInitialPositionMm;
+  double linear_servo_right_target_mm_ = kLinearServoInitialPositionMm;
   double last_servo_update_s_ = 0.0;
 
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
