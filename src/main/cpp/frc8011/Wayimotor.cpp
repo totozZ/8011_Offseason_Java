@@ -55,6 +55,29 @@ void Wayimotor::Control()
       wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
       motor.SetControl(velocitytorquecurrent.WithVelocity(wayiconfig.Veloutput));
       break;
+    case 11:
+    {
+      // BangBang 作为速度监测器：检测是否掉速
+      double boost = bangBangController.Calculate(wayiconfig.currentVelocity, wayiconfig.targetVelocity);
+      // boost=1 表示掉速，需要增压；boost=0 表示达速
+
+      // 基础速度控制 + BangBang 增压
+      wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
+
+      if (wayiconfig.useTorqueCurrent)
+      {
+        // 使用 VelocityTorqueCurrentFOC 控制，掉速时叠加额外电流
+        double extraCurrent = boost * wayiconfig.bangBangBoostCurrent;
+        motor.SetControl(velocitytorquecurrent.WithVelocity(wayiconfig.Veloutput).WithFeedForward(extraCurrent * 1_A));
+      }
+      else
+      {
+        // 使用 VelocityVoltage 控制，掉速时叠加额外电压
+        double extraVoltage = boost * wayiconfig.bangBangBoostVoltage;
+        motor.SetControl(velocity.WithVelocity(wayiconfig.Veloutput).WithFeedForward(extraVoltage * 1_V));
+      }
+    }
+    break;
     default:
       break;
   }

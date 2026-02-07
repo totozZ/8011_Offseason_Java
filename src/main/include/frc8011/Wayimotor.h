@@ -24,6 +24,7 @@
 #include <ctre/phoenix6/controls/VelocityTorqueCurrentFOC.hpp>
 #include <ctre/phoenix6/controls/VoltageOut.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
+#include <frc/controller/BangBangController.h>
 
 using namespace ctre::phoenix6;
 
@@ -71,6 +72,9 @@ struct WayimotorConfig
   double Current_speed = 0.5;  // 电流控制速度限制(0-1范围, 1为最大占空比输出)
   int followerId = -1;         // 从属电机ID, -1表示不是从属电机
   bool follow_invert = false;  // 从属电机是否反转,默认同方向
+  bool useTorqueCurrent = false;  // BangBang输出模式: false=Voltage, true=TorqueCurrent，再增加控制模式可能需要建立枚举
+  double bangBangBoostVoltage = 2.0;  // BangBang增压电压 (V)
+  double bangBangBoostCurrent = 5.0;  // BangBang增压电流 (A)
 };
 
 class Wayimotor
@@ -89,6 +93,8 @@ private:
   hardware::TalonFX motor;     // 猎鹰电机
 
   ctre::phoenix6::controls::StaticBrake brake{};  // 静态制动
+
+  frc::BangBangController bangBangController{ 5.0 };  // BangBang Controller with 5 tolerance
 
   controls::VelocityVoltage velocity = controls::VelocityVoltage{ 0_tps }.WithSlot(0);  // 速度闭环控制
 
@@ -221,6 +227,13 @@ public:
     setmode(10);
     motor.SetControl(voltageOut.WithOutput(voltage));
   }  // 设置电压输出（用于SysId）
+
+  void setBangBangVelocity(double velocity, bool useTorqueCurrent = false)
+  {
+    setmode(11);
+    wayiconfig.targetVelocity = velocity;
+    wayiconfig.useTorqueCurrent = useTorqueCurrent;
+  }
 
   void setfollowControl(int _followID, bool _follow_invert)
   {

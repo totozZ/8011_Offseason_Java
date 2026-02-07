@@ -15,7 +15,8 @@ void ShooterSubsystem::Initialization()
 {
   // 配置右电机为主电机（使用VelocityTorqueCurrentFOC）
   configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0;  // 不反转
+  shooter_right_config.MotorOutput.Inverted = 0;     // 不反转
+  shooter_right_config.MotorOutput.NeutralMode = 0;  // 刹车模式
 
   // Slot0 PID 参数
   configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
@@ -50,16 +51,15 @@ void ShooterSubsystem::Periodic()
   last_servo_update_s_ = now_s;
 
   double servo_command = left_trigger - right_trigger;
-  if (std::abs(servo_command) < 0.02) {
+  if (std::abs(servo_command) < 0.02)
+  {
     servo_command = 0.0;
   }
 
-  linear_servo_left_target_mm_ =
-      std::clamp(linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
-                 kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ =
-      std::clamp(linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
-                 kLinearServoMaxPositionMm);
+  linear_servo_left_target_mm_ = std::clamp(
+      linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
+  linear_servo_right_target_mm_ = std::clamp(
+      linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
 
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
@@ -83,9 +83,19 @@ void ShooterSubsystem::SetShootVelocity(double velocity)
   shooter_right_.setvelocitytorquecurrent(velocity);  // 使用VelocityTorqueCurrentFOC
 }
 
+void ShooterSubsystem::SetBangBangShootVelocity(double velocity)
+{
+  shooter_right_.setBangBangVelocity(velocity, true);  // 使用BangBang控制
+}
+
 frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity)
 {
   return frc2::cmd::RunOnce([this, velocity] { SetShootVelocity(velocity); });
+}
+
+frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(double velocity)
+{
+  return frc2::cmd::RunOnce([this, velocity] { SetBangBangShootVelocity(velocity); });
 }
 
 double ShooterSubsystem::GetShootVelocity()

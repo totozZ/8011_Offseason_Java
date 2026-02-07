@@ -29,7 +29,9 @@ public:
   void Periodic() override;
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
+  frc2::CommandPtr SetBangBangShootVelocityCommandPtr(double velocity);
   void SetShootVelocity(double velocity);
+  void SetBangBangShootVelocity(double velocity);
   double GetShootVelocity();
   void Stop();
 
@@ -50,10 +52,8 @@ private:
   void Initialization();
 
   static constexpr int kServoHubCanId = 3;
-  static constexpr auto kLinearServoLeftChannel =
-      rev::servohub::ServoChannel::ChannelId::kChannelId0;
-  static constexpr auto kLinearServoRightChannel =
-      rev::servohub::ServoChannel::ChannelId::kChannelId3;
+  static constexpr auto kLinearServoLeftChannel = rev::servohub::ServoChannel::ChannelId::kChannelId0;
+  static constexpr auto kLinearServoRightChannel = rev::servohub::ServoChannel::ChannelId::kChannelId3;
   static constexpr double kLinearServoLengthMm = 129.0;
   static constexpr double kLinearServoMaxPositionMm = (LinearServoConstants::MaxPositionMm < kLinearServoLengthMm) ?
                                                           LinearServoConstants::MaxPositionMm :
@@ -61,10 +61,8 @@ private:
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
 
   rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
-  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
-                                  kLinearServoSpeedMmPerS };
-  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm,
-                                   kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
   double linear_servo_left_target_mm_ = 0.0;
   double linear_servo_right_target_mm_ = 0.0;
   double last_servo_update_s_ = 0.0;
@@ -74,22 +72,19 @@ private:
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
 
   // SysId routine for shooter
-  frc2::sysid::SysIdRoutine m_sysIdRoutine{
-      frc2::sysid::Config{
-          std::nullopt,  // 默认斜坡率 (1 V/s)
-          4_V,           // 动态电压
-          std::nullopt,  // 默认超时 (10 s)
-          nullptr },
-      frc2::sysid::Mechanism{
-          [this](units::volt_t output) { shooter_right_.setVoltage(output); },
-          [this](frc::sysid::SysIdRoutineLog* log) {
-            log->Motor("shooter")
-                .voltage(shooter_right_.Getmotor().GetMotorVoltage().GetValue())
-                .position(shooter_right_.Getmotor().GetPosition().GetValue())
-                .velocity(shooter_right_.Getmotor().GetVelocity().GetValue());
-          },
-          this }
-  };
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
+                                                                 4_V,           // 动态电压
+                                                                 std::nullopt,  // 默认超时 (10 s)
+                                                                 nullptr },
+                                            frc2::sysid::Mechanism{
+                                                [this](units::volt_t output) { shooter_right_.setVoltage(output); },
+                                                [this](frc::sysid::SysIdRoutineLog* log) {
+                                                  log->Motor("shooter")
+                                                      .voltage(shooter_right_.Getmotor().GetMotorVoltage().GetValue())
+                                                      .position(shooter_right_.Getmotor().GetPosition().GetValue())
+                                                      .velocity(shooter_right_.Getmotor().GetVelocity().GetValue());
+                                                },
+                                                this } };
 };
 
 }  // namespace subsystems
