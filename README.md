@@ -1,4 +1,4 @@
-﻿# FRC8011 2026 Template
+# FRC8011 2026 Template
 
 本模板以 CTRE Phoenix6 Swerve + PathPlanner 为底盘基础，保留 Vision 子系统与 ComplexCommand 框架，作为 2026 赛季的起始代码。
 

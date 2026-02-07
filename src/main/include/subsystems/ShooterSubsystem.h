@@ -12,6 +12,8 @@
 #include "Constants.h"
 #include "frc8011/LinearServo.h"
 #include "frc8011/Wayimotor.h"
+#include "rev/ServoChannel.h"
+#include "rev/ServoHub.h"
 #include "subsystems/ExampleSubsystem.h"
 
 namespace subsystems
@@ -47,16 +49,22 @@ public:
 private:
   void Initialization();
 
-  static constexpr int kLinearServoLeftPwm = 5;
-  static constexpr int kLinearServoRightPwm = 8;
+  static constexpr int kServoHubCanId = 3;
+  static constexpr auto kLinearServoLeftChannel =
+      rev::servohub::ServoChannel::ChannelId::kChannelId0;
+  static constexpr auto kLinearServoRightChannel =
+      rev::servohub::ServoChannel::ChannelId::kChannelId3;
   static constexpr double kLinearServoLengthMm = 129.0;
   static constexpr double kLinearServoMaxPositionMm = (LinearServoConstants::MaxPositionMm < kLinearServoLengthMm) ?
                                                           LinearServoConstants::MaxPositionMm :
                                                           kLinearServoLengthMm;
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
 
-  LinearServo linear_servo_left_{ kLinearServoLeftPwm, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
-  LinearServo linear_servo_right_{ kLinearServoRightPwm, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
+  rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
+  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
+                                  kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm,
+                                   kLinearServoSpeedMmPerS };
   double linear_servo_left_target_mm_ = 0.0;
   double linear_servo_right_target_mm_ = 0.0;
   double last_servo_update_s_ = 0.0;

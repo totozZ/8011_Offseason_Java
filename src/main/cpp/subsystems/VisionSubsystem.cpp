@@ -1,4 +1,4 @@
-﻿// Copyright (c) FIRST and other WPILib contributors.
+// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
@@ -85,10 +85,10 @@ void VisionSubsystem::SetLimelightIMUMode(std::string limelightname_, LimelightI
 
 
 bool VisionSubsystem::ShouldRejectMetatagPose(const LimelightHelpers::PoseEstimate& pose_estimate) {
-  bool reject = false;  // 默认不拒�?
+  bool reject = false;  // 默认不拒绝
   std::string reason;   // 记录拒绝原因
 
-  // 检�?tag 数量
+  // 检查 tag 数量
   if (pose_estimate.tagCount == 0) {
     reject = true;
     reason = "No Tags";
@@ -99,12 +99,12 @@ bool VisionSubsystem::ShouldRejectMetatagPose(const LimelightHelpers::PoseEstima
     reject = true;
     reason += reason.empty() ? "High Angular Velocity" : " & High Angular Velocity";
   }
-  // 检�?ambiguity（模糊度），仅在 tagCount > 0 时有�?
+  // 检查 ambiguity（模糊度），仅在 tagCount > 0 时有效
   if (pose_estimate.tagCount > 0 && pose_estimate.rawFiducials[0].ambiguity > 0.7) {
     reject = true;
     reason += reason.empty() ? "High Ambiguity" : " & High Ambiguity";
   }
-  // 检查距离，确保在合理范围内，仅�?tagCount > 0 时有�?
+  // 检查距离，确保在合理范围内，仅在 tagCount > 0 时有效
   if (pose_estimate.tagCount > 0 &&
       (pose_estimate.rawFiducials[0].distToCamera > 3.3 ||
        pose_estimate.rawFiducials[0].distToCamera < 0.26)) {
@@ -120,18 +120,18 @@ bool VisionSubsystem::ShouldRejectMetatagPose(const LimelightHelpers::PoseEstima
 
 void VisionSubsystem::UpdateVisionMode() {
     
-  // 检�?mt2 数据有效�?
+  // 检查 mt2 数据有效性
   if (ShouldRejectMetatagPose(mt2_left_pose_)) {
     vision_mode_ = 0;  // 视觉不通过
     return;
   }
 
-  // 检查混合模式条�?
+  // 检查混合模式条件
   if (mt2_left_pose_.rawFiducials[0].distToCamera < switch_distance_ &&
       !ShouldRejectMetatagPose(mt1_left_pose_)) {
     vision_mode_ = 2;  // 混合模式
   } else {
-    vision_mode_ = 1;  // 仅使�?mt2
+    vision_mode_ = 1;  // 仅使用 mt2
   }
       
 
@@ -178,7 +178,7 @@ void VisionSubsystem::UpdateVisionMode() {
 
       switch (vision_mode_) {
         case 1: // 使用 mt2 更新
-          estStdDevs[2] = 10000000; // 使用外部imu时不信任limelight的yaw�?
+          estStdDevs[2] = 10000000; // 使用外部 IMU 时不信任 Limelight 的 yaw
           drivetrain_->AddVisionMeasurement(
               mt2_left_pose_.pose,
               mt2_left_pose_.timestampSeconds,
@@ -194,7 +194,7 @@ void VisionSubsystem::UpdateVisionMode() {
               std::array{estStdDevs[0], estStdDevs[1], estStdDevs[2]});
             }
             else {
-                  estStdDevs[2] = 10000000; // 使用外部imu时不信任limelight的yaw�?
+                  estStdDevs[2] = 10000000; // 使用外部 IMU 时不信任 Limelight 的 yaw
               drivetrain_->AddVisionMeasurement(
                   mt2_left_pose_.pose,
                   mt2_left_pose_.timestampSeconds,

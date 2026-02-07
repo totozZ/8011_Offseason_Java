@@ -5,6 +5,7 @@
 #include "subsystems/ShooterSubsystem.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include <frc/Timer.h>
 
@@ -40,19 +41,25 @@ void ShooterSubsystem::Initialization()
   shooter_left_front_.setfollowControl(shooter_right_.Getdata().deviceId, true);
   shooter_left_back_.setfollowControl(shooter_right_.Getdata().deviceId, true);
 }
-
 void ShooterSubsystem::Periodic()
 {
-  double left_axis = -joystick_.GetLeftY();
-  double right_axis = left_axis;
+  double left_trigger = joystick_.GetLeftTriggerAxis();
+  double right_trigger = joystick_.GetRightTriggerAxis();
   double now_s = frc::Timer::GetFPGATimestamp().value();
   double dt_s = (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
   last_servo_update_s_ = now_s;
 
-  linear_servo_left_target_mm_ = std::clamp(linear_servo_left_target_mm_ + left_axis * kLinearServoSpeedMmPerS * dt_s,
-                                            0.0, kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ = std::clamp(
-      linear_servo_right_target_mm_ + right_axis * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
+  double servo_command = left_trigger - right_trigger;
+  if (std::abs(servo_command) < 0.02) {
+    servo_command = 0.0;
+  }
+
+  linear_servo_left_target_mm_ =
+      std::clamp(linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
+                 kLinearServoMaxPositionMm);
+  linear_servo_right_target_mm_ =
+      std::clamp(linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
+                 kLinearServoMaxPositionMm);
 
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);

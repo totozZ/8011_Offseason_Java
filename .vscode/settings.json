@@ -1,6 +1,10 @@
 {
   "java.configuration.updateBuildConfiguration": "disabled",
   "java.import.gradle.enabled": false,
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false,
+  "files.autoSave": "afterDelay",
+  "files.autoReload": "onFocusChange",
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
