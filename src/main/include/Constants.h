@@ -235,13 +235,17 @@ inline constexpr double MaxFlightTime = 2.0;
 inline constexpr double AdjustSpeed = 0.4;
 }  // namespace SolverConstants
 
-namespace ShooterConstants
+namespace FeederConstants
 {
 inline constexpr int BackwardFeederMotorID = 9;
+inline constexpr int UpwardFeederMotorID = 13;
+}  // namespace FeederConstants
+
+namespace ShooterConstants
+{
 inline constexpr int ShooterRightMotorID = 10;
 inline constexpr int ShooterLeftFrontMotorID = 11;
 inline constexpr int ShooterLeftBackMotorID = 12;
-inline constexpr int UpwardFeederMotorID = 13;
 
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
