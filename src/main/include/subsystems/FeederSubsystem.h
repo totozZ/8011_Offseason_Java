@@ -44,25 +44,22 @@ public:
 private:
   void Initialization();
 
-  Wayimotor backward_feeder_{ ShooterConstants::BackwardFeederMotorID, kCANBus }; 
-  Wayimotor upward_feeder_{ ShooterConstants::UpwardFeederMotorID, kCANBus };  
+  Wayimotor backward_feeder_{ FeederConstants::BackwardFeederMotorID, kCANBus };
+  Wayimotor upward_feeder_{ FeederConstants::UpwardFeederMotorID, kCANBus };
 
   // SysId routine for feeder (测试backward_feeder)
-  frc2::sysid::SysIdRoutine m_sysIdRoutine{
-      frc2::sysid::Config{
-          std::nullopt,  // 默认斜坡率 (1 V/s)
-          4_V,           // 动态电压
-          std::nullopt,  // 默认超时 (10 s)
-          nullptr },
-      frc2::sysid::Mechanism{
-          [this](units::volt_t output) { backward_feeder_.setVoltage(output); },
-          [this](frc::sysid::SysIdRoutineLog* log) {
-            log->Motor("feeder")
-                .voltage(backward_feeder_.Getmotor().GetMotorVoltage().GetValue())
-                .position(backward_feeder_.Getmotor().GetPosition().GetValue())
-                .velocity(backward_feeder_.Getmotor().GetVelocity().GetValue());
-          },
-          this }
-  };
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
+                                                                 4_V,           // 动态电压
+                                                                 std::nullopt,  // 默认超时 (10 s)
+                                                                 nullptr },
+                                            frc2::sysid::Mechanism{
+                                                [this](units::volt_t output) { backward_feeder_.setVoltage(output); },
+                                                [this](frc::sysid::SysIdRoutineLog* log) {
+                                                  log->Motor("feeder")
+                                                      .voltage(backward_feeder_.Getmotor().GetMotorVoltage().GetValue())
+                                                      .position(backward_feeder_.Getmotor().GetPosition().GetValue())
+                                                      .velocity(backward_feeder_.Getmotor().GetVelocity().GetValue());
+                                                },
+                                                this } };
 };
 }  // namespace subsystems
