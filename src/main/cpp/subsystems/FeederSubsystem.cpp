@@ -11,15 +11,15 @@ void FeederSubsystem::Initialization()
   configs::TalonFXConfiguration backward_feeder_config{};
   backward_feeder_config.MotorOutput.Inverted = 1;
   /* slot0 PID槽*/
-  configs::Slot0Configs& backward_feeder_slot0 = backward_feeder_config.Slot0;
-  backward_feeder_slot0.kG = 0.;          // Gear ratio of 1:2, 0.5 rotations per rotor rotation
-  backward_feeder_slot0.kS = 0.12;        // Add 0.25 V output to overcome static friction
-  backward_feeder_slot0.kV = 0.12;        // A velocity target of 1 rps results in 0.12 V output
-  backward_feeder_slot0.kA = 0;           // An acceleration of 1 rps/s requires 0.01 V output
-  backward_feeder_slot0.kP = 0.03;        // A position error of 0.2 rotations results in 12 V output
-  backward_feeder_slot0.kI = 0;           // No output for integrated error
-  backward_feeder_slot0.kD = 0.;          // A velocity error of 1 rps results in 0.5 V output
-  backward_feeder_slot0.GravityType = 0;  // elevator重力补偿
+  configs::Slot0Configs &backward_feeder_slot0 = backward_feeder_config.Slot0;
+  backward_feeder_slot0.kG = 0.;         // Gear ratio of 1:2, 0.5 rotations per rotor rotation
+  backward_feeder_slot0.kS = 0.12;       // Add 0.25 V output to overcome static friction
+  backward_feeder_slot0.kV = 0.12;       // A velocity target of 1 rps results in 0.12 V output
+  backward_feeder_slot0.kA = 0;          // An acceleration of 1 rps/s requires 0.01 V output
+  backward_feeder_slot0.kP = 0.03;       // A position error of 0.2 rotations results in 12 V output
+  backward_feeder_slot0.kI = 0;          // No output for integrated error
+  backward_feeder_slot0.kD = 0.;         // A velocity error of 1 rps results in 0.5 V output
+  backward_feeder_slot0.GravityType = 0; // elevator重力补偿
 
   /* Retry config apply up to 5 times, report if failure */
   ctre::phoenix::StatusCode backward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
@@ -33,15 +33,15 @@ void FeederSubsystem::Initialization()
   configs::TalonFXConfiguration upward_feeder_config{};
   upward_feeder_config.MotorOutput.Inverted = 0;
   /* slot0 PID槽*/
-  configs::Slot0Configs& upward_feeder_slot0 = upward_feeder_config.Slot0;
-  upward_feeder_slot0.kG = 0.;          // Gear ratio of 1:2, 0.5 rotations per rotor rotation
-  upward_feeder_slot0.kS = 6;        // Add 0.25 V output to overcome static friction
+  configs::Slot0Configs &upward_feeder_slot0 = upward_feeder_config.Slot0;
+  upward_feeder_slot0.kG = 0.;         // Gear ratio of 1:2, 0.5 rotations per rotor rotation
+  upward_feeder_slot0.kS = 7;          // Add 0.25 V output to overcome static friction
   upward_feeder_slot0.kV = 0.1;        // A velocity target of 1 rps results in 0.12 V output
-  upward_feeder_slot0.kA = 2;           // An acceleration of 1 rps/s requires 0.01 V output
-  upward_feeder_slot0.kP = 1.5;        // A position error of 0.2 rotations results in 12 V output
-  upward_feeder_slot0.kI = 1.5;           // No output for integrated error
-  upward_feeder_slot0.kD = 0.;          // A velocity error of 1 rps results in 0.5 V output
-  upward_feeder_slot0.GravityType = 0;  // elevator重力补偿
+  upward_feeder_slot0.kA = 3;          // An acceleration of 1 rps/s requires 0.01 V output
+  upward_feeder_slot0.kP = 3.4;        // A position error of 0.2 rotations results in 12 V output
+  upward_feeder_slot0.kI = 1.5;        // No output for integrated error
+  upward_feeder_slot0.kD = 0.;         // A velocity error of 1 rps results in 0.5 V output
+  upward_feeder_slot0.GravityType = 0; // elevator重力补偿
 
   /* Retry config apply up to 5 times, report if failure */
   ctre::phoenix::StatusCode upward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
@@ -56,28 +56,32 @@ void FeederSubsystem::Initialization()
 void FeederSubsystem::Periodic()
 {
 
-backward_feeder_.Control();
-upward_feeder_.Control();
+  backward_feeder_.Control();
+  upward_feeder_.Control();
 }
 
 void FeederSubsystem::SetBackwardFeederVelocity(double duty)
 {
-  backward_feeder_.setNormalizedDutyCircle(duty);  // 使用占空比，范围-1到1
+  backward_feeder_.setNormalizedDutyCircle(duty); // 使用占空比，范围-1到1
+  // backward_feeder_.setVelocityTorqueCurrent(duty);
 }
 
 void FeederSubsystem::SetUpwardFeederVelocity(double duty)
 {
-  upward_feeder_.setNormalizedDutyCircle(duty);  // 使用占空比，范围-1到1
+  // upward_feeder_.setNormalizedDutyCircle(duty); // 使用占空比，范围-1到1
+  upward_feeder_.setvelocitytorquecurrent(duty);
 }
 
 frc2::CommandPtr FeederSubsystem::SetBackwardFeederVelocityCommandPtr(double velocity)
 {
-  return frc2::cmd::RunOnce([this, velocity] { SetBackwardFeederVelocity(velocity); });
+  return frc2::cmd::RunOnce([this, velocity]
+                            { SetBackwardFeederVelocity(velocity); });
 }
 
 frc2::CommandPtr FeederSubsystem::SetUpwardFeederVelocityCommandPtr(double velocity)
 {
-  return frc2::cmd::RunOnce([this, velocity] { SetUpwardFeederVelocity(velocity); });
+  return frc2::cmd::RunOnce([this, velocity]
+                            { SetUpwardFeederVelocity(velocity); });
 }
 
 double FeederSubsystem::GetBackwardFeederVelocity()

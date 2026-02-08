@@ -68,7 +68,9 @@ void ShooterSubsystem::Periodic()
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
 
-  frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm", linear_servo_left_target_mm_);
+  
+
+      frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm", linear_servo_left_target_mm_);
   frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm", linear_servo_right_target_mm_);
   shooter_right_.Control();
   shooter_left_back_.Control();

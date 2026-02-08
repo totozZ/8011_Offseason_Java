@@ -12,51 +12,51 @@ void Wayimotor::Control()
   // 电机控制
   switch (wayiconfig.mode)
   {
-    case 0:
-      motor.SetControl(brake);
-      break;
-    case 1:
-      wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
-      motor.SetControl(velocity.WithVelocity(wayiconfig.Veloutput));
-      break;
-    case 2:
-      wayiconfig.Posoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
-      motor.SetControl(position.WithPosition(wayiconfig.Posoutput));
-      break;
-    case 3:
-      wayiconfig.Curoutput = wayiconfig.targetCurrent * 1_A * wayiconfig.invert;
-      motor.SetControl(Torque.WithOutput(wayiconfig.Curoutput).WithMaxAbsDutyCycle(wayiconfig.Current_speed));
-      // frc::SmartDashboard::PutNumber("Climb I", m_climb.Getdata().targetCurrent);
-      break;
-    case 4:
-      wayiconfig.motionoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
-      motor.SetControl(motionmagic.WithPosition(wayiconfig.motionoutput));
-      break;
-    case 5:
-      wayiconfig.mmVeloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
-      motor.SetControl(motionmagicvelocity.WithVelocity(wayiconfig.mmVeloutput));
-      break;
-    case 6:
-      wayiconfig.DutyOutput =
-          wayiconfig.targetVelocity / wayiconfig.maxVelocity * 1.0 * wayiconfig.invert;  // 将目标速度转换为占空比
-      motor.SetControl(DutyCircle.WithOutput(wayiconfig.DutyOutput));                    // 设置占空比
-      break;
-    case 7:
-      wayiconfig.motionoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
-      motor.SetControl(mm_position.WithPosition(wayiconfig.motionoutput));
-      break;
-    case 8:
-      motor.SetControl(controls::Follower{ wayiconfig.followerId, wayiconfig.follow_invert });
-      break;
-    case 9:
-      wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
-      motor.SetControl(velocitytorquecurrent.WithVelocity(wayiconfig.Veloutput));
-      break;
-    default:
-      break;
+  case 0:
+    motor.SetControl(brake);
+    break;
+  case 1:
+    wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
+    motor.SetControl(velocity.WithVelocity(wayiconfig.Veloutput));
+    break;
+  case 2:
+    wayiconfig.Posoutput =
+        (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+    motor.SetControl(position.WithPosition(wayiconfig.Posoutput));
+    break;
+  case 3:
+    wayiconfig.Curoutput = wayiconfig.targetCurrent * 1_A * wayiconfig.invert;
+    motor.SetControl(Torque.WithOutput(wayiconfig.Curoutput).WithMaxAbsDutyCycle(wayiconfig.Current_speed));
+    // frc::SmartDashboard::PutNumber("Climb I", m_climb.Getdata().targetCurrent);
+    break;
+  case 4:
+    wayiconfig.motionoutput =
+        (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+    motor.SetControl(motionmagic.WithPosition(wayiconfig.motionoutput));
+    break;
+  case 5:
+    wayiconfig.mmVeloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
+    motor.SetControl(motionmagicvelocity.WithVelocity(wayiconfig.mmVeloutput));
+    break;
+  case 6:
+    wayiconfig.DutyOutput =
+        wayiconfig.targetVelocity / wayiconfig.maxVelocity * 1.0 * wayiconfig.invert; // 将目标速度转换为占空比
+    motor.SetControl(DutyCircle.WithOutput(wayiconfig.DutyOutput));                   // 设置占空比
+    break;
+  case 7:
+    wayiconfig.motionoutput =
+        (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+    motor.SetControl(mm_position.WithPosition(wayiconfig.motionoutput));
+    break;
+  case 8:
+    motor.SetControl(controls::Follower{wayiconfig.followerId, wayiconfig.follow_invert});
+    break;
+  case 9:
+    wayiconfig.Veloutput = wayiconfig.targetVelocity * wayiconfig.gearRatio * 1_tps * wayiconfig.invert;
+    motor.SetControl(velocitytorquecurrent.WithVelocity(wayiconfig.Veloutput));
+    break;
+  default:
+    break;
   }
 }
 
@@ -143,4 +143,11 @@ void Wayimotor::setNormalizedMotionPosition(double normalizedPos)
   setmode(7);
   wayiconfig.targetPosition =
       wayiconfig.normalizedPosition * (wayiconfig.maxPosition - wayiconfig.minPosition) + wayiconfig.minPosition;
+}
+
+void Wayimotor::setVelocityTorqueCurrent(double normalizedVel)
+{
+  wayiconfig.normalizedPosition = std::clamp(normalizedVel, -1.0, 1.0);
+  setmode(9);
+  wayiconfig.targetVelocity = wayiconfig.normalizedVelocity * wayiconfig.maxVelocity;
 }
