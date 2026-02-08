@@ -1,4 +1,4 @@
-// Copyright (c) FIRST and other WPILib contributors.
+﻿// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
@@ -14,8 +14,9 @@ RobotContainer::RobotContainer()
 
 {
   drivetrain.SetGPDetection(&gpdetection);
+  shooterSub.SetFeederSubsystem(&feederSub);
 
-  // 注册auto中events命令
+  // 娉ㄥ唽auto涓璭vents鍛戒护
   // EventTrigger("Reset").OnTrue(ResetTranslationCommand());
   autoChooser = pathplanner::AutoBuilder::buildAutoChooser("offseason_right");
   frc::SmartDashboard::PutData("Auto Mode", &autoChooser);
@@ -42,7 +43,7 @@ void RobotContainer::ConfigureBindings()
   joystick.A().WhileTrue(
       frc2::cmd::Sequence(
           frc2::cmd::RunOnce([this]
-                             { shooterSub.SetShootVelocity(39); }),
+                             { shooterSub.SetShootVelocity(42); }),
           frc2::WaitCommand(1_s).ToPtr(),
           frc2::cmd::Run([this]
                          {
@@ -53,16 +54,19 @@ void RobotContainer::ConfigureBindings()
             shooterSub.Stop();
             feederSub.Stop(); }));
 
-  joystick.B().WhileTrue(
-      frc2::cmd::StartEnd(
-          [this]
-          { shooterSub.SetShootVelocity(39); }, // 开始时执行
-          [this]
-          { shooterSub.Stop(); }, // 结束（松开）时执行
-          {&shooterSub}           // 关键：声明需求
-          ));
+  // joystick.B().WhileTrue(
+  //     frc2::cmd::StartEnd(
+  //         [this]
+  //         { shooterSub.SetShootVelocity(44
+  //         ); }, // 寮€濮嬫椂鎵ц
+  //         [this]
+  //         { shooterSub.Stop(); }, // 缁撴潫锛堟澗寮€锛夋椂鎵ц
+  //         {&shooterSub}           // 鍏抽敭锛氬０鏄庨渶姹?
+  //         ));
 
-  // //底盘 SysId】、【
+
+
+  // //搴曠洏 SysId銆戙€併€?
   // joystick.A().WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kForward));
   // joystick.B().WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
   // joystick.X().WhileTrue(drivetrain.SysIdDynamic(frc2::sysid::Direction::kForward));

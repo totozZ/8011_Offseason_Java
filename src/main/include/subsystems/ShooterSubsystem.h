@@ -18,6 +18,7 @@
 
 namespace subsystems
 {
+class FeederSubsystem;
 
 class ShooterSubsystem : public ExampleSubsystem
 {
@@ -27,6 +28,7 @@ public:
     Initialization();
   }
   void Periodic() override;
+  void SetFeederSubsystem(FeederSubsystem* feeder_subsystem);
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
   void SetShootVelocity(double velocity);
@@ -59,7 +61,7 @@ private:
                                                           LinearServoConstants::MaxPositionMm :
                                                           kLinearServoLengthMm;
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
-  static constexpr double kLinearServoInitialPositionMm = 100.0;
+  static constexpr double kLinearServoInitialPositionMm = 95.0;
 
   rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
   LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
@@ -73,7 +75,12 @@ private:
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
+  FeederSubsystem* feeder_sub_ = nullptr;
 
+  void CalculateShooterVelocity();
+  double shooter_velocity_target = 0.0;
+
+  void LinearServoControl();
   // SysId routine for shooter
   frc2::sysid::SysIdRoutine m_sysIdRoutine{
       frc2::sysid::Config{
