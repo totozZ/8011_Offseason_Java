@@ -237,15 +237,15 @@ inline constexpr double AdjustSpeed = 0.4;
 
 namespace FeederConstants
 {
-inline constexpr int BackwardFeederMotorID = 9;
-inline constexpr int UpwardFeederMotorID = 13;
+inline constexpr int BackwardFeederMotorID = 17;
+inline constexpr int UpwardFeederMotorID = 16;
 }  // namespace FeederConstants
 
 namespace ShooterConstants
 {
-inline constexpr int ShooterRightMotorID = 10;
-inline constexpr int ShooterLeftFrontMotorID = 11;
-inline constexpr int ShooterLeftBackMotorID = 12;
+inline constexpr int ShooterRightMotorID = 13;
+inline constexpr int ShooterLeftFrontMotorID = 14;
+inline constexpr int ShooterLeftBackMotorID = 15;
 
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
@@ -253,9 +253,15 @@ inline constexpr double TargetHeight = 1.8796;
 inline constexpr double ShooterHeight = 0.75;
 }  // namespace ShooterConstants
 
+namespace GroundIntakeConstants
+{
+inline constexpr int IntakeRollerMotorID = 18;
+inline constexpr int IntakePivotMotorID = 19;
+}  // namespace GroundIntakeConstants
+
 namespace LinearServoConstants
 {
 // 0-12.5 125-60
-//  70mm
+//  70mm  100mm
 inline constexpr double MaxPositionMm = 125.0;
 }  // namespace LinearServoConstants

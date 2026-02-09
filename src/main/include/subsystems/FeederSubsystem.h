@@ -28,6 +28,7 @@ public:
   frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
   void SetBackwardFeederVelocity(double velocity);
   void SetUpwardFeederVelocity(double velocity);
+  void SetUpwardDuty(double duty);
   double GetBackwardFeederVelocity();
   double GetUpwardFeederVelocity();
   void Stop();
@@ -40,12 +41,28 @@ public:
   {
     return m_sysIdRoutine.Dynamic(direction);
   }
+  
+  double GetComboTargetVelocity() const {
+    return combo_target_velocity_;
+  }
+  void ChangeComboTargetVelocity(double delta) {
+    combo_target_velocity_ = delta;
+  }
+
+  void SetUpperVelocityBANGBANG(double velocity);
+
+  frc2::CommandPtr SetUpperVelocityBANGBANGCommandPtr(double velocity);
+
+  void SetUpperVelocitycombo(double velocity);
 
 private:
   void Initialization();
+  static constexpr double kUpperVelocityReachTolerance = 1.0;
 
   Wayimotor backward_feeder_{ FeederConstants::BackwardFeederMotorID, kCANBus };
   Wayimotor upward_feeder_{ FeederConstants::UpwardFeederMotorID, kCANBus };
+  bool upper_velocity_reached_once_ = false;
+  double combo_target_velocity_ = 40.0;
 
   // SysId routine for feeder (测试backward_feeder)
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)

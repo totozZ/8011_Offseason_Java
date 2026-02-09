@@ -163,6 +163,7 @@ public:
   void setNormalizedMotionPosition(double normalizedPos);  // 0-1 MotionMagic位置控制
   void setNormalizedMotionVelocity(double normalizedVel);  // 0-1 MotionMagic速度控制
   void setNormalizedDutyCircle(double normalizedDuty);     // 0-1 占空比控制
+  void setVelocityTorqueCurrent(double normalizedVel);
 
   // 设置物理限制
   void setPhysicalLimits(double minPos, double maxPos, double maxVel, double maxCur)

@@ -68,8 +68,7 @@ void ShooterSubsystem::Initialization()
 
 void ShooterSubsystem::Periodic()
 {
-  pitch_.Receive();
-  pitch_.Control();
+
   shooter_left_.Receive();
   shooter_left_.Control();
   shooter_right_.Receive();

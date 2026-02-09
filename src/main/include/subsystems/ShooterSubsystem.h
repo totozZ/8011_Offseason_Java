@@ -18,6 +18,7 @@
 
 namespace subsystems
 {
+class FeederSubsystem;
 
 class ShooterSubsystem : public ExampleSubsystem
 {
@@ -27,6 +28,7 @@ public:
     Initialization();
   }
   void Periodic() override;
+  void SetFeederSubsystem(FeederSubsystem* feeder_subsystem);
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
   frc2::CommandPtr SetBangBangShootVelocityCommandPtr(double velocity);
@@ -59,18 +61,26 @@ private:
                                                           LinearServoConstants::MaxPositionMm :
                                                           kLinearServoLengthMm;
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
+  static constexpr double kLinearServoInitialPositionMm = 95.0;
 
   rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
-  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
-  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
-  double linear_servo_left_target_mm_ = 0.0;
-  double linear_servo_right_target_mm_ = 0.0;
+  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
+                                  kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm,
+                                   kLinearServoSpeedMmPerS };
+  double linear_servo_left_target_mm_ = kLinearServoInitialPositionMm;
+  double linear_servo_right_target_mm_ = kLinearServoInitialPositionMm;
   double last_servo_update_s_ = 0.0;
 
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
+  FeederSubsystem* feeder_sub_ = nullptr;
 
+  void CalculateShooterVelocity();
+  double shooter_velocity_target = 0.0;
+
+  void LinearServoControl();
   // SysId routine for shooter
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
                                                                  4_V,           // 动态电压
