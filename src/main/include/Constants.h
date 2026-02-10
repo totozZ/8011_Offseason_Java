@@ -246,6 +246,7 @@ namespace ShooterConstants
 inline constexpr int ShooterRightMotorID = 13;
 inline constexpr int ShooterLeftFrontMotorID = 14;
 inline constexpr int ShooterLeftBackMotorID = 15;
+inline constexpr double LinearServoInitialPositionMm = 95.0;
 
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
