@@ -31,7 +31,9 @@ public:
   void SetFeederSubsystem(FeederSubsystem* feeder_subsystem);
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
+  frc2::CommandPtr SetBangBangShootVelocityCommandPtr(double velocity);
   void SetShootVelocity(double velocity);
+  void SetBangBangShootVelocity(double velocity);
   double GetShootVelocity();
   void Stop();
 
@@ -52,10 +54,8 @@ private:
   void Initialization();
 
   static constexpr int kServoHubCanId = 3;
-  static constexpr auto kLinearServoLeftChannel =
-      rev::servohub::ServoChannel::ChannelId::kChannelId0;
-  static constexpr auto kLinearServoRightChannel =
-      rev::servohub::ServoChannel::ChannelId::kChannelId3;
+  static constexpr auto kLinearServoLeftChannel = rev::servohub::ServoChannel::ChannelId::kChannelId0;
+  static constexpr auto kLinearServoRightChannel = rev::servohub::ServoChannel::ChannelId::kChannelId3;
   static constexpr double kLinearServoLengthMm = 129.0;
   static constexpr double kLinearServoMaxPositionMm = (LinearServoConstants::MaxPositionMm < kLinearServoLengthMm) ?
                                                           LinearServoConstants::MaxPositionMm :
@@ -81,22 +81,19 @@ private:
 
   void LinearServoControl();
   // SysId routine for shooter
-  frc2::sysid::SysIdRoutine m_sysIdRoutine{
-      frc2::sysid::Config{
-          std::nullopt,  // 默认斜坡率 (1 V/s)
-          4_V,           // 动态电压
-          std::nullopt,  // 默认超时 (10 s)
-          nullptr },
-      frc2::sysid::Mechanism{
-          [this](units::volt_t output) { shooter_right_.setVoltage(output); },
-          [this](frc::sysid::SysIdRoutineLog* log) {
-            log->Motor("shooter")
-                .voltage(shooter_right_.Getmotor().GetMotorVoltage().GetValue())
-                .position(shooter_right_.Getmotor().GetPosition().GetValue())
-                .velocity(shooter_right_.Getmotor().GetVelocity().GetValue());
-          },
-          this }
-  };
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
+                                                                 4_V,           // 动态电压
+                                                                 std::nullopt,  // 默认超时 (10 s)
+                                                                 nullptr },
+                                            frc2::sysid::Mechanism{
+                                                [this](units::volt_t output) { shooter_right_.setVoltage(output); },
+                                                [this](frc::sysid::SysIdRoutineLog* log) {
+                                                  log->Motor("shooter")
+                                                      .voltage(shooter_right_.Getmotor().GetMotorVoltage().GetValue())
+                                                      .position(shooter_right_.Getmotor().GetPosition().GetValue())
+                                                      .velocity(shooter_right_.Getmotor().GetVelocity().GetValue());
+                                                },
+                                                this } };
 };
 
 }  // namespace subsystems

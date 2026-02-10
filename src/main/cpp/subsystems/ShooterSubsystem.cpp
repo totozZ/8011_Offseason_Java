@@ -19,11 +19,11 @@ void ShooterSubsystem::SetFeederSubsystem(FeederSubsystem* feeder_subsystem)
 
 void ShooterSubsystem::Initialization()
 {
-  
   configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0; 
+  shooter_right_config.MotorOutput.Inverted = 0;     // 不反转
+  shooter_right_config.MotorOutput.NeutralMode = 0;  // 刹车模式
 
-  // Slot0 PID 
+  // Slot0 PID
   configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
   shooter_right_slot0.kG = 0.;
   shooter_right_slot0.kS = 7;
@@ -33,7 +33,6 @@ void ShooterSubsystem::Initialization()
   shooter_right_slot0.kI = 0;
   shooter_right_slot0.kD = 0.;
   shooter_right_slot0.GravityType = 0;
-
 
   ctre::phoenix::StatusCode shooter_right_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i)
@@ -53,6 +52,25 @@ void ShooterSubsystem::Initialization()
 }
 void ShooterSubsystem::Periodic()
 {
+  double left_trigger = joystick_.GetLeftTriggerAxis();
+  double right_trigger = joystick_.GetRightTriggerAxis();
+  double now_s = frc::Timer::GetFPGATimestamp().value();
+  double dt_s = (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
+  last_servo_update_s_ = now_s;
+
+  double servo_command = left_trigger - right_trigger;
+  if (std::abs(servo_command) < 0.02)
+  {
+    servo_command = 0.0;
+  }
+
+  linear_servo_left_target_mm_ = std::clamp(
+      linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
+  linear_servo_right_target_mm_ = std::clamp(
+      linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
+
+  SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
+  SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
   shooter_right_.Control();
   shooter_left_back_.Control();
   shooter_left_front_.Control();
@@ -60,24 +78,19 @@ void ShooterSubsystem::Periodic()
   shooter_left_back_.Receive();
   shooter_left_front_.Receive();
 
-
-
   // 使用左右trigger控制电推杆
   LinearServoControl();
 
-
   CalculateShooterVelocity();
 
-  if (joystick_.B().Get()) {
+  if (joystick_.B().Get())
+  {
     SetShootVelocity(shooter_velocity_target);
   }
-  else {
+  else
+  {
     SetShootVelocity(0.0);
   }
-
-
-
-
 }
 
 void ShooterSubsystem::CalculateShooterVelocity()
@@ -87,23 +100,21 @@ void ShooterSubsystem::CalculateShooterVelocity()
   if (feeder_sub_ != nullptr)
   {
     feeder_upward_velocity = feeder_sub_->GetUpwardFeederVelocity();
-    feeder_upward_velocity_difference = -feeder_upward_velocity+ feeder_sub_->GetComboTargetVelocity();
-    if(feeder_upward_velocity_difference>10)
+    feeder_upward_velocity_difference = -feeder_upward_velocity + feeder_sub_->GetComboTargetVelocity();
+    if (feeder_upward_velocity_difference > 10)
     {
-      feeder_upward_velocity_difference=10;
+      feeder_upward_velocity_difference = 10;
     }
-    if(feeder_upward_velocity_difference<-10)
+    if (feeder_upward_velocity_difference < -10)
     {
-      feeder_upward_velocity_difference=-10;
+      feeder_upward_velocity_difference = -10;
     }
   }
   double shooter_velocity = GetShootVelocity();
-  shooter_velocity_target = 44+feeder_upward_velocity_difference; 
-
+  shooter_velocity_target = 44 + feeder_upward_velocity_difference;
 
   frc::SmartDashboard::PutNumber("shooter_feeder_upward_velocity", feeder_upward_velocity);
   frc::SmartDashboard::PutNumber("shooter_velocity_target", shooter_velocity_target);
-
 }
 
 void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm)
@@ -121,9 +132,19 @@ void ShooterSubsystem::SetShootVelocity(double velocity)
   shooter_right_.setvelocitytorquecurrent(velocity);  // 使用VelocityTorqueCurrentFOC
 }
 
+void ShooterSubsystem::SetBangBangShootVelocity(double velocity)
+{
+  shooter_right_.setBangBangVelocity(velocity, true);  // 使用BangBang控制
+}
+
 frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity)
 {
   return frc2::cmd::RunOnce([this, velocity] { SetShootVelocity(velocity); });
+}
+
+frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(double velocity)
+{
+  return frc2::cmd::RunOnce([this, velocity] { SetBangBangShootVelocity(velocity); });
 }
 
 double ShooterSubsystem::GetShootVelocity()
@@ -138,7 +159,6 @@ void ShooterSubsystem::Stop()
 
 void ShooterSubsystem::LinearServoControl()
 {
-
   double left_trigger = joystick_.GetLeftTriggerAxis();
   double right_trigger = joystick_.GetRightTriggerAxis();
   double now_s = frc::Timer::GetFPGATimestamp().value();
@@ -146,16 +166,15 @@ void ShooterSubsystem::LinearServoControl()
   last_servo_update_s_ = now_s;
 
   double servo_command = left_trigger - right_trigger;
-  if (std::abs(servo_command) < 0.02) {
+  if (std::abs(servo_command) < 0.02)
+  {
     servo_command = 0.0;
   }
 
-  linear_servo_left_target_mm_ =
-      std::clamp(linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
-                 kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ =
-      std::clamp(linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0,
-                 kLinearServoMaxPositionMm);
+  linear_servo_left_target_mm_ = std::clamp(
+      linear_servo_left_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
+  linear_servo_right_target_mm_ = std::clamp(
+      linear_servo_right_target_mm_ + servo_command * kLinearServoSpeedMmPerS * dt_s, 0.0, kLinearServoMaxPositionMm);
 
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
