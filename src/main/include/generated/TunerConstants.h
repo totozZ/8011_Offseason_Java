@@ -80,7 +80,7 @@ public:
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
-  static constexpr units::meters_per_second_t kSpeedAt12Volts = 0.00_mps;
+  static constexpr units::meters_per_second_t kSpeedAt12Volts = 4.0_mps;
 
 private:
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
@@ -89,7 +89,7 @@ private:
 
   static constexpr units::scalar_t kDriveGearRatio = 6.48;
   static constexpr units::scalar_t kSteerGearRatio = 12.1;
-  static constexpr units::inch_t kWheelRadius = 0_in;
+  static constexpr units::inch_t kWheelRadius = 2_in;
 
   static constexpr bool kInvertLeftSide = false;
   static constexpr bool kInvertRightSide = true;
