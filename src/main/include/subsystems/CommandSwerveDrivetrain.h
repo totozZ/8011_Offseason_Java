@@ -4,6 +4,7 @@
 #include <frc/Notifier.h>
 #include <frc/geometry/Translation2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/controller/PIDController.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
@@ -11,6 +12,9 @@
 #include <pathplanner/lib/commands/FollowPathCommand.h>
 #include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 #include <pathplanner/lib/path/PathPlannerPath.h>
+#include <units/math.h>
+#include <cmath>
+#include <functional>
 
 #include "Constants.h"
 #include "ctre/phoenix6/SignalLogger.hpp"
@@ -323,6 +327,19 @@ private:
     void ConfigureAutoBuilder();
     void StartSimThread();
 
+    // DriveAiming 成员
+    frc::PIDController m_driveAimingPID{
+        DriveAimingConstants::kPDriveAiming,
+        DriveAimingConstants::kIDriveAiming,
+        DriveAimingConstants::kDDriveAiming
+    };
+    swerve::requests::FieldCentric m_driveAimingRequest{};
+
+    // DriveAiming 方法
+    frc::Rotation2d CalculateTargetAngleToHub();
+    frc::Translation2d GetHubPosition();
+    static double NormalizeAngle(double angle);
+
     
   // 创建VR对象
   frc::Pose2d currentPose;
@@ -380,6 +397,19 @@ private:
 
 
   GPDetection *GetGPDetection() const { return gpdetection_; }
+
+  /**
+   * @brief 边移动边对准Hub
+   * @param xSupplier X方向速度 (-1.0 ~ 1.0)
+   * @param ySupplier Y方向速度 (-1.0 ~ 1.0)
+   * @param maxSpeed 最大速度
+   * @return frc2::CommandPtr
+   */
+  frc2::CommandPtr DriveAimingCommand(
+      std::function<double()> xSupplier,
+      std::function<double()> ySupplier,
+      units::meters_per_second_t maxSpeed
+  );
 };
 
 }

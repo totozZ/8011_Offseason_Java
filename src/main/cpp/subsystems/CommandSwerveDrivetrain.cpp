@@ -1,6 +1,8 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 
 #include <frc/RobotController.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include <frc2/command/Commands.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
 #include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 
@@ -593,6 +595,76 @@ std::shared_ptr<PathPlannerPath> CommandSwerveDrivetrain::GeneratePath(
       ));
 
   return path;
+}
+
+//DriveAiming实现
+
+frc2::CommandPtr CommandSwerveDrivetrain::DriveAimingCommand(
+    std::function<double()> xSupplier,
+    std::function<double()> ySupplier,
+    units::meters_per_second_t maxSpeed
+) {
+    return frc2::cmd::Run([this, xSupplier, ySupplier, maxSpeed] {
+        auto currentPose = GetState().Pose;
+        double currentYawDeg = currentPose.Rotation().Degrees().value();
+
+        auto targetAngle = CalculateTargetAngleToHub();
+        double targetYawDeg = targetAngle.Degrees().value();
+
+        double pidOutput = m_driveAimingPID.Calculate(currentYawDeg, targetYawDeg);
+
+        auto omega = units::radians_per_second_t{std::clamp(
+            pidOutput,
+            -DriveAimingConstants::MaxDriveAimingOmega.value(),
+            DriveAimingConstants::MaxDriveAimingOmega.value()
+        )};
+
+        SetControl(
+            m_driveAimingRequest
+                .WithVelocityX(xSupplier() * maxSpeed)
+                .WithVelocityY(ySupplier() * maxSpeed)
+                .WithRotationalRate(omega)
+        );
+
+       
+        frc::SmartDashboard::PutNumber("DriveAiming/TargetYawDeg", targetYawDeg);
+        frc::SmartDashboard::PutNumber("DriveAiming/CurrentYawDeg", currentYawDeg);
+        frc::SmartDashboard::PutNumber("DriveAiming/AngleErrorDeg", targetYawDeg - currentYawDeg);
+        frc::SmartDashboard::PutNumber("DriveAiming/OmegaRadPerSec", omega.value());
+        frc::SmartDashboard::PutBoolean("DriveAiming/OnTarget", m_driveAimingPID.AtSetpoint());
+    }, {this})
+    .BeforeStarting([this] {
+        m_driveAimingPID.Reset();
+        m_driveAimingPID.EnableContinuousInput(-180.0, 180.0);
+        m_driveAimingPID.SetTolerance(DriveAimingConstants::DriveAimingAngleTolerance);
+    })
+    .FinallyDo([this](bool) {
+        SetControl(swerve::requests::SwerveDriveBrake{});
+    });
+}
+
+frc::Rotation2d CommandSwerveDrivetrain::CalculateTargetAngleToHub() {
+    auto robotPose = GetState().Pose;
+    auto hubPos = GetHubPosition();
+
+    auto hub_robot_x = hubPos.X() - robotPose.X();
+    auto hub_robot_y = hubPos.Y() - robotPose.Y();
+
+    return frc::Rotation2d{units::math::atan2(hub_robot_y, hub_robot_x)};
+}
+
+frc::Translation2d CommandSwerveDrivetrain::GetHubPosition() {
+    auto alliance = frc::DriverStation::GetAlliance();
+    if (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed) {
+        return DriveAimingConstants::RedHubPosition;
+    }
+    return DriveAimingConstants::BlueHubPosition;
+}
+
+double CommandSwerveDrivetrain::NormalizeAngle(double angle) {
+    while (angle > 180.0) angle -= 360.0;
+    while (angle < -180.0) angle += 360.0;
+    return angle;
 }
 
 

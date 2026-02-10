@@ -86,6 +86,15 @@ void RobotContainer::ConfigureBindings()
 
   drivetrain.RegisterTelemetry([this](auto const &state)
                                { logger.Telemeterize(state); });
+
+
+  joystick.RightBumper().WhileTrue(
+      drivetrain.DriveAimingCommand(
+          [this]() { return -joystick.GetLeftY(); },
+          [this]() { return -joystick.GetLeftX(); },
+          MaxSpeed * 0.6
+      )
+  );
 }
 
 frc2::Command *RobotContainer::GetAutonomousCommand()

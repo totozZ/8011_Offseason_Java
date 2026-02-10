@@ -6,6 +6,8 @@
 
 #include <units/angle.h>
 #include <units/length.h>
+#include <frc/geometry/Translation2d.h>
+#include <units/angular_velocity.h>
 
 /**
  * The Constants header provides a convenient place for teams to hold robot-wide
@@ -266,3 +268,19 @@ namespace LinearServoConstants
 //  70mm  100mm
 inline constexpr double MaxPositionMm = 125.0;
 }  // namespace LinearServoConstants
+
+namespace DriveAimingConstants
+{
+//蓝方Hub坐标
+static constexpr frc::Translation2d BlueHubPosition{4.625467_m, 4.034536_m};
+static constexpr frc::Translation2d RedHubPosition{11.874533_m, 4.034536_m};
+
+//DriveAiming pid
+constexpr double kPDriveAiming = 0.2;
+constexpr double kIDriveAiming = 0.0;
+constexpr double kDDriveAiming = 0.01;
+
+//旋转限制
+static constexpr units::radians_per_second_t MaxDriveAimingOmega = 5.0_rad_per_s;
+constexpr double DriveAimingAngleTolerance = 0.5;  // 度
+}  // namespace DriveAimingConstants
