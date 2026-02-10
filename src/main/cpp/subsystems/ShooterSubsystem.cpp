@@ -117,6 +117,14 @@ void ShooterSubsystem::CalculateShooterVelocity()
   frc::SmartDashboard::PutNumber("shooter_velocity_target", shooter_velocity_target);
 }
 
+void ShooterSubsystem::CalculateLinearServoTarget()
+{
+  // pitch angle映射关系：
+  linear_servo_left_target_mm_ = sin((90 - shooter_pitch_angle_) * M_PI / 180) * 206.17 - 48.64858705;
+  linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
+  // shooter_pitch_angle_ = 90.0 - asin((linear_servo_left_target_mm_ + 48.64858705) / 206.17) * 180.0 /M_PI;
+}
+
 void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm)
 {
   linear_servo_left_.SetPositionMm(position_mm);

@@ -68,14 +68,15 @@ private:
   double linear_servo_left_target_mm_ = ShooterConstants::LinearServoInitialPositionMm;
   double linear_servo_right_target_mm_ = ShooterConstants::LinearServoInitialPositionMm;
   double last_servo_update_s_ = 0.0;
-
   Wayimotor shooter_left_front_{ ShooterConstants::ShooterLeftFrontMotorID, kCANBus };  // 发射左电机
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
   FeederSubsystem* feeder_sub_ = nullptr;
 
   void CalculateShooterVelocity();
+  void CalculateLinearServoTarget();
   double shooter_velocity_target = 0.0;
+  double shooter_pitch_angle_ = 0.0;  // 球出射角(出射向量跟水平面的夹角)
 
   void LinearServoControl();
   // SysId routine for shooter
@@ -94,4 +95,5 @@ private:
                                                 this } };
 };
 
+#define M_PI 3.14159265358979323846
 }  // namespace subsystems
