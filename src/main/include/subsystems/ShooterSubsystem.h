@@ -54,8 +54,8 @@ private:
   void Initialization();
 
   static constexpr int kServoHubCanId = 3;
-  static constexpr auto kLinearServoLeftChannel = rev::servohub::ServoChannel::ChannelId::kChannelId0;
-  static constexpr auto kLinearServoRightChannel = rev::servohub::ServoChannel::ChannelId::kChannelId3;
+  static constexpr auto kLinearServoLeftChannel = rev::servohub::ServoChannel::ChannelId::kChannelId3;
+  static constexpr auto kLinearServoRightChannel = rev::servohub::ServoChannel::ChannelId::kChannelId2;
   static constexpr double kLinearServoLengthMm = 129.0;
   static constexpr double kLinearServoMaxPositionMm = (LinearServoConstants::MaxPositionMm < kLinearServoLengthMm) ?
                                                           LinearServoConstants::MaxPositionMm :
@@ -63,10 +63,8 @@ private:
   static constexpr double kLinearServoSpeedMmPerS = 10.0;
 
   rev::servohub::ServoHub servo_hub_{ kServoHubCanId };
-  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm,
-                                  kLinearServoSpeedMmPerS };
-  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm,
-                                   kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_left_{ servo_hub_, kLinearServoLeftChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
+  LinearServo linear_servo_right_{ servo_hub_, kLinearServoRightChannel, kLinearServoLengthMm, kLinearServoSpeedMmPerS };
   double linear_servo_left_target_mm_ = ShooterConstants::LinearServoInitialPositionMm;
   double linear_servo_right_target_mm_ = ShooterConstants::LinearServoInitialPositionMm;
   double last_servo_update_s_ = 0.0;
