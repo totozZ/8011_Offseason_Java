@@ -15,7 +15,6 @@
 #include "frc8011/LEDSubsystem.h"
 namespace subsystems {
     class CommandSwerveDrivetrain;
-    class GPDetection;
 } // 前向声明
 namespace nt {
     class NetworkTable;
@@ -27,8 +26,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
  public:
 
     explicit VisionSubsystem(CommandSwerveDrivetrain* drivetrain_,
-                             LEDSubsystem* ledsub_,
-                             GPDetection* gpdetection_);
+                             LEDSubsystem* ledsub_);
 
   /**
    * Will be called periodically whenever the CommandScheduler runs.
@@ -42,7 +40,6 @@ class VisionSubsystem : public frc2::SubsystemBase {
   // 依赖的子系统
     CommandSwerveDrivetrain* drivetrain_;
     LEDSubsystem* ledsub_;
-    GPDetection* gpdetection_;
 
   // 当前机器人角速度
   double currentAngularVelocity_ = 0.0;

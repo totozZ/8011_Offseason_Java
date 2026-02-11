@@ -10,10 +10,9 @@
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
 RobotContainer::RobotContainer()
-    : visionSub(&drivetrain, &m_ledsubsystem, &gpdetection), shooterSub(joystick), feederSub(joystick), clientSub(&drivetrain), gpdetection("GPDetection", &drivetrain), complexcommand(&drivetrain, &visionSub)
+    : visionSub(&drivetrain, &m_ledsubsystem), shooterSub(joystick), feederSub(joystick), clientSub(&drivetrain), complexcommand(&drivetrain, &visionSub)
 
 {
-  drivetrain.SetGPDetection(&gpdetection);
   shooterSub.SetFeederSubsystem(&feederSub);
 
   // 娉ㄥ唽auto涓璭vents鍛戒护

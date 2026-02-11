@@ -4,8 +4,6 @@
 
 #include "subsystems/VisionSubsystem.h"
 
-#include "frc8011/GPDetection.h"
-
 #include <array>
 #include <cmath>
 #include <frc/DriverStation.h>
@@ -17,19 +15,14 @@
 using namespace subsystems;
 
 VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
-                                 LEDSubsystem* ledsub,
-                                 GPDetection* gpdetection)
+                                 LEDSubsystem* ledsub)
     : drivetrain_(drivetrain),
-    ledsub_(ledsub),
-      gpdetection_(gpdetection){  // 修改：m_drivetrain -> drivetrain_
+      ledsub_(ledsub) {
     if (!drivetrain_) {
         throw std::runtime_error("VisionSubsystem: drivetrain pointer cannot be null!");
     }
     if (!ledsub_) {
         throw std::runtime_error("VisionSubsystem: visionSub pointer cannot be null!");
-    }
-    if (!gpdetection_) {
-        throw std::runtime_error("VisionSubsystem: gpdetection pointer cannot be null!");
     }
 
     vision_table_ = nt::NetworkTableInstance::GetDefault().GetTable("Vision");
@@ -142,9 +135,9 @@ void VisionSubsystem::UpdateVisionMode() {
     UpdateAngularVelocity();
     
     // 设置当前 IMU 模式
-    // currentIMUMode = frc::DriverStation::IsDisabled()
-    //                      ? LimelightIMUMode::SeedingMode
-    //                      : LimelightIMUMode::FusedIMU;
+    currentIMUMode = frc::DriverStation::IsDisabled()
+                         ? LimelightIMUMode::SeedingMode
+                         : LimelightIMUMode::FusedIMU;
     SetLimelightIMUMode(limelight_left_name_, currentIMUMode);
     frc::SmartDashboard::PutNumber("limelight_imu_mode",
                                    static_cast<int>(currentIMUMode));
@@ -160,9 +153,9 @@ void VisionSubsystem::UpdateVisionMode() {
     mt2_left_pose_ = mt2_left_optional.value_or(LimelightHelpers::PoseEstimate{});
 
 
-    if(mt1_left_optional.has_value()) {
-    Test(mt1_left_pose_, mt2_left_pose_.pose);
-  }
+  //   if(mt1_left_optional.has_value()) {
+  //   Test(mt1_left_pose_, mt2_left_pose_.pose);
+  // }
 
     UpdateVisionMode();
 
