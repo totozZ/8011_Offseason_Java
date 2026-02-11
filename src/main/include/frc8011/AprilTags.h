@@ -31,7 +31,7 @@ private:
 
 public:
     AprilTags(){
-        table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-left");
+        table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-front");
         botPose = {0,0,0,0,0,0};
         flag_vision = 0;
         Angle_0 = 0;

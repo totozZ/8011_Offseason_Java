@@ -31,7 +31,7 @@ void Robot::DisabledExit() {}
 
 void Robot::AutonomousInit() {
   nt::NetworkTableInstance::GetDefault()
-      .GetTable("limelight-left")
+      .GetTable("limelight-front")
       ->PutNumber("throttle_set", 0);
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
@@ -51,7 +51,7 @@ void Robot::AutonomousExit() {}
 
 void Robot::TeleopInit() {
   nt::NetworkTableInstance::GetDefault()
-      .GetTable("limelight-left")
+      .GetTable("limelight-front")
       ->PutNumber("throttle_set", 0);
 
   m_container.clientSub.PubRobotInit(1);

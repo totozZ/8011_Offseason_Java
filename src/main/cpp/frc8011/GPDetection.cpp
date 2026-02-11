@@ -15,7 +15,7 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 
 namespace {
-constexpr const char kLimelightTableName[] = "limelight-back";
+constexpr const char kLimelightTableName[] = "limelight-front";
 constexpr double kPi = 3.14159265358979323846;
 constexpr double kDegToRad = kPi / 180.0;
 constexpr int kMedianWindowSize = 5;
