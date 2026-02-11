@@ -4,7 +4,6 @@
 #include <frc/Notifier.h>
 #include <frc/geometry/Translation2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
-#include <frc/controller/PIDController.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
@@ -328,12 +327,7 @@ private:
     void StartSimThread();
 
     // DriveAiming 成员
-    frc::PIDController m_driveAimingPID{
-        DriveAimingConstants::kPDriveAiming,
-        DriveAimingConstants::kIDriveAiming,
-        DriveAimingConstants::kDDriveAiming
-    };
-    swerve::requests::FieldCentric m_driveAimingRequest{};
+    swerve::requests::FieldCentricFacingAngle m_driveAimingRequest{};
 
     // DriveAiming 方法
     frc::Rotation2d CalculateTargetAngleToHub();

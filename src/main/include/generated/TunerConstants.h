@@ -23,9 +23,9 @@ class TunerConstants
   // SwerveModuleConstants::SteerMotorClosedLoopOutput
   static constexpr configs::Slot0Configs steerGains =
       configs::Slot0Configs{}
-          .WithKP(100)
+          .WithKP(80)
           .WithKI(0)
-          .WithKD(0.5)
+          .WithKD(0)
           .WithKS(0.1)
           .WithKV(1.16)
           .WithKA(0)

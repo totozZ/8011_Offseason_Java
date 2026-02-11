@@ -16,7 +16,6 @@ void Robot::RobotPeriodic() {
   m_timeAndJoystickReplay.Update();
   frc2::CommandScheduler::GetInstance().Run();
 
-
 }
 
 void Robot::DisabledInit() {
