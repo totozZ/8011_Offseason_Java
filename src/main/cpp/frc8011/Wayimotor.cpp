@@ -1,4 +1,5 @@
 #include "frc8011/Wayimotor.h"
+#include <algorithm>
 #include <frc/RobotBase.h>
 
 void Wayimotor::Control()
@@ -170,7 +171,7 @@ void Wayimotor::setNormalizedMotionPosition(double normalizedPos)
 
 void Wayimotor::setVelocityTorqueCurrent(double normalizedVel)
 {
-  wayiconfig.normalizedPosition = std::clamp(normalizedVel, -1.0, 1.0);
+  wayiconfig.normalizedVelocity = std::clamp(normalizedVel, -1.0, 1.0);
   setmode(9);
   wayiconfig.targetVelocity = wayiconfig.normalizedVelocity * wayiconfig.maxVelocity;
 }

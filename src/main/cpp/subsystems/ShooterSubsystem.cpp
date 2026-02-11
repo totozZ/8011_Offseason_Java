@@ -83,13 +83,39 @@ void ShooterSubsystem::Periodic()
 
   CalculateShooterVelocity();
 
-  if (joystick_.B().Get())
+  //射击
+  double now_shoot = frc::Timer::GetFPGATimestamp().value();
+  if (joystick_.A().Get())
   {
-    SetShootVelocity(shooter_velocity_target);
+    if (!is_shooting_)
+    {
+      
+      shoot_start_time_ = now_shoot;
+      is_shooting_ = true;
+    }
+
+   
+    SetShootVelocity(0);
+
+  //设置超过1s启动feeder
+    if (now_shoot - shoot_start_time_ >= 1.0 && feeder_sub_ != nullptr)
+    {
+      feeder_sub_->SetBackwardFeederVelocity(0.54);
+      feeder_sub_->SetUpwardFeederVelocity(0.4);
+    }
   }
   else
   {
-    SetShootVelocity(0.0);
+    if (is_shooting_)
+    {
+      // A键松开，停止所有
+      SetShootVelocity(0.0);
+      if (feeder_sub_ != nullptr)
+      {
+        feeder_sub_->Stop();
+      }
+      is_shooting_ = false;
+    }
   }
 }
 

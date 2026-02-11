@@ -276,9 +276,9 @@ static constexpr frc::Translation2d BlueHubPosition{4.625467_m, 4.034536_m};
 static constexpr frc::Translation2d RedHubPosition{11.874533_m, 4.034536_m};
 
 //DriveAiming pid
-constexpr double kPDriveAiming = 0.2;
+constexpr double kPDriveAiming = 0.135;
 constexpr double kIDriveAiming = 0.0;
-constexpr double kDDriveAiming = 0.01;
+constexpr double kDDriveAiming = 0.0;
 
 //旋转限制
 static constexpr units::radians_per_second_t MaxDriveAimingOmega = 5.0_rad_per_s;

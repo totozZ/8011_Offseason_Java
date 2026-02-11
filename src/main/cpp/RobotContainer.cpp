@@ -40,20 +40,6 @@ void RobotContainer::ConfigureBindings()
     useClosedLoop = !useClosedLoop;
     frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop); }));
 
-  joystick.A().WhileTrue(
-      frc2::cmd::Sequence(
-          frc2::cmd::RunOnce([this]
-                             { shooterSub.SetShootVelocity(42); }),
-          frc2::WaitCommand(1_s).ToPtr(),
-          frc2::cmd::Run([this]
-                         {
-            feederSub.SetBackwardFeederVelocity(0.54);
-            feederSub.SetUpwardFeederVelocity(40); }))
-          .FinallyDo([this]
-                     {
-            shooterSub.Stop();
-            feederSub.Stop(); }));
-
   // joystick.B().WhileTrue(
   //     frc2::cmd::StartEnd(
   //         [this]

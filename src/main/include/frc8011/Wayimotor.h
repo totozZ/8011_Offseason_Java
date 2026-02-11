@@ -217,10 +217,9 @@ public:
     wayiconfig.targetVelocity = targetVelocity;
   }  // 设置motionmagic速度
 
-  void setvelocitytorquecurrent(double targetVelocity)
+  void setvelocitytorquecurrent(double normalizedVel)
   {
-    setmode(9);
-    wayiconfig.targetVelocity = targetVelocity;
+    setVelocityTorqueCurrent(normalizedVel);
   }  // 设置速度电流FOC控制
 
   void setVoltage(units::volt_t voltage)

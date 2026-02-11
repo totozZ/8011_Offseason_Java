@@ -86,7 +86,7 @@ void FeederSubsystem::SetBackwardFeederVelocity(double duty)
 
 void FeederSubsystem::SetUpwardFeederVelocity(double duty)
 {
-  // upward_feeder_.setvelocitytorquecurrent(duty); // 浣跨敤鍗犵┖姣旓紝鑼冨洿-1鍒?
+  // upward_feeder_.setNormalizedDutyCircle(duty);
   upward_feeder_.setvelocitytorquecurrent(duty);
 }
 

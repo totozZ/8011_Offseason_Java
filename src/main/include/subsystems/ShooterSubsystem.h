@@ -79,6 +79,10 @@ private:
   double shooter_pitch_angle_ = 0.0;  // 球出射角(出射向量跟水平面的夹角)
 
   void LinearServoControl();
+
+  double shoot_start_time_ = 0.0;
+  bool is_shooting_ = false;
+
   // SysId routine for shooter
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
                                                                  4_V,           // 动态电压
