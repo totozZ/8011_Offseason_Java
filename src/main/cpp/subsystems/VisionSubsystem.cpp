@@ -112,26 +112,42 @@ bool VisionSubsystem::ShouldRejectMetatagPose(const LimelightHelpers::PoseEstima
 }
 
 void VisionSubsystem::UpdateVisionMode() {
-    
-  // 检查 mt2 数据有效性
+  if (vision_table_) {
+    // Keep publishers alive for the whole robot runtime.
+    static auto mt1_timestamp_pub =
+        vision_table_->GetDoubleTopic("MT1TimestampSec").Publish();
+    static auto mt2_timestamp_pub =
+        vision_table_->GetDoubleTopic("MT2TimestampSec").Publish();
+    static auto mt12_delta_pub =
+        vision_table_->GetDoubleTopic("MT12TimestampDeltaSec").Publish();
+    static auto mt1_pose_pub =
+        vision_table_->GetStructTopic<frc::Pose2d>("MT1Pose").Publish();
+    static auto mt2_pose_pub =
+        vision_table_->GetStructTopic<frc::Pose2d>("MT2Pose").Publish();
+
+    const double mt1_timestamp_s = mt1_left_pose_.timestampSeconds.value();
+    const double mt2_timestamp_s = mt2_left_pose_.timestampSeconds.value();
+    mt1_timestamp_pub.Set(mt1_timestamp_s);
+    mt2_timestamp_pub.Set(mt2_timestamp_s);
+    mt12_delta_pub.Set(mt2_timestamp_s - mt1_timestamp_s);
+    mt1_pose_pub.Set(mt1_left_pose_.pose);
+    mt2_pose_pub.Set(mt2_left_pose_.pose);
+  }
+
   if (ShouldRejectMetatagPose(mt2_left_pose_)) {
-    vision_mode_ = 0;  // 视觉不通过
+    vision_mode_ = 0;
     return;
   }
 
-  // 检查混合模式条件
   if (mt2_left_pose_.rawFiducials[0].distToCamera < switch_distance_ &&
       !ShouldRejectMetatagPose(mt1_left_pose_)) {
-    vision_mode_ = 2;  // 混合模式
+    vision_mode_ = 2;
   } else {
-    vision_mode_ = 1;  // 仅使用 mt2
+    vision_mode_ = 1;
   }
-      
-
 }
 
-
-  void VisionSubsystem::LimelightMeasurement() {
+void VisionSubsystem::LimelightMeasurement() {
     UpdateAngularVelocity();
     
     // 设置当前 IMU 模式
@@ -276,10 +292,6 @@ void VisionSubsystem::Test(LimelightHelpers::PoseEstimate mt1, frc::Pose2d mt2) 
       "pigeon_yaw",
       drivetrain_->GetcurrentPose().Rotation().Degrees().value());
 
-  if (vision_table_) {
-    vision_table_->GetStructTopic<frc::Pose2d>("MT2Pose").Publish().Set(mt2);
-    vision_table_->GetStructTopic<frc::Pose2d>("MT1Pose").Publish().Set(mt1_left_pose_.pose);
-
-  }
+  (void)mt2;
 }
 

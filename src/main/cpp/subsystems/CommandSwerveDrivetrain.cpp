@@ -90,7 +90,7 @@ void CommandSwerveDrivetrain::Periodic() {
                           GetState().Pose.Translation().Y().value(),
                           GetState().Pose.Rotation().Degrees().value()});
 
-  auto& modules = GetModules();
+  auto modules = GetModules();
   for (size_t i = 0; i < modules.size(); ++i) {
     const std::string modulePrefix = "Swerve/Module" + std::to_string(i);
     frc::SmartDashboard::PutNumber(
