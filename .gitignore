@@ -141,6 +141,8 @@ $RECYCLE.BIN/
 
 # Ignore Gradle GUI config
 gradle-app.setting
+gradle.properties
+/gradle.properties
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
@@ -189,3 +191,6 @@ compile_commands.json
 # Codex agent artifacts
 AGENTS.md
 agent/
+
+# Local scripts
+scripts/

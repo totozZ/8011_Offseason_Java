@@ -25,16 +25,24 @@ public:
   void Periodic() override;
   void SetRollerVelocity(double velocity);
   void SetRollerDutyCycle(double dutyCycle);
-  void SetPivotPosition(double position);
+  frc2::CommandPtr SetRollerDutyCycleCommandPtr(double dutyCycle);
+  void SetPitchPosition(double position);
   void Stop();
 
+  void SetPitchNormPosition(double norm);
+
+  frc2::CommandPtr SetPitchNormPositionCommandPtr(double norm);
 private:
   void Initialization();
 
   // Intake roller (spin to intake/eject game pieces).
   Wayimotor intake_roller_{ GroundIntakeConstants::IntakeRollerMotorID, kCANBus };
-  // Intake pivot (position-loop for intake arm angle).
-  Wayimotor intake_pivot_{ GroundIntakeConstants::IntakePivotMotorID, kCANBus };
+  // Intake pitch (position-loop for intake arm angle).
+  Wayimotor intake_pitch_{ GroundIntakeConstants::IntakePivotMotorID, kCANBus };
+  
+  void GroundIntakeReset();
+
+  
 };
 
 }  // namespace subsystems

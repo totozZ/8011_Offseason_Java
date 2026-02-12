@@ -1,6 +1,7 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 
 #include <frc/RobotController.h>
+#include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/Commands.h>
 #include <pathplanner/lib/auto/AutoBuilder.h>
@@ -58,6 +59,19 @@ void CommandSwerveDrivetrain::ConfigureAutoBuilder() {
 }
 
 void CommandSwerveDrivetrain::Periodic() {
+  static constexpr double kPeriodicOverrunMs = 5.0;
+  static int periodic_overrun_count = 0;
+  static double periodic_ms_max = 0.0;
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
+  const double t_start_s = frc::Timer::GetFPGATimestamp().value();
+  const bool publish_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((t_start_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (publish_debug) {
+    last_debug_publish_s = t_start_s;
+  }
+
   /*
    * Periodically try to apply the operator perspective.
    * If we haven't applied the operator perspective before, then we should apply
@@ -84,32 +98,45 @@ void CommandSwerveDrivetrain::Periodic() {
   currentPose = GetState().Pose;
 
   // 打印当前里程计位�?
-  frc::SmartDashboard::PutNumberArray(
-      "CurrentPose_code",
-      std::vector<double>{GetState().Pose.Translation().X().value(),
-                          GetState().Pose.Translation().Y().value(),
-                          GetState().Pose.Rotation().Degrees().value()});
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumberArray(
+        "CurrentPose_code",
+        std::vector<double>{GetState().Pose.Translation().X().value(),
+                            GetState().Pose.Translation().Y().value(),
+                            GetState().Pose.Rotation().Degrees().value()});
 
-  auto modules = GetModules();
-  for (size_t i = 0; i < modules.size(); ++i) {
-    const std::string modulePrefix = "Swerve/Module" + std::to_string(i);
-    frc::SmartDashboard::PutNumber(
-        modulePrefix + "/Drive/SupplyCurrent",
-        modules[i]->GetDriveMotor().GetSupplyCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber(
-        modulePrefix + "/Drive/TorqueCurrent",
-        modules[i]->GetDriveMotor().GetTorqueCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber(
-        modulePrefix + "/Steer/SupplyCurrent",
-        modules[i]->GetSteerMotor().GetSupplyCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber(
-        modulePrefix + "/Steer/TorqueCurrent",
-        modules[i]->GetSteerMotor().GetTorqueCurrent().GetValue().value());
+    auto modules = GetModules();
+    for (size_t i = 0; i < modules.size(); ++i) {
+      const std::string modulePrefix = "Swerve/Module" + std::to_string(i);
+      frc::SmartDashboard::PutNumber(
+          modulePrefix + "/Drive/SupplyCurrent",
+          modules[i]->GetDriveMotor().GetSupplyCurrent().GetValue().value());
+      frc::SmartDashboard::PutNumber(
+          modulePrefix + "/Drive/TorqueCurrent",
+          modules[i]->GetDriveMotor().GetTorqueCurrent().GetValue().value());
+      frc::SmartDashboard::PutNumber(
+          modulePrefix + "/Steer/SupplyCurrent",
+          modules[i]->GetSteerMotor().GetSupplyCurrent().GetValue().value());
+      frc::SmartDashboard::PutNumber(
+          modulePrefix + "/Steer/TorqueCurrent",
+          modules[i]->GetSteerMotor().GetTorqueCurrent().GetValue().value());
+    }
+    frc::SmartDashboard::PutNumber("eventflag", eventflag);
   }
-
   // gene_path = GeneratePath(frc::Pose2d{1_m, 1_m, frc::Rotation2d{90_deg}});
 
-  frc::SmartDashboard::PutNumber("eventflag", eventflag);
+  const double periodic_ms =
+      (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
+  if (periodic_ms > periodic_ms_max) {
+    periodic_ms_max = periodic_ms;
+  }
+  if (periodic_ms > kPeriodicOverrunMs) {
+    ++periodic_overrun_count;
+  }
+  frc::SmartDashboard::PutNumber("Perf/DrivetrainPeriodicMs", periodic_ms);
+  frc::SmartDashboard::PutNumber("Perf/DrivetrainPeriodicMsMax", periodic_ms_max);
+  frc::SmartDashboard::PutNumber("Perf/DrivetrainPeriodicOverrunCount",
+                                 periodic_overrun_count);
 };
 
 void CommandSwerveDrivetrain::StartSimThread() {

@@ -22,7 +22,9 @@ void Wayimotor::Control()
       break;
     case 2:
       wayiconfig.Posoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+          (wayiconfig.targetPosition * wayiconfig.gearRatio * wayiconfig.invert +
+           wayiconfig.offset) *
+          1_tr;
       motor.SetControl(position.WithPosition(wayiconfig.Posoutput));
       break;
     case 3:
@@ -32,7 +34,9 @@ void Wayimotor::Control()
       break;
     case 4:
       wayiconfig.motionoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+          (wayiconfig.targetPosition * wayiconfig.gearRatio * wayiconfig.invert +
+           wayiconfig.offset) *
+          1_tr;
       motor.SetControl(motionmagic.WithPosition(wayiconfig.motionoutput));
       break;
     case 5:
@@ -46,7 +50,9 @@ void Wayimotor::Control()
       break;
     case 7:
       wayiconfig.motionoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+          (wayiconfig.targetPosition * wayiconfig.gearRatio * wayiconfig.invert +
+           wayiconfig.offset) *
+          1_tr;
       motor.SetControl(mm_position.WithPosition(wayiconfig.motionoutput));
       break;
     case 8:
@@ -81,7 +87,9 @@ void Wayimotor::Control()
     break;
     case 12:
       wayiconfig.Posoutput =
-          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+          (wayiconfig.targetPosition * wayiconfig.gearRatio * wayiconfig.invert +
+           wayiconfig.offset) *
+          1_tr;
       motor.SetControl(positionDutyCycle.WithPosition(wayiconfig.Posoutput));
       break;
     default:
@@ -112,7 +120,7 @@ void Wayimotor::Receive()
 void Wayimotor::Reset(double _offset)
 {
   wayiconfig.offset = _offset;
-  setposition(0);
+  setmode(0);
 }
 
 void Wayimotor::setNormalizedVelocity(double normalizedVel)

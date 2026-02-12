@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "ctre/phoenix6/HootAutoReplay.hpp"
-
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/TimedRobot.h>
 #include <frc2/command/CommandPtr.h>
@@ -39,9 +37,4 @@ private:
 
     RobotContainer m_container;
     frc::Field2d m_simField;
-
-    /* log and replay timestamp and joystick data */
-    ctre::phoenix6::HootAutoReplay m_timeAndJoystickReplay = ctre::phoenix6::HootAutoReplay{}
-        .WithTimestampReplay()
-        .WithJoystickReplay();
 };

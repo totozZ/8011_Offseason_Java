@@ -15,7 +15,6 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/FeederSubsystem.h"
 #include "subsystems/GroundIntakeSubsystem.h"
-#include "frc8011/LEDSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
 
@@ -38,11 +37,11 @@ private:
                                                    .WithSteerRequestType(swerve::SteerRequestType::Position);
 
   bool useClosedLoop = false;
+  bool ground_intake_prepared_ = false;
 
   Telemetry logger{ MaxSpeed };
 
   frc2::CommandXboxController joystick{ 0 };
-  LEDSubsystem m_ledsubsystem;
 
 public:
   subsystems::CommandSwerveDrivetrain drivetrain{ TunerConstants::CreateDrivetrain() };

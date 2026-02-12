@@ -5,6 +5,7 @@
 #include "subsystems/FeederSubsystem.h"
 
 #include <cmath>
+#include <frc/Timer.h>
 
 using namespace subsystems;
 
@@ -59,6 +60,10 @@ void FeederSubsystem::Initialization()
 
 void FeederSubsystem::Periodic()
 {
+  static constexpr double kPeriodicOverrunMs = 5.0;
+  static int periodic_overrun_count = 0;
+  static double periodic_ms_max = 0.0;
+  const double t_start_s = frc::Timer::GetFPGATimestamp().value();
 
   backward_feeder_.Control();
   upward_feeder_.Control();
@@ -68,14 +73,28 @@ void FeederSubsystem::Periodic()
 
 
 
-  if (joystick_.X().Get())
-  {
-  SetUpperVelocitycombo(combo_target_velocity_);
-  }
-  else
-  {
+  const bool x_pressed = joystick_.X().Get();
+  if (x_pressed) {
+    SetUpperVelocitycombo(combo_target_velocity_);
+    x_combo_was_active_ = true;
+  } else if (x_combo_was_active_) {
+    // Only stop once when exiting X-hold mode, do not override other commands.
     Stop();
+    x_combo_was_active_ = false;
   }
+
+  const double periodic_ms =
+      (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
+  if (periodic_ms > periodic_ms_max) {
+    periodic_ms_max = periodic_ms;
+  }
+  if (periodic_ms > kPeriodicOverrunMs) {
+    ++periodic_overrun_count;
+  }
+  frc::SmartDashboard::PutNumber("Perf/FeederPeriodicMs", periodic_ms);
+  frc::SmartDashboard::PutNumber("Perf/FeederPeriodicMsMax", periodic_ms_max);
+  frc::SmartDashboard::PutNumber("Perf/FeederPeriodicOverrunCount",
+                                 periodic_overrun_count);
 }
 
 void FeederSubsystem::SetBackwardFeederVelocity(double duty)
@@ -84,10 +103,20 @@ void FeederSubsystem::SetBackwardFeederVelocity(double duty)
   // backward_feeder_.setVelocityTorqueCurrent(duty);
 }
 
+void FeederSubsystem::SetBackwardFeederDuty(double duty) {
+  backward_feeder_.setNormalizedDutyCircle(duty);
+}
+
 void FeederSubsystem::SetUpwardFeederVelocity(double duty)
 {
   // upward_feeder_.setNormalizedDutyCircle(duty);
   upward_feeder_.setvelocitytorquecurrent(duty);
+}
+
+void FeederSubsystem::SetUpwardFeederCurrent(double current,
+                                             double max_abs_duty_cycle) {
+  upward_feeder_.setCurrent_Speed(max_abs_duty_cycle);
+  upward_feeder_.setcurrent(current);
 }
 
 frc2::CommandPtr FeederSubsystem::SetBackwardFeederVelocityCommandPtr(double velocity)
@@ -112,6 +141,10 @@ double FeederSubsystem::GetUpwardFeederVelocity()
   return upward_feeder_.Getdata().currentVelocity;
 }
 
+double FeederSubsystem::GetUpwardFeederCurrent() {
+  return upward_feeder_.Getdata().currentCurrent;
+}
+
 void FeederSubsystem::Stop()
 {
   SetBackwardFeederVelocity(0.);
@@ -127,16 +160,28 @@ void FeederSubsystem::SetUpwardDuty(double duty)
 
 void FeederSubsystem::SetUpperVelocityBANGBANG(double velocity)
 {
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
+  const double now_s = frc::Timer::GetFPGATimestamp().value();
+  const bool publish_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (publish_debug) {
+    last_debug_publish_s = now_s;
+  }
+
   double current_velocity = GetUpwardFeederVelocity();
-  frc::SmartDashboard::PutNumber("Feeder Upward Velocity", current_velocity);
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumber("Feeder Upward Velocity", current_velocity);
+  }
 
   if (current_velocity < velocity)
   {
-    SetUpwardDuty(1.0); // 鍏ㄩ€熷墠杩?
+    SetUpwardDuty(1.0); // 全速
   }
   else
   {
-    SetUpwardDuty(0.0); // 鍋滄
+    SetUpwardDuty(0.0); // 停
   }
 }
 
@@ -146,9 +191,30 @@ frc2::CommandPtr FeederSubsystem::SetUpperVelocityBANGBANGCommandPtr(double velo
                             { SetUpperVelocityBANGBANG(velocity); });
 }
 
+frc2::CommandPtr FeederSubsystem::SetBackwardFeederDutyCommandPtr(double duty) {
+  return frc2::cmd::RunOnce([this, duty] { SetBackwardFeederDuty(duty); });
+}
+
+frc2::CommandPtr FeederSubsystem::SetUpwardFeederCurrentCommandPtr(
+    double current, double max_abs_duty_cycle) {
+  return frc2::cmd::RunOnce([this, current, max_abs_duty_cycle] {
+    SetUpwardFeederCurrent(current, max_abs_duty_cycle);
+  });
+}
+
 
 void FeederSubsystem::SetUpperVelocitycombo(double velocity)
 {
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
+  const double now_s = frc::Timer::GetFPGATimestamp().value();
+  const bool publish_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (publish_debug) {
+    last_debug_publish_s = now_s;
+  }
+
   if (velocity <= 0.0)
   {
     SetUpwardFeederVelocity(0.0);
@@ -164,9 +230,13 @@ void FeederSubsystem::SetUpperVelocitycombo(double velocity)
   }
 
   const double current_velocity = GetUpwardFeederVelocity();
-  frc::SmartDashboard::PutNumber("Feeder Combo Target Velocity", velocity);
-  frc::SmartDashboard::PutNumber("Feeder Combo ReachedOnce", upper_velocity_reached_once_);
-  frc::SmartDashboard::PutNumber("Feeder Combo current Velocity", current_velocity);
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumber("Feeder Combo Target Velocity", velocity);
+    frc::SmartDashboard::PutNumber("Feeder Combo ReachedOnce",
+                                   upper_velocity_reached_once_);
+    frc::SmartDashboard::PutNumber("Feeder Combo current Velocity",
+                                   current_velocity);
+  }
 
   if (!upper_velocity_reached_once_)
   {
@@ -180,6 +250,19 @@ void FeederSubsystem::SetUpperVelocitycombo(double velocity)
 
   // Reached once: hold by FOC velocity control.
   SetUpwardFeederVelocity(velocity);
-  frc::SmartDashboard::PutNumber("targetvelocity", upward_feeder_.Getdata().targetVelocity);
-  frc::SmartDashboard::PutNumber("Veloutput", upward_feeder_.Getdata().Veloutput.value());
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumber("targetvelocity",
+                                   upward_feeder_.Getdata().targetVelocity);
+    frc::SmartDashboard::PutNumber("Veloutput",
+                                   upward_feeder_.Getdata().Veloutput.value());
+  }
+}
+
+void FeederSubsystem::SetPreload() {
+  SetUpwardFeederCurrent(13.0, 0.25);
+  SetBackwardFeederDuty(0.3);
+}
+
+frc2::CommandPtr FeederSubsystem::SetPreloadCommandPtr() {
+  return this->RunOnce([this] { SetPreload(); });
 }

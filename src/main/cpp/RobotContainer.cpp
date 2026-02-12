@@ -10,25 +10,29 @@
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
 RobotContainer::RobotContainer()
-    : visionSub(&drivetrain, &m_ledsubsystem),
+    : visionSub(&drivetrain, nullptr),
       shooterSub(joystick),
       feederSub(joystick),
       clientSub(&drivetrain),
       groundIntakeSub(joystick),
-      complexcommand(&drivetrain, &visionSub)
+      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub,
+                     &groundIntakeSub)
 
 {
   shooterSub.SetFeederSubsystem(&feederSub);
 
   // 娉ㄥ唽auto涓璭vents鍛戒护
   // EventTrigger("Reset").OnTrue(ResetTranslationCommand());
-  autoChooser = pathplanner::AutoBuilder::buildAutoChooser("offseason_right");
+  autoChooser = pathplanner::AutoBuilder::buildAutoChooser();
   frc::SmartDashboard::PutData("Auto Mode", &autoChooser);
 
   ConfigureBindings();
 }
 
 void RobotContainer::ConfigureBindings() {
+  // Input ownership note:
+  // Periodic-owned inputs: A, X, POVUp, POVDown, LeftTrigger, RightTrigger.
+  // Check docs/controller-input-map.md before adding new button bindings.
   // Note that X is defined as forward according to WPILib convention,
   // and Y is defined as to the left according to WPILib convention.
   drivetrain.SetDefaultCommand(drivetrain.ApplyRequest([this]() -> auto&& {
@@ -48,7 +52,7 @@ void RobotContainer::ConfigureBindings() {
   }));
 
   // joystick.B().WhileTrue(
-  //     frc2::cmd::StartEnd(
+  //     frc2::cmd::StartEnd(、】【】【、
   //         [this]
   //         { shooterSub.SetShootVelocity(44
   //         ); }, // 寮€濮嬫椂鎵ц
@@ -69,7 +73,6 @@ void RobotContainer::ConfigureBindings() {
   // joystick.B().WhileTrue(shooterSub.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
   // joystick.X().WhileTrue(shooterSub.SysIdDynamic(frc2::sysid::Direction::kForward));
   // joystick.Y().WhileTrue(shooterSub.SysIdDynamic(frc2::sysid::Direction::kReverse));
-
   // // Feeder SysId
   // joystick.A().WhileTrue(feederSub.SysIdQuasistatic(frc2::sysid::Direction::kForward));
   // joystick.B().WhileTrue(feederSub.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
@@ -84,19 +87,22 @@ void RobotContainer::ConfigureBindings() {
       [this]() { return -joystick.GetLeftX(); }, MaxSpeed * 0.6));
 
   // X键: 地面intake展开并吸取
-  joystick.Y().WhileTrue(frc2::cmd::StartEnd(
-      [this] {
-        // groundIntakeSub.SetPivotPosition(-20);
-        groundIntakeSub.SetPivotPosition(1.4);
-        groundIntakeSub.SetRollerDutyCycle(0.5);
-      },
-      [this] {
-        // groundIntakeSub.SetPivotPosition(-2);
-        groundIntakeSub.SetPivotPosition(1.4);
+  joystick.Y().OnTrue(
+      frc2::cmd::Either(
+          complexcommand.GroundintakeresetCommand(),
+          complexcommand.GroundintakeprepareCommand(),
+          [this] { return ground_intake_prepared_; })
+          .AndThen(frc2::cmd::RunOnce(
+              [this] { ground_intake_prepared_ = !ground_intake_prepared_; })));
 
-        groundIntakeSub.SetRollerDutyCycle(0);
-      },
-      {&groundIntakeSub}));
+  // B键: intake辅助动作(短时反转)后回到prepare状态
+  joystick.B().OnTrue(
+      complexcommand.GroundintakeassistCommand()
+          .AndThen(frc2::cmd::RunOnce(
+              [this] { ground_intake_prepared_ = true; })));
+  
+  // Start键：预装载
+  joystick.Start().OnTrue(complexcommand.PreloadCommand());
 }
 
 frc2::Command* RobotContainer::GetAutonomousCommand() {

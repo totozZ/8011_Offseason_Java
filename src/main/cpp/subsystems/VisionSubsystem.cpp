@@ -7,12 +7,16 @@
 #include <array>
 #include <cmath>
 #include <frc/DriverStation.h>
+#include <frc/Timer.h>
 #include <iostream>
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
 #include <networktables/StructTopic.h>
 
 using namespace subsystems;
+namespace {
+bool g_publish_vision_debug = true;
+}  // namespace
 
 VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
                                  LEDSubsystem* ledsub)
@@ -21,24 +25,51 @@ VisionSubsystem::VisionSubsystem(CommandSwerveDrivetrain* drivetrain,
     if (!drivetrain_) {
         throw std::runtime_error("VisionSubsystem: drivetrain pointer cannot be null!");
     }
-    if (!ledsub_) {
-        throw std::runtime_error("VisionSubsystem: visionSub pointer cannot be null!");
-    }
 
     vision_table_ = nt::NetworkTableInstance::GetDefault().GetTable("Vision");
 
 }
 
 void VisionSubsystem::Periodic() {
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
+  const double now_s = frc::Timer::GetFPGATimestamp().value();
+  g_publish_vision_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (g_publish_vision_debug) {
+    last_debug_publish_s = now_s;
+  }
+
+  static constexpr double kPeriodicOverrunMs = 5.0;
+  static int periodic_overrun_count = 0;
+  static double periodic_ms_max = 0.0;
+  const double t_start_s = frc::Timer::GetFPGATimestamp().value();
+
   try {
 
   LimelightMeasurement();
   LED_control();
-  frc::SmartDashboard::PutNumber("vision_mode", vision_mode_);
+  if (g_publish_vision_debug) {
+    frc::SmartDashboard::PutNumber("vision_mode", vision_mode_);
+  }
 
   } catch (const std::exception& e) {
     std::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
   }
+
+  const double periodic_ms =
+      (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
+  if (periodic_ms > periodic_ms_max) {
+    periodic_ms_max = periodic_ms;
+  }
+  if (periodic_ms > kPeriodicOverrunMs) {
+    ++periodic_overrun_count;
+  }
+  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMs", periodic_ms);
+  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMsMax", periodic_ms_max);
+  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicOverrunCount",
+                                 periodic_overrun_count);
 }
 
   void VisionSubsystem::UpdateAngularVelocity() {
@@ -46,6 +77,11 @@ void VisionSubsystem::Periodic() {
     currentAngularVelocity_ = drivetrain_->GetPigeon2()
                                   .GetAngularVelocityZDevice()
                                   .GetValueAsDouble();  // 获取当前角速度
+
+    if (g_publish_vision_debug) {
+      frc::SmartDashboard::PutNumber("Vision_AngularVelocity",
+                                     currentAngularVelocity_);
+    }
 }
 
 void VisionSubsystem::SetLimelightIMUMode(std::string limelightname_, LimelightIMUMode mode)
@@ -72,9 +108,8 @@ void VisionSubsystem::SetLimelightIMUMode(std::string limelightname_, LimelightI
 
   LimelightHelpers::SetRobotOrientation(
       limelightname_,
-      drivetrain_->GetPigeon2().GetYaw().GetValueAsDouble(),
-      drivetrain_->GetPigeon2().GetAngularVelocityZDevice().GetValueAsDouble(),
-      0, 0, 0, 0);
+      drivetrain_->GetcurrentPose().Rotation().Degrees().value(),
+      0, 0, 0, 0, 0);
 }
 
 
@@ -113,7 +148,7 @@ bool VisionSubsystem::ShouldRejectMetatagPose(const LimelightHelpers::PoseEstima
 }
 
 void VisionSubsystem::UpdateVisionMode() {
-  if (vision_table_) {
+  if (vision_table_ && g_publish_vision_debug) {
     // Keep publishers alive for the whole robot runtime.
     static auto mt1_timestamp_pub =
         vision_table_->GetDoubleTopic("MT1TimestampSec").Publish();
@@ -156,8 +191,10 @@ void VisionSubsystem::LimelightMeasurement() {
                          ? LimelightIMUMode::SeedingMode
                          : LimelightIMUMode::FusedIMU;
     SetLimelightIMUMode(limelight_left_name_, currentIMUMode);
-    frc::SmartDashboard::PutNumber("limelight_imu_mode",
-                                   static_cast<int>(currentIMUMode));
+    if (g_publish_vision_debug) {
+      frc::SmartDashboard::PutNumber("limelight_imu_mode",
+                                     static_cast<int>(currentIMUMode));
+    }
 
     // 获取 Limelight 数据
     // 左边limelight

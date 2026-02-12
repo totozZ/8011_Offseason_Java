@@ -28,9 +28,12 @@ public:
   frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
   void SetBackwardFeederVelocity(double velocity);
   void SetUpwardFeederVelocity(double velocity);
+  void SetBackwardFeederDuty(double duty);
+  void SetUpwardFeederCurrent(double current, double max_abs_duty_cycle);
   void SetUpwardDuty(double duty);
   double GetBackwardFeederVelocity();
   double GetUpwardFeederVelocity();
+  double GetUpwardFeederCurrent();
   void Stop();
 
   frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction)
@@ -52,8 +55,13 @@ public:
   void SetUpperVelocityBANGBANG(double velocity);
 
   frc2::CommandPtr SetUpperVelocityBANGBANGCommandPtr(double velocity);
+  frc2::CommandPtr SetBackwardFeederDutyCommandPtr(double duty);
+  frc2::CommandPtr SetUpwardFeederCurrentCommandPtr(
+      double current, double max_abs_duty_cycle);
 
   void SetUpperVelocitycombo(double velocity);
+  void SetPreload();
+  frc2::CommandPtr SetPreloadCommandPtr();
 
 private:
   void Initialization();
@@ -62,6 +70,7 @@ private:
   Wayimotor backward_feeder_{ FeederConstants::BackwardFeederMotorID, kCANBus };
   Wayimotor upward_feeder_{ FeederConstants::UpwardFeederMotorID, kCANBus };
   bool upper_velocity_reached_once_ = false;
+  bool x_combo_was_active_ = false;
   double combo_target_velocity_ = 40.0;
 
   // SysId routine for feeder (测试backward_feeder)

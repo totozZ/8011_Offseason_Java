@@ -49,29 +49,11 @@ void ShooterSubsystem::Initialization() {
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
 }
 void ShooterSubsystem::Periodic() {
-  double left_trigger = joystick_.GetLeftTriggerAxis();
-  double right_trigger = joystick_.GetRightTriggerAxis();
-  double now_s = frc::Timer::GetFPGATimestamp().value();
-  double dt_s =
-      (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
-  last_servo_update_s_ = now_s;
+  static constexpr double kPeriodicOverrunMs = 5.0;
+  static int periodic_overrun_count = 0;
+  static double periodic_ms_max = 0.0;
+  const double t_start_s = frc::Timer::GetFPGATimestamp().value();
 
-  double servo_command = left_trigger - right_trigger;
-  if (std::abs(servo_command) < 0.02) {
-    servo_command = 0.0;
-  }
-
-  linear_servo_left_target_mm_ =
-      std::clamp(linear_servo_left_target_mm_ +
-                     servo_command * kLinearServoSpeedMmPerS * dt_s,
-                 0.0, kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ =
-      std::clamp(linear_servo_right_target_mm_ +
-                     servo_command * kLinearServoSpeedMmPerS * dt_s,
-                 0.0, kLinearServoMaxPositionMm);
-
-  SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
-  SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
   shooter_right_.Control();
   shooter_left_back_.Control();
   shooter_left_front_.Control();
@@ -112,9 +94,32 @@ void ShooterSubsystem::Periodic() {
       is_shooting_ = false;
     }
   }
+
+  const double periodic_ms =
+      (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
+  if (periodic_ms > periodic_ms_max) {
+    periodic_ms_max = periodic_ms;
+  }
+  if (periodic_ms > kPeriodicOverrunMs) {
+    ++periodic_overrun_count;
+  }
+  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicMs", periodic_ms);
+  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicMsMax", periodic_ms_max);
+  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicOverrunCount",
+                                 periodic_overrun_count);
 }
 
 void ShooterSubsystem::CalculateShooterVelocity() {
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
+  const double now_s = frc::Timer::GetFPGATimestamp().value();
+  const bool publish_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (publish_debug) {
+    last_debug_publish_s = now_s;
+  }
+
   double feeder_upward_velocity = 0.0;
   double feeder_upward_velocity_difference = 0.0;
   if (feeder_sub_ != nullptr) {
@@ -132,14 +137,15 @@ void ShooterSubsystem::CalculateShooterVelocity() {
           -ShooterConstants::kMaxFeederVelocityDifference;
     }
   }
-  double shooter_velocity = GetShootVelocity();
   shooter_velocity_target = ShooterConstants::kUpwardVelocityTarget +
                             feeder_upward_velocity_difference;
 
-  frc::SmartDashboard::PutNumber("shooter_feeder_upward_velocity",
-                                 feeder_upward_velocity);
-  frc::SmartDashboard::PutNumber("shooter_velocity_target",
-                                 shooter_velocity_target);
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumber("shooter_feeder_upward_velocity",
+                                   feeder_upward_velocity);
+    frc::SmartDashboard::PutNumber("shooter_velocity_target",
+                                   shooter_velocity_target);
+  }
 }
 
 void ShooterSubsystem::CalculateLinearServoTarget() {
@@ -185,9 +191,17 @@ double ShooterSubsystem::GetShootVelocity() {
 void ShooterSubsystem::Stop() { SetShootVelocity(0.0); }
 
 void ShooterSubsystem::LinearServoControl() {
+  static double last_debug_publish_s = -1.0;
+  static constexpr double kDebugPublishPeriodS = 0.1;
   double left_trigger = joystick_.GetLeftTriggerAxis();
   double right_trigger = joystick_.GetRightTriggerAxis();
   double now_s = frc::Timer::GetFPGATimestamp().value();
+  const bool publish_debug =
+      (last_debug_publish_s < 0.0) ||
+      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
+  if (publish_debug) {
+    last_debug_publish_s = now_s;
+  }
   double dt_s =
       (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
   last_servo_update_s_ = now_s;
@@ -209,8 +223,10 @@ void ShooterSubsystem::LinearServoControl() {
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
 
-  frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm",
-                                 linear_servo_left_target_mm_);
-  frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm",
-                                 linear_servo_right_target_mm_);
+  if (publish_debug) {
+    frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm",
+                                   linear_servo_left_target_mm_);
+    frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm",
+                                   linear_servo_right_target_mm_);
+  }
 }

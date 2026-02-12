@@ -6,23 +6,36 @@
 #include <frc/geometry/Pose2d.h>
 
 #include "subsystems/CommandSwerveDrivetrain.h"
+#include "subsystems/FeederSubsystem.h"
+#include "subsystems/GroundIntakeSubsystem.h"
+#include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
 
 class ComplexCommand
     : public frc2::CommandHelper<frc2::Command, ComplexCommand> {
  public:
   explicit ComplexCommand(subsystems::CommandSwerveDrivetrain* driveSubsystem,
-                          subsystems::VisionSubsystem* visionSubsystem);
+                          subsystems::VisionSubsystem* visionSubsystem,
+                          subsystems::ShooterSubsystem* shooterSubsystem,
+                          subsystems::FeederSubsystem* feederSubsystem,
+                          subsystems::GroundIntakeSubsystem* groundIntakeSubsystem);
 
   frc2::CommandPtr FollowPathCommand(frc::Pose2d targetPos);
   frc2::CommandPtr FollowPathCommand(
       std::vector<frc::Pose2d> const& targetPoses);
   frc2::CommandPtr AutoFollowPathCommand(frc::Pose2d targetPos, double maxspeed,
                                          double maxacc);
+  frc2::CommandPtr GroundintakeprepareCommand();
+  frc2::CommandPtr GroundintakeassistCommand();
+  frc2::CommandPtr GroundintakeresetCommand();
+  frc2::CommandPtr PreloadCommand();
 
   frc2::CommandPtr autoFollow(frc::Pose2d targetPos);
 
  private:
   subsystems::CommandSwerveDrivetrain* m_drivesubsystem;
   subsystems::VisionSubsystem* m_visionSubsystem;
+  subsystems::ShooterSubsystem* m_shooterSubsystem;
+  subsystems::FeederSubsystem* m_feederSubsystem;
+  subsystems::GroundIntakeSubsystem* m_groundIntakeSubsystem;
 };
