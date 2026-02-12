@@ -14,6 +14,7 @@
 #include "frc8011/ClientSubsystem.h"
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/FeederSubsystem.h"
+#include "subsystems/GroundIntakeSubsystem.h"
 #include "frc8011/LEDSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
@@ -49,6 +50,7 @@ public:
   subsystems::ShooterSubsystem shooterSub;
   subsystems::FeederSubsystem feederSub;
   subsystems::ClientSubsystem clientSub;
+  subsystems::GroundIntakeSubsystem groundIntakeSub;
   ComplexCommand complexcommand;
 
 private:

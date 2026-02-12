@@ -72,8 +72,9 @@ void VisionSubsystem::SetLimelightIMUMode(std::string limelightname_, LimelightI
 
   LimelightHelpers::SetRobotOrientation(
       limelightname_,
-      drivetrain_->GetcurrentPose().Rotation().Degrees().value(),
-      0, 0, 0, 0, 0);
+      drivetrain_->GetPigeon2().GetYaw().GetValueAsDouble(),
+      drivetrain_->GetPigeon2().GetAngularVelocityZDevice().GetValueAsDouble(),
+      0, 0, 0, 0);
 }
 
 

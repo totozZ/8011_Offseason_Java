@@ -24,6 +24,7 @@ public:
 
   void Periodic() override;
   void SetRollerVelocity(double velocity);
+  void SetRollerDutyCycle(double dutyCycle);
   void SetPivotPosition(double position);
   void Stop();
 

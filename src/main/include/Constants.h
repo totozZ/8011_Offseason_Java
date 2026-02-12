@@ -254,6 +254,16 @@ inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
 inline constexpr double TargetHeight = 1.8796;
 inline constexpr double ShooterHeight = 0.75;
+
+// Shoot velocity constants
+inline constexpr double kShootVelocity = 41.5;
+inline constexpr double kUpwardVelocityTarget = 44.0;
+inline constexpr double kFeederDelayTime = 1.0;
+inline constexpr double kMaxFeederVelocityDifference = 10.0;
+
+// Feeder velocity constants
+inline constexpr double kBackwardFeederVelocity = 0.54;
+inline constexpr double kUpwardFeederVelocity = 0.4;
 }  // namespace ShooterConstants
 
 namespace GroundIntakeConstants

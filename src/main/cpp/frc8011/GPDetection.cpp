@@ -347,4 +347,3 @@ frc::Pose2d GPDetection::ComputeObjectPoseFromDistance(
 }
 
 }  // namespace subsystems
-

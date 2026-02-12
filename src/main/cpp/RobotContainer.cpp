@@ -10,7 +10,12 @@
 #include <pathplanner/lib/auto/AutoBuilder.h>
 
 RobotContainer::RobotContainer()
-    : visionSub(&drivetrain, &m_ledsubsystem), shooterSub(joystick), feederSub(joystick), clientSub(&drivetrain), complexcommand(&drivetrain, &visionSub)
+    : visionSub(&drivetrain, &m_ledsubsystem),
+      shooterSub(joystick),
+      feederSub(joystick),
+      clientSub(&drivetrain),
+      groundIntakeSub(joystick),
+      complexcommand(&drivetrain, &visionSub)
 
 {
   shooterSub.SetFeederSubsystem(&feederSub);
@@ -23,21 +28,24 @@ RobotContainer::RobotContainer()
   ConfigureBindings();
 }
 
-void RobotContainer::ConfigureBindings()
-{
+void RobotContainer::ConfigureBindings() {
   // Note that X is defined as forward according to WPILib convention,
   // and Y is defined as to the left according to WPILib convention.
-  drivetrain.SetDefaultCommand(drivetrain.ApplyRequest([this]() -> auto &&
-                                                       {
+  drivetrain.SetDefaultCommand(drivetrain.ApplyRequest([this]() -> auto&& {
     auto& request = useClosedLoop ? driveClosed : drive;
-    return request.WithVelocityX(-joystick.GetLeftY() * MaxSpeed * OperatorConstants::SpeedRate)
-        .WithVelocityY(-joystick.GetLeftX() * MaxSpeed * OperatorConstants::SpeedRate)
-        .WithRotationalRate(-joystick.GetRightX() * MaxAngularRate * OperatorConstants::AngularSpeedRate); }));
+    return request
+        .WithVelocityX(-joystick.GetLeftY() * MaxSpeed *
+                       OperatorConstants::SpeedRate)
+        .WithVelocityY(-joystick.GetLeftX() * MaxSpeed *
+                       OperatorConstants::SpeedRate)
+        .WithRotationalRate(-joystick.GetRightX() * MaxAngularRate *
+                            OperatorConstants::AngularSpeedRate);
+  }));
 
-  joystick.LeftBumper().OnTrue(frc2::cmd::RunOnce([this]
-                                                  {
+  joystick.LeftBumper().OnTrue(frc2::cmd::RunOnce([this] {
     useClosedLoop = !useClosedLoop;
-    frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop); }));
+    frc::SmartDashboard::PutBoolean("Drive ClosedLoop", useClosedLoop);
+  }));
 
   // joystick.B().WhileTrue(
   //     frc2::cmd::StartEnd(
@@ -45,11 +53,10 @@ void RobotContainer::ConfigureBindings()
   //         { shooterSub.SetShootVelocity(44
   //         ); }, // 寮€濮嬫椂鎵ц
   //         [this]
-  //         { shooterSub.Stop(); }, // 缁撴潫锛堟澗寮€锛夋椂鎵ц
+  //         { shooterSub.Stop(); }, //
+  //         缁撴潫锛堟澗寮€锛夋椂鎵ц
   //         {&shooterSub}           // 鍏抽敭锛氬０鏄庨渶姹?
   //         ));
-
-
 
   // //搴曠洏 SysId銆戙€併€?
   // joystick.A().WhileTrue(drivetrain.SysIdQuasistatic(frc2::sysid::Direction::kForward));
@@ -69,20 +76,29 @@ void RobotContainer::ConfigureBindings()
   // joystick.X().WhileTrue(feederSub.SysIdDynamic(frc2::sysid::Direction::kForward));
   // joystick.Y().WhileTrue(feederSub.SysIdDynamic(frc2::sysid::Direction::kReverse));
 
-  drivetrain.RegisterTelemetry([this](auto const &state)
-                               { logger.Telemeterize(state); });
+  drivetrain.RegisterTelemetry(
+      [this](auto const& state) { logger.Telemeterize(state); });
 
+  joystick.RightBumper().WhileTrue(drivetrain.DriveAimingCommand(
+      [this]() { return -joystick.GetLeftY(); },
+      [this]() { return -joystick.GetLeftX(); }, MaxSpeed * 0.6));
 
-  joystick.RightBumper().WhileTrue(
-      drivetrain.DriveAimingCommand(
-          [this]() { return -joystick.GetLeftY(); },
-          [this]() { return -joystick.GetLeftX(); },
-          MaxSpeed * 0.6
-      )
-  );
+  // X键: 地面intake展开并吸取
+  joystick.Y().WhileTrue(frc2::cmd::StartEnd(
+      [this] {
+        // groundIntakeSub.SetPivotPosition(-20);
+        groundIntakeSub.SetPivotPosition(1.4);
+        groundIntakeSub.SetRollerDutyCycle(0.5);
+      },
+      [this] {
+        // groundIntakeSub.SetPivotPosition(-2);
+        groundIntakeSub.SetPivotPosition(1.4);
+
+        groundIntakeSub.SetRollerDutyCycle(0);
+      },
+      {&groundIntakeSub}));
 }
 
-frc2::Command *RobotContainer::GetAutonomousCommand()
-{
+frc2::Command* RobotContainer::GetAutonomousCommand() {
   return autoChooser.GetSelected();
 }

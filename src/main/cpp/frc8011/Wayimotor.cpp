@@ -79,6 +79,11 @@ void Wayimotor::Control()
       }
     }
     break;
+    case 12:
+      wayiconfig.Posoutput =
+          (wayiconfig.targetPosition * wayiconfig.gearRatio + wayiconfig.offset) * 1_tr * wayiconfig.invert;
+      motor.SetControl(positionDutyCycle.WithPosition(wayiconfig.Posoutput));
+      break;
     default:
       break;
   }

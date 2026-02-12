@@ -3,19 +3,19 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "Robot.h"
-#include "LimelightHelpers.h"
 
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandScheduler.h>
 #include <networktables/NetworkTableInstance.h>
-#include <frc/smartdashboard/SmartDashboard.h>
 #include <units/math.h>
+
+#include "LimelightHelpers.h"
 
 Robot::Robot() {}
 
 void Robot::RobotPeriodic() {
   m_timeAndJoystickReplay.Update();
   frc2::CommandScheduler::GetInstance().Run();
-
 }
 
 void Robot::DisabledInit() {
@@ -41,7 +41,7 @@ void Robot::AutonomousInit() {
 
 void Robot::AutonomousPeriodic() {
   try {
-  } catch (const std::exception &e) {
+  } catch (const std::exception& e) {
     std::cout << "auto Periodic Failed: " << e.what() << std::endl;
   }
 }
@@ -58,21 +58,18 @@ void Robot::TeleopInit() {
     frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand);
   }
   m_container.visionSub.disable_mix = 0;
-
 }
 
 void Robot::TeleopPeriodic() {
   try {
-  } catch (const std::exception &e) {
+  } catch (const std::exception& e) {
     std::cout << "pathplanner Periodic Failed: " << e.what() << std::endl;
   }
 }
 
 void Robot::TeleopExit() {}
 
-void Robot::TestInit() {
-  frc2::CommandScheduler::GetInstance().CancelAll();
-}
+void Robot::TestInit() { frc2::CommandScheduler::GetInstance().CancelAll(); }
 
 void Robot::TestPeriodic() {}
 
@@ -87,7 +84,5 @@ void Robot::SimulationPeriodic() {
 }
 
 #ifndef RUNNING_FRC_TESTS
-int main() {
-  return frc::StartRobot<Robot>();
-}
+int main() { return frc::StartRobot<Robot>(); }
 #endif
