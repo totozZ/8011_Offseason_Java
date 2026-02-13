@@ -645,7 +645,7 @@ frc2::CommandPtr CommandSwerveDrivetrain::DriveAimingCommand(
              },
              {this})
       .BeforeStarting([this, maxSpeed] {
-        m_driveAimingRequest.WithHeadingPID(7.0, 0.0, 0.02)
+        m_driveAimingRequest.WithHeadingPID(5.0, 0.0, 0)
             .WithRotationalDeadband(units::radians_per_second_t{0.2})
             .WithMaxAbsRotationalRate(units::radians_per_second_t{6.14})
             .WithDeadband(maxSpeed * 0.05)
@@ -673,6 +673,14 @@ frc::Translation2d CommandSwerveDrivetrain::GetHubPosition() {
     return DriveAimingConstants::RedHubPosition;
   }
   return DriveAimingConstants::BlueHubPosition;
+}
+
+double CommandSwerveDrivetrain::GetDistanceToHub() {
+  const auto robotPose = GetState().Pose;
+  const auto hubPos = GetHubPosition();
+  const double dx = (hubPos.X() - robotPose.X()).value();
+  const double dy = (hubPos.Y() - robotPose.Y()).value();
+  return std::hypot(dx, dy);
 }
 
 double CommandSwerveDrivetrain::NormalizeAngle(double angle) {

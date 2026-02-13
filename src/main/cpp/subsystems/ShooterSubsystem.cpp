@@ -9,12 +9,18 @@
 #include <algorithm>
 #include <cmath>
 
+#include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/FeederSubsystem.h"
 
 using namespace subsystems;
 
 void ShooterSubsystem::SetFeederSubsystem(FeederSubsystem* feeder_subsystem) {
   feeder_sub_ = feeder_subsystem;
+}
+
+void ShooterSubsystem::SetDrivetrainSubsystem(
+    CommandSwerveDrivetrain* drivetrain_subsystem) {
+  drivetrain_sub_ = drivetrain_subsystem;
 }
 
 void ShooterSubsystem::Initialization() {
@@ -62,10 +68,33 @@ void ShooterSubsystem::Periodic() {
   shooter_left_front_.Receive();
 
   // 娴ｈ法鏁ゅ锕€褰竧rigger閹貉冨煑閻㈠灚甯归弶?
+  CalculateShooterVelocity();
+  if (drivetrain_sub_ != nullptr) {
+    const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
+    const double ideal_pitch_raw_deg =
+        CalculatePitchAngleFromDistance(hub_distance_m);
+    const bool raw_in_range = (ideal_pitch_raw_deg >= kAutoPitchMinDeg) &&
+                              (ideal_pitch_raw_deg <= kAutoPitchMaxDeg);
+    ideal_pitch_valid_ = std::isfinite(ideal_pitch_raw_deg) && raw_in_range;
+    if (ideal_pitch_valid_) {
+      last_valid_pitch_deg_ = ideal_pitch_raw_deg;
+    }
+    // Always command from last valid pitch to avoid freezing on transient NaN.
+    ideal_pitch_deg_ = last_valid_pitch_deg_;
+    frc::SmartDashboard::PutNumber("shooter_hub_distance_m", hub_distance_m);
+    frc::SmartDashboard::PutNumber("shooter_ideal_pitch_raw_deg",
+                                   ideal_pitch_raw_deg);
+    frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_raw_in_range",
+                                    raw_in_range);
+  } else {
+    ideal_pitch_valid_ = false;
+    ideal_pitch_deg_ = last_valid_pitch_deg_;
+  }
+  frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_valid", ideal_pitch_valid_);
+  frc::SmartDashboard::PutNumber("shooter_ideal_pitch_deg", ideal_pitch_deg_);
   LinearServoControl();
   CalculatePitchFromLinearServo();
 
-  CalculateShooterVelocity();
   const double periodic_ms =
       (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
   if (periodic_ms > periodic_ms_max) {
@@ -202,8 +231,6 @@ void ShooterSubsystem::Stop() { SetShootVelocity(0.0); }
 void ShooterSubsystem::LinearServoControl() {
   static double last_debug_publish_s = -1.0;
   static constexpr double kDebugPublishPeriodS = 0.1;
-  double left_trigger = joystick_.GetLeftTriggerAxis();
-  double right_trigger = joystick_.GetRightTriggerAxis();
   double now_s = frc::Timer::GetFPGATimestamp().value();
   const bool publish_debug =
       (last_debug_publish_s < 0.0) ||
@@ -215,27 +242,56 @@ void ShooterSubsystem::LinearServoControl() {
       (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
   last_servo_update_s_ = now_s;
 
-  double servo_command = left_trigger - right_trigger;
-  if (std::abs(servo_command) < 0.02) {
-    servo_command = 0.0;
-  }
-
-  linear_servo_left_target_mm_ =
-      std::clamp(linear_servo_left_target_mm_ +
-                     servo_command * kLinearServoSpeedMmPerS * dt_s,
-                 0.0, kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ =
-      std::clamp(linear_servo_right_target_mm_ +
-                     servo_command * kLinearServoSpeedMmPerS * dt_s,
-                 0.0, kLinearServoMaxPositionMm);
+  const double target_stroke_mm = CalculateStrokeFromPitchDeg(ideal_pitch_deg_);
+  const double max_step_mm = std::max(0.0, kLinearServoSpeedMmPerS * dt_s);
+  const double stroke_error_mm = target_stroke_mm - linear_servo_left_target_mm_;
+  const double step_mm = std::clamp(stroke_error_mm, -max_step_mm, max_step_mm);
+  linear_servo_left_target_mm_ = std::clamp(
+      linear_servo_left_target_mm_ + step_mm, 0.0, kLinearServoMaxPositionMm);
+  linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
 
   SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
   SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
 
   if (publish_debug) {
+    frc::SmartDashboard::PutNumber("linear_servo_auto_target_mm",
+                                   linear_servo_left_target_mm_);
+    frc::SmartDashboard::PutNumber("linear_servo_target_from_pitch_mm",
+                                   target_stroke_mm);
+    frc::SmartDashboard::PutNumber("linear_servo_step_mm", step_mm);
+    frc::SmartDashboard::PutNumber("linear_servo_dt_s", dt_s);
     frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm",
                                    linear_servo_left_target_mm_);
     frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm",
                                    linear_servo_right_target_mm_);
   }
+}
+
+double ShooterSubsystem::CalculatePitchAngleFromDistance(double x) {
+  constexpr double v  = 6.607443729;
+  constexpr double dz = 1.2296;
+  constexpr double g  = 9.80665;
+
+  if (!(x > 0.0)) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  // Create intermediate variables first (for clarity and numerical stability)
+  const double v2 = v * v;
+  const double v4 = v2 * v2;
+
+  // Discriminant: must be >= 0 for a real solution
+  const double D = v4 - g * (g * x * x + 2.0 * dz * v2);
+  if (D < 0.0) {
+    return std::numeric_limits<double>::quiet_NaN();  // unreachable at this x
+  }
+
+  // High-arc solution uses the '+' branch
+  const double sqrtD = std::sqrt(D);
+  const double numerator = v2 + sqrtD;
+  const double denominator = g * x;
+
+  const double theta_rad = std::atan2(numerator, denominator);
+  constexpr double kRad2Deg = 180.0 / 3.14159265358979323846;
+  return theta_rad * kRad2Deg;
 }

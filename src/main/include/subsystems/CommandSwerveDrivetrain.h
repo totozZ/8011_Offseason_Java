@@ -388,6 +388,8 @@ private:
 
   frc::Pose2d GetcurrentPose() { return currentPose; }
 
+  double GetDistanceToHub();
+
 
 
   GPDetection *GetGPDetection() const { return gpdetection_; }

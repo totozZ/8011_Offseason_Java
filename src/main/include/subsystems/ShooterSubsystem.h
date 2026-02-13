@@ -16,9 +16,13 @@
 #include "rev/ServoHub.h"
 #include "subsystems/ExampleSubsystem.h"
 
+#include <cmath>
+#include <limits>
+
 namespace subsystems
 {
 class FeederSubsystem;
+class CommandSwerveDrivetrain;
 
 class ShooterSubsystem : public ExampleSubsystem
 {
@@ -29,6 +33,7 @@ public:
   }
   void Periodic() override;
   void SetFeederSubsystem(FeederSubsystem* feeder_subsystem);
+  void SetDrivetrainSubsystem(CommandSwerveDrivetrain* drivetrain_subsystem);
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
   frc2::CommandPtr HoldShootVelocityCommandPtr(double velocity);
@@ -37,6 +42,7 @@ public:
   void SetShootVelocity(double velocity);
   void SetBangBangShootVelocity(double velocity);
   double GetShootVelocity();
+  bool IsAutoPitchValid() const { return ideal_pitch_valid_; }
   void Stop();
 
   void SetLinearServoLeftPositionMm(double position_mm);
@@ -74,13 +80,20 @@ private:
   Wayimotor shooter_left_back_{ ShooterConstants::ShooterLeftBackMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };           // 发射右电机
   FeederSubsystem* feeder_sub_ = nullptr;
+  CommandSwerveDrivetrain* drivetrain_sub_ = nullptr;
 
   void CalculateShooterVelocity();
   void CalculateLinearServoTarget();
   void CalculatePitchFromLinearServo();
   double CalculateStrokeFromPitchDeg(double pitch_deg) const;
+  double CalculatePitchAngleFromDistance(double x);
+  static constexpr double kAutoPitchMinDeg = 50.0;
+  static constexpr double kAutoPitchMaxDeg = 60.0;
   double shooter_velocity_target = 0.0;
-  double shooter_pitch_angle_ = 0.0;  // 球出射角(出射向量跟水平面的夹角)
+  double shooter_pitch_angle_ = 0.0;
+  double last_valid_pitch_deg_ = 60.0;
+  double ideal_pitch_deg_ = std::numeric_limits<double>::quiet_NaN();
+  bool ideal_pitch_valid_ = false;
 
   void LinearServoControl();
 

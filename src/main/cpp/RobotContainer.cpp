@@ -20,6 +20,7 @@ RobotContainer::RobotContainer()
 
 {
   shooterSub.SetFeederSubsystem(&feederSub);
+  shooterSub.SetDrivetrainSubsystem(&drivetrain);
 
   // 濞夈劌鍞絘uto娑撶挱vents閸涙垝鎶?
   // EventTrigger("Reset").OnTrue(ResetTranslationCommand());
@@ -85,7 +86,10 @@ void RobotContainer::ConfigureBindings() {
   joystick.RightBumper().WhileTrue(drivetrain.DriveAimingCommand(
       [this]() { return -joystick.GetLeftY(); },
       [this]() { return -joystick.GetLeftX(); }, MaxSpeed * 0.6));
-  joystick.A().WhileTrue(complexcommand.ShootWithFeederCommand());
+  joystick.A().WhileTrue(
+      frc2::cmd::Either(complexcommand.ShootWithFeederCommand(),
+                        frc2::cmd::None(),
+                        [this] { return shooterSub.IsAutoPitchValid(); }));
   joystick.A().OnFalse(complexcommand.StopShootWithFeederCommand());
 
   joystick.POVDown().WhileTrue(complexcommand.FollowAndShootCommand2(frc::Pose2d{units::meter_t{1.8}, units::meter_t{4.034},
