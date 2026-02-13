@@ -8,11 +8,6 @@ When adding new bindings in `RobotContainer`, check this file first.
 - `ShooterSubsystem::Periodic` (`src/main/cpp/subsystems/ShooterSubsystem.cpp`)
   - `A` button: shoot/follow feeder logic
   - `LeftTrigger` / `RightTrigger`: linear servo incremental control
-- `FeederSubsystem::Periodic` (`src/main/cpp/subsystems/FeederSubsystem.cpp`)
-  - `X` button: feeder combo velocity control
-- `GroundIntakeSubsystem::Periodic` (`src/main/cpp/subsystems/GroundIntakeSubsystem.cpp`)
-  - `POVUp`: set pitch to preset
-  - `POVDown`: set pitch to preset
 
 ## RobotContainer Ownership
 - `LeftBumper`: toggle drivetrain open/closed loop
@@ -20,6 +15,7 @@ When adding new bindings in `RobotContainer`, check this file first.
 - `Y`: toggle ground intake prepare/reset
 - `B`: ground intake assist command
 - `Start`: feeder preload command
+- `POVUp`: follow-and-shoot to `(2.00, 4.034, 0deg)`
 - `LeftStick` / `RightStickX`: drivetrain default drive
 
 ## Current Conflict Status

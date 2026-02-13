@@ -182,9 +182,8 @@ void Wayimotor::setNormalizedMotionPosition(double normalizedPos)
       wayiconfig.normalizedPosition * (wayiconfig.maxPosition - wayiconfig.minPosition) + wayiconfig.minPosition;
 }
 
-void Wayimotor::setVelocityTorqueCurrent(double normalizedVel)
+void Wayimotor::setVelocityTorqueCurrent(double velocity)
 {
-  wayiconfig.normalizedVelocity = std::clamp(normalizedVel, -1.0, 1.0);
   setmode(9);
-  wayiconfig.targetVelocity = wayiconfig.normalizedVelocity * wayiconfig.maxVelocity;
+  wayiconfig.targetVelocity = velocity;
 }

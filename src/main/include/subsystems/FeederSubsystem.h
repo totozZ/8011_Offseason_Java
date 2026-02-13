@@ -26,6 +26,9 @@ public:
 
   frc2::CommandPtr SetBackwardFeederVelocityCommandPtr(double velocity);
   frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
+  frc2::CommandPtr HoldFeederVelocityCommandPtr(double backward_velocity,
+                                                double upward_velocity);
+  frc2::CommandPtr StopCommandPtr();
   void SetBackwardFeederVelocity(double velocity);
   void SetUpwardFeederVelocity(double velocity);
   void SetBackwardFeederDuty(double duty);

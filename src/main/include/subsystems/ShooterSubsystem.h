@@ -31,6 +31,8 @@ public:
   void SetFeederSubsystem(FeederSubsystem* feeder_subsystem);
 
   frc2::CommandPtr SetShootVelocityCommandPtr(double velocity);
+  frc2::CommandPtr HoldShootVelocityCommandPtr(double velocity);
+  frc2::CommandPtr StopCommandPtr();
   frc2::CommandPtr SetBangBangShootVelocityCommandPtr(double velocity);
   void SetShootVelocity(double velocity);
   void SetBangBangShootVelocity(double velocity);
@@ -75,13 +77,12 @@ private:
 
   void CalculateShooterVelocity();
   void CalculateLinearServoTarget();
+  void CalculatePitchFromLinearServo();
+  double CalculateStrokeFromPitchDeg(double pitch_deg) const;
   double shooter_velocity_target = 0.0;
   double shooter_pitch_angle_ = 0.0;  // 球出射角(出射向量跟水平面的夹角)
 
   void LinearServoControl();
-
-  double shoot_start_time_ = 0.0;
-  bool is_shooting_ = false;
 
   // SysId routine for shooter
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)

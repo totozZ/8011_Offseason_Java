@@ -39,7 +39,8 @@ private:
   Wayimotor intake_roller_{ GroundIntakeConstants::IntakeRollerMotorID, kCANBus };
   // Intake pitch (position-loop for intake arm angle).
   Wayimotor intake_pitch_{ GroundIntakeConstants::IntakePivotMotorID, kCANBus };
-  
+  bool pitch_reset_flag_ = false;
+  int pitch_reset_counter_ = 0;
   void GroundIntakeReset();
 
   

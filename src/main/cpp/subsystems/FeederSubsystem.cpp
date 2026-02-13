@@ -72,17 +72,6 @@ void FeederSubsystem::Periodic()
   upward_feeder_.Receive();
 
 
-
-  const bool x_pressed = joystick_.X().Get();
-  if (x_pressed) {
-    SetUpperVelocitycombo(combo_target_velocity_);
-    x_combo_was_active_ = true;
-  } else if (x_combo_was_active_) {
-    // Only stop once when exiting X-hold mode, do not override other commands.
-    Stop();
-    x_combo_was_active_ = false;
-  }
-
   const double periodic_ms =
       (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
   if (periodic_ms > periodic_ms_max) {
@@ -107,10 +96,10 @@ void FeederSubsystem::SetBackwardFeederDuty(double duty) {
   backward_feeder_.setNormalizedDutyCircle(duty);
 }
 
-void FeederSubsystem::SetUpwardFeederVelocity(double duty)
+void FeederSubsystem::SetUpwardFeederVelocity(double velocity)
 {
-  // upward_feeder_.setNormalizedDutyCircle(duty);
-  upward_feeder_.setvelocitytorquecurrent(duty);
+  // mode 9: VelocityTorqueCurrentFOC, direct speed setpoint
+  upward_feeder_.setvelocitytorquecurrent(velocity);
 }
 
 void FeederSubsystem::SetUpwardFeederCurrent(double current,
@@ -129,6 +118,18 @@ frc2::CommandPtr FeederSubsystem::SetUpwardFeederVelocityCommandPtr(double veloc
 {
   return frc2::cmd::RunOnce([this, velocity]
                             { SetUpwardFeederVelocity(velocity); });
+}
+
+frc2::CommandPtr FeederSubsystem::HoldFeederVelocityCommandPtr(
+    double backward_velocity, double upward_velocity) {
+  return this->Run([this, backward_velocity, upward_velocity] {
+    SetBackwardFeederVelocity(backward_velocity);
+    SetUpwardFeederVelocity(upward_velocity);
+  });
+}
+
+frc2::CommandPtr FeederSubsystem::StopCommandPtr() {
+  return this->RunOnce([this] { Stop(); });
 }
 
 double FeederSubsystem::GetBackwardFeederVelocity()

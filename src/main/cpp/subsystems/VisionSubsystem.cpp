@@ -218,9 +218,10 @@ void VisionSubsystem::LimelightMeasurement() {
       /**
        * @brief 以下代码来自581，别动！
        */
+      double kVisionStdScale = 1.1;  // 先 1.5~2.5 试
       double avgDistance = mt2_left_pose_.avgTagDist;
-      double xyDev = 0.01 * std::pow(avgDistance, 1.2);
-      double thetaDev = 0.03 * std::pow(avgDistance, 1.2);
+      double xyDev = 0.01 * std::pow(avgDistance, 1.2) * kVisionStdScale;
+      double thetaDev = 0.03 * std::pow(avgDistance, 1.2) * kVisionStdScale;
       std::array<double, 3> estStdDevs = {xyDev, xyDev, thetaDev};
 
       switch (vision_mode_) {

@@ -176,7 +176,7 @@ class Wayimotor {
   void setNormalizedMotionVelocity(
       double normalizedVel);  // 0-1 MotionMagic速度控制
   void setNormalizedDutyCircle(double normalizedDuty);  // 0-1 占空比控制
-  void setVelocityTorqueCurrent(double normalizedVel);
+  void setVelocityTorqueCurrent(double velocity);
 
   // 设置物理限制
   void setPhysicalLimits(double minPos, double maxPos, double maxVel,
@@ -218,8 +218,8 @@ class Wayimotor {
     wayiconfig.targetVelocity = targetVelocity;
   }  // 设置motionmagic速度
 
-  void setvelocitytorquecurrent(double normalizedVel) {
-    setVelocityTorqueCurrent(normalizedVel);
+  void setvelocitytorquecurrent(double velocity) {
+    setVelocityTorqueCurrent(velocity);
   }  // 设置速度电流FOC控制
 
   void setVoltage(units::volt_t voltage) {

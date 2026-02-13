@@ -29,6 +29,11 @@ class ComplexCommand
   frc2::CommandPtr GroundintakeassistCommand();
   frc2::CommandPtr GroundintakeresetCommand();
   frc2::CommandPtr PreloadCommand();
+  frc2::CommandPtr ShootWithFeederCommand();
+  frc2::CommandPtr StopShootWithFeederCommand();
+
+  frc2::CommandPtr FollowAndShootCommand(frc::Pose2d targetPos);
+  frc2::CommandPtr FollowAndShootCommand2(frc::Pose2d targetPos);
 
   frc2::CommandPtr autoFollow(frc::Pose2d targetPos);
 

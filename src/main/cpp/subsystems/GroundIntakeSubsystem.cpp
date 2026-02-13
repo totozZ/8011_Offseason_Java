@@ -1,8 +1,9 @@
-// Copyright (c) FIRST and other WPILib contributors.
+﻿// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 #include "subsystems/GroundIntakeSubsystem.h"
+#include <frc/DriverStation.h>
 #include <frc/Timer.h>
 
 using namespace subsystems;
@@ -46,7 +47,7 @@ void GroundIntakeSubsystem::Initialization() {
     
   /* Configure Motion Magic */
   configs::MotionMagicConfigs &mm_pitch = intake_pitch_config.MotionMagic;
-  // expo所需参数
+  // expo鎵€闇€鍙傛暟
   mm_pitch.MotionMagicCruiseVelocity = 0_tps; // 5 (mechanism) rotations per second cruise
   mm_pitch.MotionMagicExpo_kV=0.1_V / 1_tps; // 0.12
   mm_pitch.MotionMagicExpo_kA=0.04_V / 1_tr_per_s_sq; // 0.1
@@ -85,39 +86,33 @@ void GroundIntakeSubsystem::Periodic() {
   intake_roller_.Receive();
   intake_pitch_.Receive();
 
-  GroundIntakeReset();
+  if (pitch_reset_flag_ == 0) {
+  // GroundIntakeReset();
 
-  if (joystick_.POVUp().Get()) 
-  {
-    SetPitchNormPosition(0.9);}
-
-  if (joystick_.POVDown().Get()) 
-  {
-    SetPitchNormPosition(1);}
-
+  }
 
   if (publish_debug) {
-    frc::SmartDashboard::PutNumber("ground_intake_roller_velocity",
-                                   intake_roller_.Getdata().currentVelocity);
-    frc::SmartDashboard::PutNumber(
-        "ground_intake_pitch_currentnormalizedPosition",
-        intake_pitch_.Getdata().currentnormalizedPosition);
-    frc::SmartDashboard::PutNumber("ground_intake_pitch_wayiconfig.offset",
-                                   intake_pitch_.Getdata().offset);
-    frc::SmartDashboard::PutNumber("ground_intake_pitch_currentPosition",
-                                   intake_pitch_.Getdata().currentPosition);
-    frc::SmartDashboard::PutNumber("target_pos",
-                                   intake_pitch_.Getdata().normalizedPosition);
-    frc::SmartDashboard::PutNumber("target_pos2",
-                                   intake_pitch_.Getdata().targetPosition);
-    frc::SmartDashboard::PutNumber("target_pos3",
-                                   intake_pitch_.Getdata().motionoutput.value());
-    frc::SmartDashboard::PutNumber("mode", intake_pitch_.Getdata().mode);
-    frc::SmartDashboard::PutNumber(
-        "motor.GetPosition().GetValueAsDouble() ",
-        intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
-    frc::SmartDashboard::PutNumber("motor.gearRatio ",
-                                   intake_pitch_.Getdata().gearRatio);
+    // frc::SmartDashboard::PutNumber("ground_intake_roller_velocity",
+    //                                intake_roller_.Getdata().currentVelocity);
+    // frc::SmartDashboard::PutNumber(
+    //     "ground_intake_pitch_currentnormalizedPosition",
+    //     intake_pitch_.Getdata().currentnormalizedPosition);
+    // frc::SmartDashboard::PutNumber("ground_intake_pitch_wayiconfig.offset",
+    //                                intake_pitch_.Getdata().offset);
+    // frc::SmartDashboard::PutNumber("ground_intake_pitch_currentPosition",
+    //                                intake_pitch_.Getdata().currentPosition);
+    // frc::SmartDashboard::PutNumber("target_pos",
+    //                                intake_pitch_.Getdata().normalizedPosition);
+    // frc::SmartDashboard::PutNumber("target_pos2",
+    //                                intake_pitch_.Getdata().targetPosition);
+    // frc::SmartDashboard::PutNumber("target_pos3",
+    //                                intake_pitch_.Getdata().motionoutput.value());
+    // frc::SmartDashboard::PutNumber("mode", intake_pitch_.Getdata().mode);
+    // frc::SmartDashboard::PutNumber(
+    //     "motor.GetPosition().GetValueAsDouble() ",
+    //     intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
+    // frc::SmartDashboard::PutNumber("motor.gearRatio ",
+    //                                intake_pitch_.Getdata().gearRatio);
   }
 
   const double periodic_ms =
@@ -166,7 +161,7 @@ void GroundIntakeSubsystem::SetPitchNormPosition(double norm) {
 
 frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(double norm) {
 
-    // 设置intake电机的占空比
+    // 璁剧疆intake鐢垫満鐨勫崰绌烘瘮
     return this->RunOnce(
         [this, norm] {
             SetPitchNormPosition(norm);
@@ -176,18 +171,27 @@ frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(double no
 }
 
 void GroundIntakeSubsystem::GroundIntakeReset() {
-  static int reset_counter_pitch = 0;
-  static bool pitch_reset_flag = 0;
+  // Disabled state should not advance homing.
+  if (!frc::DriverStation::IsEnabled()) {
 
-  
-      if (!pitch_reset_flag) {
-        intake_pitch_.setcurrent(-30); // 设置pitch电机电流为-28A
-        if (intake_pitch_.Getdata().currentCurrent < -28) {
-            reset_counter_pitch++;
-            if (reset_counter_pitch >= 3) {
-                intake_pitch_.Reset(intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
-                pitch_reset_flag = 1;
-            }
-        }
-    }
+    pitch_reset_counter_ = 0;
+    frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
+    return;
+  }
+
+
+
+  intake_pitch_.setcurrent(-30);
+  if (intake_pitch_.Getdata().currentCurrent < -28) {
+    ++pitch_reset_counter_;
+  } else {
+    pitch_reset_counter_ = 0;
+  }
+
+  if (pitch_reset_counter_ >= 3) {
+    intake_pitch_.Reset(intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
+    pitch_reset_flag_ = true;
+  }
+
+  frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
 }

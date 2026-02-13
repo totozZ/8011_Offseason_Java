@@ -19,8 +19,8 @@ void ShooterSubsystem::SetFeederSubsystem(FeederSubsystem* feeder_subsystem) {
 
 void ShooterSubsystem::Initialization() {
   configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0;     // 不反转
-  shooter_right_config.MotorOutput.NeutralMode = 0;  // 刹车模式
+  shooter_right_config.MotorOutput.Inverted = 0;     // 娑撳秴寮芥潪?
+  shooter_right_config.MotorOutput.NeutralMode = 0;  // 閸掔婧呭Ο鈥崇础
 
   // Slot0 PID
   configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
@@ -28,9 +28,9 @@ void ShooterSubsystem::Initialization() {
   shooter_right_slot0.kS = 7;
   shooter_right_slot0.kV = 0.06;
   shooter_right_slot0.kA = 3.5;
-  shooter_right_slot0.kP = 5;
-  shooter_right_slot0.kI = 0;
-  shooter_right_slot0.kD = 0.;
+  shooter_right_slot0.kP = 12;
+  shooter_right_slot0.kI = 0.2;
+  shooter_right_slot0.kD = 0.01;
   shooter_right_slot0.GravityType = 0;
 
   ctre::phoenix::StatusCode shooter_right_status =
@@ -61,40 +61,11 @@ void ShooterSubsystem::Periodic() {
   shooter_left_back_.Receive();
   shooter_left_front_.Receive();
 
-  // 使用左右trigger控制电推杆
+  // 娴ｈ法鏁ゅ锕€褰竧rigger閹貉冨煑閻㈠灚甯归弶?
   LinearServoControl();
+  CalculatePitchFromLinearServo();
 
   CalculateShooterVelocity();
-
-  // 射击
-  double now_shoot = frc::Timer::GetFPGATimestamp().value();
-  if (joystick_.A().Get()) {
-    if (!is_shooting_) {
-      shoot_start_time_ = now_shoot;
-      is_shooting_ = true;
-    }
-
-    SetShootVelocity(ShooterConstants::kShootVelocity);
-
-    // 设置超过kFeederDelayTime启动feeder
-    if (now_shoot - shoot_start_time_ >= ShooterConstants::kFeederDelayTime &&
-        feeder_sub_ != nullptr) {
-      feeder_sub_->SetBackwardFeederVelocity(
-          ShooterConstants::kBackwardFeederVelocity);
-      feeder_sub_->SetUpwardFeederVelocity(
-          ShooterConstants::kUpwardFeederVelocity);
-    }
-  } else {
-    if (is_shooting_) {
-      // A键松开，停止所有
-      SetShootVelocity(0.0);
-      if (feeder_sub_ != nullptr) {
-        feeder_sub_->Stop();
-      }
-      is_shooting_ = false;
-    }
-  }
-
   const double periodic_ms =
       (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
   if (periodic_ms > periodic_ms_max) {
@@ -149,13 +120,42 @@ void ShooterSubsystem::CalculateShooterVelocity() {
 }
 
 void ShooterSubsystem::CalculateLinearServoTarget() {
-  // pitch angle映射关系：
+  // pitch angle map
   linear_servo_left_target_mm_ =
-      sin((90 - shooter_pitch_angle_) * M_PI / 180) * 206.17 - 48.64858705;
+      CalculateStrokeFromPitchDeg(shooter_pitch_angle_);
   linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
-  // shooter_pitch_angle_ = 90.0 - asin((linear_servo_left_target_mm_
-  // + 48.64858705) / 206.17) * 180.0 /M_PI;
 }
+
+
+void ShooterSubsystem::CalculatePitchFromLinearServo() {
+  constexpr double kPitchMapScale = 206.17;
+  constexpr double kPitchMapOffset = 48.64858705;
+
+  // Left/right are commanded in lock-step, so use left side directly.
+  const double stroke_mm = linear_servo_left_target_mm_;
+  double asin_input = (stroke_mm + kPitchMapOffset) / kPitchMapScale;
+  asin_input = std::clamp(asin_input, -1.0, 1.0);
+
+  shooter_pitch_angle_ = 90.0 - std::asin(asin_input) * 180.0 / M_PI;
+  frc::SmartDashboard::PutNumber("shooter_pitch_deg_from_servo",
+                                 shooter_pitch_angle_);
+  frc::SmartDashboard::PutNumber("linear_servo_stroke_pitch60_mm",
+                                 CalculateStrokeFromPitchDeg(60.0));
+  frc::SmartDashboard::PutNumber(
+      "linear_servo_left_right_delta_mm",
+      linear_servo_left_target_mm_ - linear_servo_right_target_mm_);
+}
+
+double ShooterSubsystem::CalculateStrokeFromPitchDeg(double pitch_deg) const {
+  constexpr double kPitchMapScale = 206.17;
+  constexpr double kPitchMapOffset = 48.64858705;
+
+  const double stroke_mm =
+      std::sin((90.0 - pitch_deg) * M_PI / 180.0) * kPitchMapScale -
+      kPitchMapOffset;
+  return std::clamp(stroke_mm, 0.0, kLinearServoMaxPositionMm);
+}
+
 
 void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm) {
   linear_servo_left_.SetPositionMm(position_mm);
@@ -166,16 +166,25 @@ void ShooterSubsystem::SetLinearServoRightPositionMm(double position_mm) {
 }
 
 void ShooterSubsystem::SetShootVelocity(double velocity) {
-  shooter_right_.setmode(9);
-  shooter_right_.Getdata().targetVelocity = velocity;
+  // mode 9: VelocityTorqueCurrentFOC, direct speed setpoint
+  shooter_right_.setvelocitytorquecurrent(velocity);
 }
 
 void ShooterSubsystem::SetBangBangShootVelocity(double velocity) {
-  shooter_right_.setBangBangVelocity(velocity, true);  // 使用BangBang控制
+  shooter_right_.setBangBangVelocity(velocity, true);  // 娴ｈ法鏁angBang閹貉冨煑
 }
 
 frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity) {
   return frc2::cmd::RunOnce([this, velocity] { SetShootVelocity(velocity); });
+}
+
+frc2::CommandPtr ShooterSubsystem::HoldShootVelocityCommandPtr(
+    double velocity) {
+  return this->Run([this, velocity] { SetShootVelocity(velocity); });
+}
+
+frc2::CommandPtr ShooterSubsystem::StopCommandPtr() {
+  return this->RunOnce([this] { Stop(); });
 }
 
 frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(
@@ -185,7 +194,7 @@ frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(
 }
 
 double ShooterSubsystem::GetShootVelocity() {
-  return shooter_right_.Getdata().currentVelocity;  // 从主电机读取
+  return shooter_right_.Getdata().currentVelocity;  // 娴犲簼瀵岄悽鍨簚鐠囪褰?
 }
 
 void ShooterSubsystem::Stop() { SetShootVelocity(0.0); }
