@@ -25,8 +25,9 @@ void ShooterSubsystem::SetDrivetrainSubsystem(
 
 void ShooterSubsystem::Initialization() {
   configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0;     // 娑撳秴寮芥潪?
-  shooter_right_config.MotorOutput.NeutralMode = 0;  // 閸掔婧呭Ο鈥崇础
+  shooter_right_config.MotorOutput.Inverted = 0;  // 娑撳秴寮芥潪?
+  shooter_right_config.MotorOutput.NeutralMode =
+      0;  // 閸掔婧呭Ο鈥崇础
 
   // Slot0 PID
   configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
@@ -90,7 +91,8 @@ void ShooterSubsystem::Periodic() {
     ideal_pitch_valid_ = false;
     ideal_pitch_deg_ = last_valid_pitch_deg_;
   }
-  frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_valid", ideal_pitch_valid_);
+  frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_valid",
+                                  ideal_pitch_valid_);
   frc::SmartDashboard::PutNumber("shooter_ideal_pitch_deg", ideal_pitch_deg_);
   LinearServoControl();
   CalculatePitchFromLinearServo();
@@ -155,7 +157,6 @@ void ShooterSubsystem::CalculateLinearServoTarget() {
   linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
 }
 
-
 void ShooterSubsystem::CalculatePitchFromLinearServo() {
   constexpr double kPitchMapScale = 206.17;
   constexpr double kPitchMapOffset = 48.64858705;
@@ -185,7 +186,6 @@ double ShooterSubsystem::CalculateStrokeFromPitchDeg(double pitch_deg) const {
   return std::clamp(stroke_mm, 0.0, kLinearServoMaxPositionMm);
 }
 
-
 void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm) {
   linear_servo_left_.SetPositionMm(position_mm);
 }
@@ -200,7 +200,8 @@ void ShooterSubsystem::SetShootVelocity(double velocity) {
 }
 
 void ShooterSubsystem::SetBangBangShootVelocity(double velocity) {
-  shooter_right_.setBangBangVelocity(velocity, true);  // 娴ｈ法鏁angBang閹貉冨煑
+  shooter_right_.setBangBangVelocity(
+      velocity, true);  // 娴ｈ法鏁angBang閹貉冨煑
 }
 
 frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity) {
@@ -223,7 +224,8 @@ frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(
 }
 
 double ShooterSubsystem::GetShootVelocity() {
-  return shooter_right_.Getdata().currentVelocity;  // 娴犲簼瀵岄悽鍨簚鐠囪褰?
+  return shooter_right_.Getdata()
+      .currentVelocity;  // 娴犲簼瀵岄悽鍨簚鐠囪褰?
 }
 
 void ShooterSubsystem::Stop() { SetShootVelocity(0.0); }
@@ -244,7 +246,8 @@ void ShooterSubsystem::LinearServoControl() {
 
   const double target_stroke_mm = CalculateStrokeFromPitchDeg(ideal_pitch_deg_);
   const double max_step_mm = std::max(0.0, kLinearServoSpeedMmPerS * dt_s);
-  const double stroke_error_mm = target_stroke_mm - linear_servo_left_target_mm_;
+  const double stroke_error_mm =
+      target_stroke_mm - linear_servo_left_target_mm_;
   const double step_mm = std::clamp(stroke_error_mm, -max_step_mm, max_step_mm);
   linear_servo_left_target_mm_ = std::clamp(
       linear_servo_left_target_mm_ + step_mm, 0.0, kLinearServoMaxPositionMm);
@@ -268,9 +271,11 @@ void ShooterSubsystem::LinearServoControl() {
 }
 
 double ShooterSubsystem::CalculatePitchAngleFromDistance(double x) {
-  constexpr double v  = 6.607443729;
+  constexpr double v = 6.607443729;
+  // constexpr double v = 7.022;
+  // constexpr double v = 8.067;
   constexpr double dz = 1.2296;
-  constexpr double g  = 9.80665;
+  constexpr double g = 9.80665;
 
   if (!(x > 0.0)) {
     return std::numeric_limits<double>::quiet_NaN();

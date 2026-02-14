@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "subsystems/GroundIntakeSubsystem.h"
+
 #include <frc/DriverStation.h>
 #include <frc/Timer.h>
 
@@ -20,8 +21,6 @@ void GroundIntakeSubsystem::Initialization() {
   intake_roller_slot0.kI = 0.08;
   intake_roller_slot0.kD = 0.;
   intake_roller_slot0.GravityType = 0;
-
-
 
   configs::TalonFXConfiguration intake_pitch_config{};
   intake_pitch_config.MotorOutput.Inverted = 0;
@@ -44,26 +43,26 @@ void GroundIntakeSubsystem::Initialization() {
     }
   }
 
-    
   /* Configure Motion Magic */
-  configs::MotionMagicConfigs &mm_pitch = intake_pitch_config.MotionMagic;
+  configs::MotionMagicConfigs& mm_pitch = intake_pitch_config.MotionMagic;
   // expo鎵€闇€鍙傛暟
-  mm_pitch.MotionMagicCruiseVelocity = 0_tps; // 5 (mechanism) rotations per second cruise
-  mm_pitch.MotionMagicExpo_kV=0.1_V / 1_tps; // 0.12
-  mm_pitch.MotionMagicExpo_kA=0.04_V / 1_tr_per_s_sq; // 0.1
+  mm_pitch.MotionMagicCruiseVelocity =
+      0_tps;  // 5 (mechanism) rotations per second cruise
+  mm_pitch.MotionMagicExpo_kV = 0.1_V / 1_tps;           // 0.12
+  mm_pitch.MotionMagicExpo_kA = 0.04_V / 1_tr_per_s_sq;  // 0.1
 
   ctre::phoenix::StatusCode intake_roller_status =
       ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i) {
     intake_roller_status = intake_roller_.Applyconfig(intake_roller_config);
     if (intake_roller_status.IsOK()) {
-
       break;
     }
   }
   intake_pitch_.setgearRatio(126.56);
   intake_pitch_.setinvert(-1);
-  intake_pitch_.setPhysicalLimits(0, 23.4 / intake_pitch_.Getdata().gearRatio,120 / intake_pitch_.Getdata().gearRatio, 40);
+  intake_pitch_.setPhysicalLimits(0, 23.4 / intake_pitch_.Getdata().gearRatio,
+                                  120 / intake_pitch_.Getdata().gearRatio, 40);
   intake_pitch_.setCurrent_Speed(0.1);
 }
 
@@ -87,8 +86,7 @@ void GroundIntakeSubsystem::Periodic() {
   intake_pitch_.Receive();
 
   if (pitch_reset_flag_ == 0) {
-  // GroundIntakeReset();
-
+    GroundIntakeReset();
   }
 
   if (publish_debug) {
@@ -134,8 +132,6 @@ void GroundIntakeSubsystem::SetRollerVelocity(double velocity) {
   intake_roller_.setvelocitytorquecurrent(velocity);
 }
 
-
-
 void GroundIntakeSubsystem::SetPitchPosition(double position) {
   intake_pitch_.setmode(12);
   intake_pitch_.Getdata().targetPosition = position;
@@ -147,39 +143,28 @@ void GroundIntakeSubsystem::SetRollerDutyCycle(double dutyCycle) {
 
 frc2::CommandPtr GroundIntakeSubsystem::SetRollerDutyCycleCommandPtr(
     double dutyCycle) {
-  return this->RunOnce(
-      [this, dutyCycle] { SetRollerDutyCycle(dutyCycle); });
+  return this->RunOnce([this, dutyCycle] { SetRollerDutyCycle(dutyCycle); });
 }
 
 void GroundIntakeSubsystem::Stop() { SetRollerVelocity(0.0); }
-
 
 void GroundIntakeSubsystem::SetPitchNormPosition(double norm) {
   intake_pitch_.setNormalizedMotionPosition(norm);
 }
 
-
-frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(double norm) {
-
-    // 璁剧疆intake鐢垫満鐨勫崰绌烘瘮
-    return this->RunOnce(
-        [this, norm] {
-            SetPitchNormPosition(norm);
-        }
-    );
-
+frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(
+    double norm) {
+  // 璁剧疆intake鐢垫満鐨勫崰绌烘瘮
+  return this->RunOnce([this, norm] { SetPitchNormPosition(norm); });
 }
 
 void GroundIntakeSubsystem::GroundIntakeReset() {
   // Disabled state should not advance homing.
   if (!frc::DriverStation::IsEnabled()) {
-
     pitch_reset_counter_ = 0;
     frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
     return;
   }
-
-
 
   intake_pitch_.setcurrent(-30);
   if (intake_pitch_.Getdata().currentCurrent < -28) {
@@ -189,7 +174,8 @@ void GroundIntakeSubsystem::GroundIntakeReset() {
   }
 
   if (pitch_reset_counter_ >= 3) {
-    intake_pitch_.Reset(intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
+    intake_pitch_.Reset(
+        intake_pitch_.Getmotor().GetPosition().GetValueAsDouble());
     pitch_reset_flag_ = true;
   }
 
