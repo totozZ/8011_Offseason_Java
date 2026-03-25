@@ -130,19 +130,6 @@ void AutoRealTimeAimDrive::Execute() {
   frc::SmartDashboard::PutNumber("shootOnMove/ShootVY", Normvy);
   frc::SmartDashboard::PutNumber("shootOnMove/ShootVZ", Shootvz);
 
-  bool rightSpeed = std::abs(m_shooter->realShootVelocity - m_shooter->GetShootVelocity()) <= 10.0;
-  bool rightRot = m_drive->SOMangleDiff <= 8.0; 
-  // 自动路线如果都在可射击区，这里就直接 true。如果有障碍物遮挡区，可以加上 currentPose.Y() 的限制
-  bool rightPos = true; 
-
-  if (rightPos && rightSpeed && rightRot) {
-    feeder->SetBackwardFeederVelocity(ShooterConstants::kBackwardFeederVelocity);
-    feeder->SetUpwardFeederVelocity(ShooterConstants::kUpwardFeederVelocity);
-  } else {
-    feeder->SetBackwardFeederVelocity(0);
-    feeder->SetUpwardFeederVelocity(0);
-  }
-
   frc::Rotation2d ttall{units::radian_t(targetAngleRad)};
   frc::Rotation2d tlow{units::radian_t(currentAngleRad)};
   double angledi=std::abs((ttall-tlow).Degrees().value());

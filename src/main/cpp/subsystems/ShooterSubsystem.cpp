@@ -3,9 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "subsystems/ShooterSubsystem.h"
-
 #include <frc/Timer.h>
-
 #include <algorithm>
 #include <cmath>
 
@@ -24,279 +22,264 @@ void ShooterSubsystem::SetDrivetrainSubsystem(
 }
 
 void ShooterSubsystem::Initialization() {
-  configs::TalonFXConfiguration shooter_right_config{};
-  shooter_right_config.MotorOutput.Inverted = 0;  // 娑撳秴寮芥潪?
-  shooter_right_config.MotorOutput.NeutralMode =
-      0;  // 閸掔婧呭Ο鈥崇础
+  // --- 1. 旧代码的几何模型预计算 ---
+  const double compensateballradis1 = ballradis - ball_error1;
+  const double compensateballradis2 = ballradis - ball_error2;
+  const double CoscompensateAngleRad = std::clamp(
+      (((compensateballradis2 + flywheelradis) * (compensateballradis2 + flywheelradis) +
+        hoodradis * hoodradis - compensateballradis1 * compensateballradis1) /
+       (2.0 * (compensateballradis2 + flywheelradis) * hoodradis)),
+      -1.0, 1.0);
+  const double compensateAngleRad = std::acos(CoscompensateAngleRad);
+  const double linemiddle = std::sqrt((flywheelradis * flywheelradis) +
+                                      hoodradis * hoodradis -
+                                      2.0 * flywheelradis * hoodradis * CoscompensateAngleRad);
+  const double costhetamiddleline = std::clamp((linemiddle * linemiddle + hoodradis * hoodradis -
+                                                flywheelradis * flywheelradis) /
+                                                   (2.0 * linemiddle * hoodradis),
+                                               -1.0, 1.0);
+  thetaMiddleLine = std::acos(costhetamiddleline);
 
-  // Slot0 PID
-  configs::Slot0Configs& shooter_right_slot0 = shooter_right_config.Slot0;
-  shooter_right_slot0.kG = 0.;
-  shooter_right_slot0.kS = 7;
-  shooter_right_slot0.kV = 0.06;
-  shooter_right_slot0.kA = 3.5;
-  shooter_right_slot0.kP = 12;
-  shooter_right_slot0.kI = 0.2;
-  shooter_right_slot0.kD = 0.01;
-  shooter_right_slot0.GravityType = 0;
+  // --- 2. 新代码的主控飞轮配置 (右上) ---
+  configs::TalonFXConfiguration shooter_right_up_config{};
+  shooter_right_up_config.MotorOutput.Inverted = 0;
+  shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
+  shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 100_A;
+  shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 25_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-  ctre::phoenix::StatusCode shooter_right_status =
-      ctre::phoenix::StatusCode::StatusCodeNotInitialized;
-  for (int i = 0; i < 5; ++i) {
-    shooter_right_status = shooter_right_.Applyconfig(shooter_right_config);
-    if (shooter_right_status.IsOK()) break;
-  }
+  configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
+  shooter_right_up_slot0.kG = 0.;
+  shooter_right_up_slot0.kS = 4.875;
+  shooter_right_up_slot0.kV = 0;
+  shooter_right_up_slot0.kA = 0;
+  shooter_right_up_slot0.kP = 8;
+  shooter_right_up_slot0.kI = 0;
+  shooter_right_up_slot0.kD = 0;
 
-  // follow
-  shooter_left_front_.setfollowControl(shooter_right_.Getdata().deviceId, true);
-  shooter_left_back_.setfollowControl(shooter_right_.Getdata().deviceId, true);
+  shooter_right_up_.Applyconfig(shooter_right_up_config);
+  shooter_right_up_.setinvert(-1);
 
-  // Power-on default actuator position
-  SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
-  SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
+  // --- 3. 配置其他三个飞轮跟随右上 ---
+  shooter_left_down_.setfollowControl(shooter_right_up_.Getdata().deviceId, true);
+  shooter_left_up_.setfollowControl(shooter_right_up_.Getdata().deviceId, true);
+  shooter_right_down_.setfollowControl(shooter_right_up_.Getdata().deviceId, false);
+
+  // --- 4. 新代码的 Pitch 角度电机配置 ---
+  configs::TalonFXConfiguration shooter_pitch_config{};
+  shooter_pitch_config.MotorOutput.Inverted = 0;
+  shooter_pitch_config.MotorOutput.NeutralMode = 1; // Brake
+  shooter_pitch_config.CurrentLimits.StatorCurrentLimit = 60_A;
+  shooter_pitch_config.CurrentLimits.StatorCurrentLimitEnable = true;
+  shooter_pitch_config.CurrentLimits.SupplyCurrentLimit = 20_A;
+  shooter_pitch_config.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+  configs::Slot0Configs& shooter_pitch_slot0 = shooter_pitch_config.Slot0;
+  shooter_pitch_slot0.kP = 7;
+  shooter_pitch_slot0.kI = 0.8;
+  shooter_pitch_slot0.kD = 0.02;
+
+  configs::MotionMagicConfigs& mm_pitch = shooter_pitch_config.MotionMagic;
+  mm_pitch.MotionMagicCruiseVelocity = 0_tps;
+  mm_pitch.MotionMagicExpo_kV = 0.1_V / 1_tps;
+  mm_pitch.MotionMagicExpo_kA = 0.01_V / 1_tr_per_s_sq;
+
+  shooter_pitch_.Applyconfig(shooter_pitch_config);
+  shooter_pitch_.setgearRatio(18.67);
+  shooter_pitch_.setinvert(-1);
+  shooter_pitch_.setPhysicalLimits(0, ShooterConstants::kPitchMotorMaxposition / 18.67,
+                                   120 / 18.67, 40);
+  shooter_pitch_.setCurrent_Speed(0.1);
+  frc::SmartDashboard::SetDefaultNumber("shootVelWant",40);
+  frc::SmartDashboard::SetDefaultBoolean("shootUseDash",false);
 }
+
 void ShooterSubsystem::Periodic() {
-  static constexpr double kPeriodicOverrunMs = 5.0;
-  static int periodic_overrun_count = 0;
-  static double periodic_ms_max = 0.0;
-  const double t_start_s = frc::Timer::GetFPGATimestamp().value();
+  // 必须调用以维持封装好的 Wayimotor 的通讯
+  shooter_right_up_.Control();
+  shooter_pitch_.Control();
+  shooter_right_up_.Receive();
+  const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
+  frc::SmartDashboard::PutNumber("shooter_hub_distance_m", hub_distance_m);
 
-  shooter_right_.Control();
-  shooter_left_back_.Control();
-  shooter_left_front_.Control();
-  shooter_right_.Receive();
-  shooter_left_back_.Receive();
-  shooter_left_front_.Receive();
+  frc::SmartDashboard::PutNumber("shooter_pitch_currentPosition", shooter_pitch_.GetPosition());
 
-  // 娴ｈ法鏁ゅ锕€褰竧rigger閹貉冨煑閻㈠灚甯归弶?
-  CalculateShooterVelocity();
-  if (drivetrain_sub_ != nullptr) {
-    const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
-    const double ideal_pitch_raw_deg =
-        CalculatePitchAngleFromDistance(hub_distance_m);
-    const bool raw_in_range = (ideal_pitch_raw_deg >= kAutoPitchMinDeg) &&
-                              (ideal_pitch_raw_deg <= kAutoPitchMaxDeg);
-    ideal_pitch_valid_ = std::isfinite(ideal_pitch_raw_deg) && raw_in_range;
-    if (ideal_pitch_valid_) {
-      last_valid_pitch_deg_ = ideal_pitch_raw_deg;
-    }
-    // Always command from last valid pitch to avoid freezing on transient NaN.
-    ideal_pitch_deg_ = last_valid_pitch_deg_;
-    frc::SmartDashboard::PutNumber("shooter_hub_distance_m", hub_distance_m);
-    frc::SmartDashboard::PutNumber("shooter_ideal_pitch_raw_deg",
-                                   ideal_pitch_raw_deg);
-    frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_raw_in_range",
-                                    raw_in_range);
+  // 1. 判断是否需要归零
+  if (shooter_pitch_reset_flag_ == 0) {
+    ShootPitch_Reset();
   } else {
-    ideal_pitch_valid_ = false;
-    ideal_pitch_deg_ = last_valid_pitch_deg_;
-  }
-  frc::SmartDashboard::PutBoolean("shooter_ideal_pitch_valid",
-                                  ideal_pitch_valid_);
-  frc::SmartDashboard::PutNumber("shooter_ideal_pitch_deg", ideal_pitch_deg_);
-  LinearServoControl();
-  CalculatePitchFromLinearServo();
+    // 2. 如果已归零，获取底盘数据并计算
+    if (drivetrain_sub_ != nullptr) {
+      const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
+      const double pass_distance_m = drivetrain_sub_->GetState().Pose.Translation().Distance(passTarget).value();
+      
+      isPassing = drivetrain_sub_->GetState().Pose.X().value() <= 11.4 && 
+                  drivetrain_sub_->GetState().Pose.X().value() >= 5;
+      
+      frc::SmartDashboard::PutBoolean("shootOnMove/isPassing", isPassing);
 
-  const double periodic_ms =
-      (frc::Timer::GetFPGATimestamp().value() - t_start_s) * 1000.0;
-  if (periodic_ms > periodic_ms_max) {
-    periodic_ms_max = periodic_ms;
+      // 旧算法：计算角度
+      CalculatePitchAngleAboveHub(hub_distance_m);
+      
+      // 旧算法：计算速度
+      if (!isPassing) {
+        CalculateShooterSpeedRegression(hub_distance_m);
+      } else {
+        CalculateShooterSpeedRegression(pass_distance_m);
+      }
+      
+      frc::SmartDashboard::PutNumber("shoot_velocity_expected", vel);
+    }
+
+    // 3. 将理论角度转换为新版电机的运动指令
+    SetShootPitchAngle(90-angle);
+
   }
-  if (periodic_ms > kPeriodicOverrunMs) {
-    ++periodic_overrun_count;
+
+  // 4. 合成速度并下发给飞轮
+  getFinalVel();
+  if (shooting) {
+    shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
+  } else {
+    Stop();
   }
-  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicMs", periodic_ms);
-  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicMsMax", periodic_ms_max);
-  frc::SmartDashboard::PutNumber("Perf/ShooterPeriodicOverrunCount",
-                                 periodic_overrun_count);
 }
 
-void ShooterSubsystem::CalculateShooterVelocity() {
-  static double last_debug_publish_s = -1.0;
-  static constexpr double kDebugPublishPeriodS = 0.1;
-  const double now_s = frc::Timer::GetFPGATimestamp().value();
-  const bool publish_debug =
-      (last_debug_publish_s < 0.0) ||
-      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
-  if (publish_debug) {
-    last_debug_publish_s = now_s;
+// ==========================================
+// 旧代码核心：速度与角度算法
+// ==========================================
+
+double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
+  if (onlyDefaultShoot) {
+    angle = 70;
+    return 70;
+  } else if (isPassing) {
+    Tangle = 50; 
+    angle = Tangle + angleOffsetFromDrive;
+    return angle;
+  } else {
+    
+    dis = dis * 2 / 8.0;
+    const double height = 1.8288 + 1.8 - shooter_height_approx;
+    constexpr double kRad2Deg = 180.0 / M_PI;
+    
+    angle = std::atan2(height, dis) * kRad2Deg;
+    if (angle > 85) angle = 85;
+    if (angle < 75) angle = 75;
+    
+    Tangle = angle;
+    angle += angleOffsetFromDrive;
+    frc::SmartDashboard::PutNumber("shootIdealAngle",angle);
+    return angle;
+  }
+}
+
+double ShooterSubsystem::CalculateShooterSpeedRegression(double dis) {
+  bool s=frc::SmartDashboard::GetBoolean("shootUseDash",false);
+  double sp=frc::SmartDashboard::GetNumber("shootVelWant",40);
+  if(!s){
+  if (onlyDefaultShoot) {
+    vel = 40.9;
+  } else if (isPassing) {
+    vel = pass_m * dis + pass_b;
+  } else if (dis < 2.5) {
+    vel = shooter_vel_quadratic_regression_a * dis + shooter_vel_quadratic_regression_b;
+  } else { 
+    vel = shooter_vel_quadratic_regression_c * dis + shooter_vel_quadratic_regression_d;
+  }}
+  else{
+    vel=sp;
   }
 
-  double feeder_upward_velocity = 0.0;
+  return vel;
+}
+double ShooterSubsystem::GetShootVelocity() {
+  // 返回主控电机 (右上) 的当前真实转速
+  return shooter_right_up_.Getdata().currentVelocity;
+}
+void ShooterSubsystem::getFinalVel() {
+  double feeder_upward_target_velocity = 0.0;
   double feeder_upward_velocity_difference = 0.0;
+  double add = 0;
+  
   if (feeder_sub_ != nullptr) {
-    feeder_upward_velocity = feeder_sub_->GetUpwardFeederVelocity();
-    feeder_upward_velocity_difference =
-        -feeder_upward_velocity + feeder_sub_->GetComboTargetVelocity();
-    if (feeder_upward_velocity_difference >
-        ShooterConstants::kMaxFeederVelocityDifference) {
-      feeder_upward_velocity_difference =
-          ShooterConstants::kMaxFeederVelocityDifference;
-    }
-    if (feeder_upward_velocity_difference <
-        -ShooterConstants::kMaxFeederVelocityDifference) {
-      feeder_upward_velocity_difference =
-          -ShooterConstants::kMaxFeederVelocityDifference;
+    feeder_upward_target_velocity = feeder_sub_->GetComboTargetVelocity();
+    // 防零除保护
+    if (feeder_upward_target_velocity > 0.01) {
+      feeder_upward_velocity_difference = -feeder_sub_->GetUpwardFeederVelocity() + feeder_upward_target_velocity;
+      add = feeder_upward_velocity_difference / feeder_upward_target_velocity * shooter_max_composite;
     }
   }
-  shooter_velocity_target = ShooterConstants::kUpwardVelocityTarget +
-                            feeder_upward_velocity_difference;
+  realShootVelocity = vel + velOffsetFromDrive + add;
+}
 
-  if (publish_debug) {
-    frc::SmartDashboard::PutNumber("shooter_feeder_upward_velocity",
-                                   feeder_upward_velocity);
-    frc::SmartDashboard::PutNumber("shooter_velocity_target",
-                                   shooter_velocity_target);
+// ==========================================
+// 结合点：旧物理模型 -> 新马达控制
+// ==========================================
+
+void ShooterSubsystem::CalculateShooterPitch() {
+  // 1. 旧代码的物理几何映射：理论射出角度 -> 内部 Hood 角度
+  const double hood_target = (90.0 - angle) + thetaMiddleLine * 180.0 / M_PI;
+  
+  // 2. 将 Hood 角度转换为归一化的位置 [0, 1] 供新系统使用
+  // 当 hood_target == min 时，norm = 0； 当 hood_target == max 时，norm = 1
+  double norm_target = (hood_target - min_hood_angle) / (max_hood_angle - min_hood_angle);
+  norm_target = std::clamp(norm_target, 0.0, 1.0);
+
+  // 3. 下发给新版的 Motion Magic 控制器
+  SetShootPitchNormPosition(norm_target);
+  
+  frc::SmartDashboard::PutNumber("shooter_calculated_hood_target_deg", hood_target);
+  frc::SmartDashboard::PutNumber("shooter_norm_target_pitch", norm_target);
+}
+
+// ==========================================
+// 新代码核心：Pitch 电流归零与停止指令
+// ==========================================
+
+void ShooterSubsystem::ShootPitch_Reset() {
+  if (!frc::DriverStation::IsEnabled()) {
+    shooter_pitch_reset_flag_ = false;
+    return;
+  }
+
+  // 给定一个负电流让机构压到底部
+  shooter_pitch_.setcurrent(-10);
+
+  if (shooter_pitch_.GetCurrent() < -8) {
+    ++shooter_pitch_reset_counter_;
+  } else {
+    shooter_pitch_reset_counter_ = 0;
+  }
+
+  if (shooter_pitch_reset_counter_ >= 3) {
+    shooter_pitch_.Reset(shooter_pitch_.GetAbsPosition());
+    shooter_pitch_reset_flag_ = true;
   }
 }
 
-void ShooterSubsystem::CalculateLinearServoTarget() {
-  // pitch angle map
-  linear_servo_left_target_mm_ =
-      CalculateStrokeFromPitchDeg(shooter_pitch_angle_);
-  linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
-}
-
-void ShooterSubsystem::CalculatePitchFromLinearServo() {
-  constexpr double kPitchMapScale = 206.17;
-  constexpr double kPitchMapOffset = 48.64858705;
-
-  // Left/right are commanded in lock-step, so use left side directly.
-  const double stroke_mm = linear_servo_left_target_mm_;
-  double asin_input = (stroke_mm + kPitchMapOffset) / kPitchMapScale;
-  asin_input = std::clamp(asin_input, -1.0, 1.0);
-
-  shooter_pitch_angle_ = 90.0 - std::asin(asin_input) * 180.0 / M_PI;
-  frc::SmartDashboard::PutNumber("shooter_pitch_deg_from_servo",
-                                 shooter_pitch_angle_);
-  frc::SmartDashboard::PutNumber("linear_servo_stroke_pitch60_mm",
-                                 CalculateStrokeFromPitchDeg(60.0));
-  frc::SmartDashboard::PutNumber(
-      "linear_servo_left_right_delta_mm",
-      linear_servo_left_target_mm_ - linear_servo_right_target_mm_);
-}
-
-double ShooterSubsystem::CalculateStrokeFromPitchDeg(double pitch_deg) const {
-  constexpr double kPitchMapScale = 206.17;
-  constexpr double kPitchMapOffset = 48.64858705;
-
-  const double stroke_mm =
-      std::sin((90.0 - pitch_deg) * M_PI / 180.0) * kPitchMapScale -
-      kPitchMapOffset;
-  return std::clamp(stroke_mm, 0.0, kLinearServoMaxPositionMm);
-}
-
-void ShooterSubsystem::SetLinearServoLeftPositionMm(double position_mm) {
-  linear_servo_left_.SetPositionMm(position_mm);
-}
-
-void ShooterSubsystem::SetLinearServoRightPositionMm(double position_mm) {
-  linear_servo_right_.SetPositionMm(position_mm);
-}
-
-void ShooterSubsystem::SetShootVelocity(double velocity) {
-  // mode 9: VelocityTorqueCurrentFOC, direct speed setpoint
-  shooter_right_.setvelocitytorquecurrent(velocity);
-}
-
-void ShooterSubsystem::SetBangBangShootVelocity(double velocity) {
-  shooter_right_.setBangBangVelocity(
-      velocity, true);  // 娴ｈ法鏁angBang閹貉冨煑
-}
-
-frc2::CommandPtr ShooterSubsystem::SetShootVelocityCommandPtr(double velocity) {
-  return frc2::cmd::RunOnce([this, velocity] { SetShootVelocity(velocity); });
-}
-
-frc2::CommandPtr ShooterSubsystem::HoldShootVelocityCommandPtr(
-    double velocity) {
-  return this->Run([this, velocity] { SetShootVelocity(velocity); });
+void ShooterSubsystem::Stop() {
+  shooter_right_up_.setcoast(); 
 }
 
 frc2::CommandPtr ShooterSubsystem::StopCommandPtr() {
   return this->RunOnce([this] { Stop(); });
 }
-
-frc2::CommandPtr ShooterSubsystem::SetBangBangShootVelocityCommandPtr(
-    double velocity) {
-  return frc2::cmd::RunOnce(
-      [this, velocity] { SetBangBangShootVelocity(velocity); });
+void ShooterSubsystem::SetShootPitchNormPosition(double norm) {
+  shooter_pitch_.setNormalizedMotionPosition(norm);
 }
 
-double ShooterSubsystem::GetShootVelocity() {
-  return shooter_right_.Getdata()
-      .currentVelocity;  // 娴犲簼瀵岄悽鍨簚鐠囪褰?
+void ShooterSubsystem::SetShootPitchAngle(double target_angle) {
+  double clamped_angle = std::clamp(target_angle, ShooterConstants::kMinPitchAngle,
+        ShooterConstants::kMaxPitchAngle);
+
+  double target_norm_position = (clamped_angle - ShooterConstants::kMinPitchAngle) /
+      (ShooterConstants::kMaxPitchAngle - ShooterConstants::kMinPitchAngle);
+
+  SetShootPitchNormPosition(target_norm_position);
 }
 
-void ShooterSubsystem::Stop() { SetShootVelocity(0.0); }
-
-void ShooterSubsystem::LinearServoControl() {
-  static double last_debug_publish_s = -1.0;
-  static constexpr double kDebugPublishPeriodS = 0.1;
-  double now_s = frc::Timer::GetFPGATimestamp().value();
-  const bool publish_debug =
-      (last_debug_publish_s < 0.0) ||
-      ((now_s - last_debug_publish_s) >= kDebugPublishPeriodS);
-  if (publish_debug) {
-    last_debug_publish_s = now_s;
-  }
-  double dt_s =
-      (last_servo_update_s_ > 0.0) ? (now_s - last_servo_update_s_) : 0.0;
-  last_servo_update_s_ = now_s;
-
-  const double target_stroke_mm = CalculateStrokeFromPitchDeg(ideal_pitch_deg_);
-  const double max_step_mm = std::max(0.0, kLinearServoSpeedMmPerS * dt_s);
-  const double stroke_error_mm =
-      target_stroke_mm - linear_servo_left_target_mm_;
-  const double step_mm = std::clamp(stroke_error_mm, -max_step_mm, max_step_mm);
-  linear_servo_left_target_mm_ = std::clamp(
-      linear_servo_left_target_mm_ + step_mm, 0.0, kLinearServoMaxPositionMm);
-  linear_servo_right_target_mm_ = linear_servo_left_target_mm_;
-
-  SetLinearServoLeftPositionMm(linear_servo_left_target_mm_);
-  SetLinearServoRightPositionMm(linear_servo_right_target_mm_);
-
-  if (publish_debug) {
-    frc::SmartDashboard::PutNumber("linear_servo_auto_target_mm",
-                                   linear_servo_left_target_mm_);
-    frc::SmartDashboard::PutNumber("linear_servo_target_from_pitch_mm",
-                                   target_stroke_mm);
-    frc::SmartDashboard::PutNumber("linear_servo_step_mm", step_mm);
-    frc::SmartDashboard::PutNumber("linear_servo_dt_s", dt_s);
-    frc::SmartDashboard::PutNumber("linear_servo_left_cmd_mm",
-                                   linear_servo_left_target_mm_);
-    frc::SmartDashboard::PutNumber("linear_servo_right_cmd_mm",
-                                   linear_servo_right_target_mm_);
-  }
-}
-
-double ShooterSubsystem::CalculatePitchAngleFromDistance(double x) {
-  constexpr double v = 6.607443729;
-  // constexpr double v = 7.022;
-  // constexpr double v = 8.067;
-  constexpr double dz = 1.2296;
-  constexpr double g = 9.80665;
-
-  if (!(x > 0.0)) {
-    return std::numeric_limits<double>::quiet_NaN();
-  }
-
-  // Create intermediate variables first (for clarity and numerical stability)
-  const double v2 = v * v;
-  const double v4 = v2 * v2;
-
-  // Discriminant: must be >= 0 for a real solution
-  const double D = v4 - g * (g * x * x + 2.0 * dz * v2);
-  if (D < 0.0) {
-    return std::numeric_limits<double>::quiet_NaN();  // unreachable at this x
-  }
-
-  // High-arc solution uses the '+' branch
-  const double sqrtD = std::sqrt(D);
-  const double numerator = v2 + sqrtD;
-  const double denominator = g * x;
-
-  const double theta_rad = std::atan2(numerator, denominator);
-  constexpr double kRad2Deg = 180.0 / 3.14159265358979323846;
-  return theta_rad * kRad2Deg;
-}
+// frc2::CommandPtr ShooterSubsystem::SetShootPitchAngleCommandPtr(double target_angle) {
+//   return this->RunOnce([this, target_angle] { SetShootPitchAngle(target_angle); });
+// }

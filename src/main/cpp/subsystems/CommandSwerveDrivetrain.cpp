@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string>
 
-#include "frc8011/GPDetection.h"
+
 using namespace subsystems;
 
 void CommandSwerveDrivetrain::ConfigureAutoBuilder() {

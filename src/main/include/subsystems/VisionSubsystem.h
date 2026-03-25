@@ -46,10 +46,10 @@ class VisionSubsystem : public frc2::SubsystemBase {
   double currentAngularVelocity_ = 0.0;
 
   // Limelight 位姿数据
-  LimelightHelpers::PoseEstimate mt1_left_pose_;
-  LimelightHelpers::PoseEstimate mt2_left_pose_;
+  std::array<LimelightHelpers::PoseEstimate, VisionConstants::limelightNames.size()> mt1_poses_;
+  std::array<LimelightHelpers::PoseEstimate, VisionConstants::limelightNames.size()> mt2_poses_;
 
-  int vision_mode_ = 1;           // 0视觉不更新，1更新mt2, 2更新混合
+  std::array<int, VisionConstants::limelightNames.size()> vision_modes_{};           // 0视觉不更新，1更新mt2, 2更新混合
   double switch_distance_ = 1.3;  // 1米，距离阈值，低于此距离使用混合模式
 
   // IMU 模式
@@ -61,8 +61,6 @@ class VisionSubsystem : public frc2::SubsystemBase {
   };
 
   LimelightIMUMode currentIMUMode = LimelightIMUMode::ExternalIMU;
-
-  std::string limelight_left_name_ = "limelight-front";  // Limelight 的名称
 
   // 信任度阈值常量
   const double kMaxAngularVelocity_ = 360.0;  // 超过 360度/秒 则不信任视觉
@@ -85,7 +83,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
    * @brief 根据距离更新视觉模式，使用mt2还是使用混合mt
    *
    */
-  void UpdateVisionMode();
+  void UpdateVisionMode(size_t index);
 
   // 全场定位相关变量和方法
   /**

@@ -24,14 +24,20 @@ public:
 
   void Periodic() override;
   void SetRollerVelocity(double velocity);
+  frc2::CommandPtr SetRollerVelocityCommandPtr(double velocity);
   void SetRollerDutyCycle(double dutyCycle);
   frc2::CommandPtr SetRollerDutyCycleCommandPtr(double dutyCycle);
   void SetPitchPosition(double position);
   void Stop();
+  frc2::CommandPtr StopCommandPtr();
 
   void SetPitchNormPosition(double norm);
+  double GetPitchCurrent();
+  double GetPitchNormPosition();
+  void BrakePitch();
 
   frc2::CommandPtr SetPitchNormPositionCommandPtr(double norm);
+  frc2::CommandPtr BrakePitchCommandPtr();
 private:
   void Initialization();
 

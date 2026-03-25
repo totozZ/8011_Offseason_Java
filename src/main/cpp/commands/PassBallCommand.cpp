@@ -133,12 +133,10 @@ void PassBallCommand::Execute() {
 frc::SmartDashboard::PutBoolean("shootOnMove/RightSpeed", rightSpeed);
 frc::SmartDashboard::PutBoolean("shootOnMove/RightRot", rightRot);
   if(rightPos&&rightSpeed&&rightRot){
-    m_feeder->SetBackwardFeederVelocity(ShooterConstants::kBackwardFeederVelocity);
-    m_feeder->SetUpwardFeederVelocity(ShooterConstants::kUpwardFeederVelocity);
+    m_feeder->setduty(0.8,0.8);
   }
   else{
-     m_feeder->SetBackwardFeederVelocity(0);
-    m_feeder->SetUpwardFeederVelocity(0);
+     m_feeder->setduty(0,0);
   }
   // 下发控制指令到底盘
   frc::Rotation2d rott{units::radian_t(targetAngleRad)};
