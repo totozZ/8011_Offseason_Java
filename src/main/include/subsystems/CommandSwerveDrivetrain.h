@@ -15,6 +15,7 @@
 #include <cmath>
 #include <functional>
 
+#include "subsystems/ShooterSubsystem.h"
 #include "Constants.h"
 #include "ctre/phoenix6/SignalLogger.hpp"
 #include "generated/TunerConstants.h"
@@ -279,6 +280,9 @@ public:
         return m_sysIdRoutineToApply->Dynamic(direction);
     }
 
+    swerve::requests::Idle Idle;
+    swerve::requests::RobotCentric m_safeCoastRequest;
+    swerve::requests::FieldCentricFacingAngle abcdef;
     /**
      * \brief Adds a vision measurement to the Kalman Filter. This will correct the
      * odometry pose estimate while still accounting for measurement noise.
@@ -321,17 +325,18 @@ public:
     {
         return _drivetrain.SamplePoseAt(utils::FPGAToCurrentTime(timestamp));
     }
+    frc::Rotation2d CalculateTargetAngleToHub();
 
 private:
     void ConfigureAutoBuilder();
     void StartSimThread();
-
+    subsystems::ShooterSubsystem* shooterSub;
     // DriveAiming 成员
     swerve::requests::FieldCentricFacingAngle m_driveAimingRequest{};
 
-    // DriveAiming 方法
-    frc::Rotation2d CalculateTargetAngleToHub();
-    frc::Translation2d GetHubPosition();
+
+    
+    
     static double NormalizeAngle(double angle);
 
     
@@ -363,6 +368,12 @@ private:
   frc2::CommandPtr followPathCommand(
       std::vector<frc::Pose2d> const &targetPoses);
 
+  std::shared_ptr<PathPlannerPath> GenerateShootOnMovePath(std::vector<frc::Pose2d> const& targetPoses);
+  frc2::CommandPtr followShootOnMovePathCommand(int direction);
+  void setShooterSubSystem(subsystems::ShooterSubsystem* sub){
+    shooterSub=sub;
+  }
+  frc::Translation2d GetHubPosition();
   // 标志位
   void ResetEventFlag() { eventflag = 0; }
   int GetEventFlag() { return eventflag; }
@@ -385,7 +396,7 @@ private:
   double rotatey = 0.0;         // 记录遥控器坐标系下的y轴方向
   double rotationOffset = 0.0;  // 记录当前陀螺仪相对于x轴的偏移角度
   void SetGPDetection(GPDetection *gpdetection) { gpdetection_ = gpdetection; }
-
+  double SOMangleDiff=0;
   frc::Pose2d GetcurrentPose() { return currentPose; }
 
   double GetDistanceToHub();

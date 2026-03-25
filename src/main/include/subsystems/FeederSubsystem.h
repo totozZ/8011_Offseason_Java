@@ -24,62 +24,74 @@ public:
   }
   void Periodic() override;
 
-  frc2::CommandPtr SetBackwardFeederVelocityCommandPtr(double velocity);
-  frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
-  frc2::CommandPtr HoldFeederVelocityCommandPtr(double backward_velocity,
-                                                double upward_velocity);
+  // --- 基础控制与动作指令 (混合新老接口) ---
   frc2::CommandPtr StopCommandPtr();
-  void SetBackwardFeederVelocity(double velocity);
-  void SetUpwardFeederVelocity(double velocity);
-  void SetBackwardFeederDuty(double duty);
-  void SetUpwardFeederCurrent(double current, double max_abs_duty_cycle);
-  void SetUpwardDuty(double duty);
-  double GetBackwardFeederVelocity();
-  double GetUpwardFeederVelocity();
-  double GetUpwardFeederCurrent();
   void Stop();
-
-  frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction)
-  {
-    return m_sysIdRoutine.Quasistatic(direction);
-  }
-  frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction)
-  {
-    return m_sysIdRoutine.Dynamic(direction);
-  }
   
-  double GetComboTargetVelocity() const {
-    return combo_target_velocity_;
-  }
-  void ChangeComboTargetVelocity(double delta) {
-    combo_target_velocity_ = delta;
-  }
+  void SetBackwardFeederCurrent(double current, double max_abs_duty_cycle);
+  frc2::CommandPtr SetBackwardFeederCurrentCommandPtr(double current, double max_abs_duty_cycle);
+  
+  void SetUpwardFeederCurrent(double current, double max_abs_duty_cycle);
+  frc2::CommandPtr SetUpwardFeederCurrentCommandPtr(double current, double max_abs_duty_cycle);
 
-  void SetUpperVelocityBANGBANG(double velocity);
+  void SetUpwardFeederVelocity(double velocity);
+  frc2::CommandPtr SetUpwardFeederVelocityCommandPtr(double velocity);
 
-  frc2::CommandPtr SetUpperVelocityBANGBANGCommandPtr(double velocity);
+  void SetBackwardFeederVelocity(double duty); 
+  frc2::CommandPtr SetBackwardFeederVelocityCommandPtr(double velocity);
+
+  void setduty(double backward_duty, double upward_duty);
+  frc2::CommandPtr setdutyCommandPtr(double backward_duty, double upward_duty);
+
+  void SetBackwardFeederDuty(double duty);
   frc2::CommandPtr SetBackwardFeederDutyCommandPtr(double duty);
-  frc2::CommandPtr SetUpwardFeederCurrentCommandPtr(
-      double current, double max_abs_duty_cycle);
 
-  void SetUpperVelocitycombo(double velocity);
+  void SetUpwardDuty(double duty);
+
+  frc2::CommandPtr HoldFeederVelocityCommandPtr(double backward_current,
+                                                double backward_current_speed,
+                                                double upward_velocity);
+
+  // --- 旧版战术逻辑接口 ---
   void SetPreload();
   frc2::CommandPtr SetPreloadCommandPtr();
 
+  void SetUpperVelocityBANGBANG(double velocity);
+  frc2::CommandPtr SetUpperVelocityBANGBANGCommandPtr(double velocity);
+  
+  void SetUpperVelocitycombo(double velocity);
+
+  // --- 状态获取 (保留旧版接口) ---
+  double GetBackwardFeederVelocity();
+  double GetUpwardFeederVelocity();
+  double GetUpwardFeederCurrent();
+  
+  double GetComboTargetVelocity() const { return combo_target_velocity_; }
+  void ChangeComboTargetVelocity(double delta) { combo_target_velocity_ = delta; }
+
+  // --- SysId ---
+  frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction) {
+    return m_sysIdRoutine.Quasistatic(direction);
+  }
+  frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction) {
+    return m_sysIdRoutine.Dynamic(direction);
+  }
+
 private:
   void Initialization();
-  static constexpr double kUpperVelocityReachTolerance = 1.0;
 
   Wayimotor backward_feeder_{ FeederConstants::BackwardFeederMotorID, kCANBus };
   Wayimotor upward_feeder_{ FeederConstants::UpwardFeederMotorID, kCANBus };
+
+  // --- 战术状态变量 (从旧版移植) ---
+  static constexpr double kUpperVelocityReachTolerance = 1.0;
   bool upper_velocity_reached_once_ = false;
-  bool x_combo_was_active_ = false;
   double combo_target_velocity_ = 40.0;
 
-  // SysId routine for feeder (测试backward_feeder)
-  frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt,  // 默认斜坡率 (1 V/s)
-                                                                 4_V,           // 动态电压
-                                                                 std::nullopt,  // 默认超时 (10 s)
+  // SysId routine for feeder 
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt, 
+                                                                 4_V,           
+                                                                 std::nullopt,  
                                                                  nullptr },
                                             frc2::sysid::Mechanism{
                                                 [this](units::volt_t output) { backward_feeder_.setVoltage(output); },

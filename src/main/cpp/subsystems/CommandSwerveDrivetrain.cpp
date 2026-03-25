@@ -40,9 +40,9 @@ void CommandSwerveDrivetrain::ConfigureAutoBuilder() {
       },
       std::make_shared<pathplanner::PPHolonomicDriveController>(
           // PID constants for translation
-          pathplanner::PIDConstants{4, 0.0, 0.0},
+          pathplanner::PIDConstants{5, 0.0, 0.0},
           // PID constants for rotation
-          pathplanner::PIDConstants{2.5, 0.0, 0.0}),
+          pathplanner::PIDConstants{8, 0.0, 0.0}),
 
       std::move(config),
 
@@ -645,8 +645,8 @@ frc2::CommandPtr CommandSwerveDrivetrain::DriveAimingCommand(
              },
              {this})
       .BeforeStarting([this, maxSpeed] {
-        m_driveAimingRequest.WithHeadingPID(5.0, 0.0, 0)
-            .WithRotationalDeadband(units::radians_per_second_t{0.2})
+        m_driveAimingRequest.WithHeadingPID(8.0, 0, 0.1)
+            .WithRotationalDeadband(units::radians_per_second_t{0.05})
             .WithMaxAbsRotationalRate(units::radians_per_second_t{6.14})
             .WithDeadband(maxSpeed * 0.05)
             .WithDriveRequestType(swerve::DriveRequestType::Velocity)
@@ -689,3 +689,104 @@ double CommandSwerveDrivetrain::NormalizeAngle(double angle) {
   return angle;
 }
 
+//在pathplanner library里面，pose2d是机器人移动切线方向，而机器人朝向需要另外计算
+std::shared_ptr<PathPlannerPath> CommandSwerveDrivetrain::GenerateShootOnMovePath(std::vector<frc::Pose2d> const& targetPoses) {
+  //后面的逻辑不允许少于两个点
+  if(targetPoses.size()<=1){
+    return nullptr;
+  }
+
+  std::vector<frc::Pose2d> poses;
+  frc::Pose2d currentPose = GetState().Pose;
+
+  units::meters_per_second_t vx = GetState().Speeds.vx; 
+  units::meters_per_second_t vy = GetState().Speeds.vy;
+  units::meters_per_second_t startSpeed = units::math::hypot(vx, vy);
+  pathplanner::IdealStartingState startState(startSpeed, currentPose.Rotation());
+  
+  frc::Rotation2d initial_heading;
+  if (startSpeed > 0.1_mps) {
+    // 运动中切线方向完全由 vx 和 vy 的比例决定
+    initial_heading= frc::Rotation2d(units::math::atan2(vy, vx));
+  } else {
+    // 静止时直接把切线方向指向我们的第一个目标点
+    initial_heading = (targetPoses[0].Translation() - currentPose.Translation()).Angle();
+  }
+
+  //第一个pose应该是机器人当前位置和移动方向
+  poses.push_back({currentPose.Translation(), initial_heading});
+
+  //希望在抵达waypoint的时候方向朝向下一个waypoint
+  for (size_t i = 0; i < targetPoses.size()-1; i++) {
+    poses.push_back({targetPoses[i].Translation(), (targetPoses[i+1].Translation() - targetPoses[i].Translation()).Angle()});
+  }
+  //最后一个点
+  poses.push_back({targetPoses[targetPoses.size()-1].Translation(), (targetPoses[targetPoses.size()-1].Translation()-targetPoses[targetPoses.size()-2].Translation()).Angle()});
+
+  // 生成waypoints
+  std::vector<Waypoint> waypoints = PathPlannerPath::waypointsFromPoses(poses);
+
+  // 先把最后一个点的机器人面向方向加入goalendstate，在生成路径后加入机器人面向的方向
+  frc::Rotation2d final_target_rotation = targetPoses.back().Rotation();
+
+  // PathConstraints constraints(2.5_mps, 4_mps_sq, 540_deg_per_s,
+  // 690_deg_per_s_sq);
+  PathConstraints constraints(0.7_mps, 1.8_mps_sq, 640_deg_per_s,
+                              980_deg_per_s_sq);
+
+  //生成路径
+  auto path = std::make_shared<PathPlannerPath>(
+      waypoints, constraints, startState,
+      GoalEndState(0_mps, final_target_rotation)  
+  );
+
+  //加入waypoint的机器人面朝方向
+  for(int i=0; i<targetPoses.size()-1; i++){
+    double waypointIndex = static_cast<double>(i + 1);
+    pathplanner::RotationTarget rotTarget(waypointIndex, targetPoses[i].Rotation());
+    path->getRotationTargets().push_back(rotTarget);
+  }
+  path->preventFlipping = true;
+
+  return path;
+}
+
+frc2::CommandPtr CommandSwerveDrivetrain::followShootOnMovePathCommand(int direction){
+  frc::Pose2d currentPose=GetState().Pose;
+  //设置每个路径点的距离，理论上距离越近精度越高也会更消耗cpu。 单位m
+  double disBetweenPoints=0.7;
+  std::vector<frc::Translation2d> pointsDiff;
+  std::vector<frc::Rotation2d> targetRot;
+  std::vector<frc::Pose2d> poses;
+  double targetDirection=-NormalizeAngle(direction);
+  // switch(direction){
+  //   case 0: targetDirection=0; break;
+  //   case 1: targetDirection=90; break;//1走左边
+  //   case 2: targetDirection=0; break;//2 is forward
+  //   case 3: targetDirection=180; break;//3 is backward
+  //   case 4: targetDirection=-45; break;// 4 is topright
+  //   case 5: targetDirection=135; break;//5 is backleft
+  //   case 6: targetDirection=45; break;//6 is topleft
+  //   case 7: targetDirection=-135; break;//7 is backright
+  //   default: return frc2::cmd::None();//如果数字不对return空命令
+  // }
+  frc::Rotation2d rot{units::degree_t(targetDirection)};
+  int count=1;
+  const int maxcount=(int)(8/disBetweenPoints);//最多走8米
+  double rotContainer;
+  while(count<=maxcount){
+    frc::Translation2d transl(units::meter_t{disBetweenPoints*count}, rot);
+    pointsDiff.push_back(currentPose.Translation()+transl);
+    rotContainer=atan2(GetHubPosition().Y().value()-pointsDiff[count-1].Y().value(),GetHubPosition().X().value()-pointsDiff[count-1].X().value() );
+    targetRot.push_back({units::degree_t{NormalizeAngle(rotContainer/PI*180)}});
+    poses.push_back({pointsDiff[count-1], targetRot[count-1]});
+    count++;
+  }
+  auto path=GenerateShootOnMovePath(poses);
+  if(path!=nullptr){
+    return AutoBuilder::followPath(path);
+  }
+  else{
+    return frc2::cmd::None();
+  }
+}

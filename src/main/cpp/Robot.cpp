@@ -23,6 +23,8 @@ void Robot::RobotPeriodic() {
   auto& scheduler = frc2::CommandScheduler::GetInstance();
   const double loop_start_s = frc::Timer::GetFPGATimestamp().value();
 
+  m_container.UpdateDriverPerspective();
+
   scheduler.Run();
 
   const double loop_end_s = frc::Timer::GetFPGATimestamp().value();
@@ -51,11 +53,13 @@ void Robot::RobotPeriodic() {
 
 void Robot::DisabledInit() {
   // Seed IMU
-  m_container.clientSub.PubRobotInit(0);
+  //m_container.clientSub.PubRobotInit(0);
   m_container.visionSub.disable_mix = 1;
 }
 
-void Robot::DisabledPeriodic() {}
+void Robot::DisabledPeriodic() {
+    m_container.refreshAutoMode();
+}
 
 void Robot::DisabledExit() {}
 
@@ -66,7 +70,7 @@ void Robot::AutonomousInit() {
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
   if (m_autonomousCommand) {
-    frc2::CommandScheduler::GetInstance().Schedule(m_autonomousCommand);
+    m_autonomousCommand->Schedule();
   }
 }
 
@@ -77,16 +81,19 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::AutonomousExit() {}
+void Robot::AutonomousExit() {
+  m_container.feederSub.Stop();
+  m_container.shooterSub.DisableShooterNonCmd();
+  m_container.groundIntakeSub.Stop();
+}
 
 void Robot::TeleopInit() {
   nt::NetworkTableInstance::GetDefault()
       .GetTable("limelight-front")
       ->PutNumber("throttle_set", 0);
-
-  m_container.clientSub.PubRobotInit(1);
+  // m_container.clientSub.PubRobotInit(1);
   if (m_autonomousCommand) {
-    frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand);
+    frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand.value().get());
   }
   m_container.visionSub.disable_mix = 0;
 }

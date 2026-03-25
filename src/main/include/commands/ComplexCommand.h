@@ -4,12 +4,15 @@
 #include <frc2/command/CommandHelper.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc/geometry/Pose2d.h>
-
+#include <functional>
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/FeederSubsystem.h"
 #include "subsystems/GroundIntakeSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
+#include "commands/AutoMoveOpen.h"
+#include "commands/AutoMoveClosed.h"
+#include "commands/AutoMoveCircle.h"
 
 class ComplexCommand
     : public frc2::CommandHelper<frc2::Command, ComplexCommand> {
@@ -18,11 +21,12 @@ class ComplexCommand
                           subsystems::VisionSubsystem* visionSubsystem,
                           subsystems::ShooterSubsystem* shooterSubsystem,
                           subsystems::FeederSubsystem* feederSubsystem,
-                          subsystems::GroundIntakeSubsystem* groundIntakeSubsystem);
+                          subsystems::GroundIntakeSubsystem* groundIntakeSubsystem);                                                       
 
   frc2::CommandPtr FollowPathCommand(frc::Pose2d targetPos);
   frc2::CommandPtr FollowPathCommand(
-      std::vector<frc::Pose2d> const& targetPoses);
+  std::vector<frc::Pose2d> const& targetPoses);
+  frc2::CommandPtr MoveOnShoot(std::function<int()> supplier);
   frc2::CommandPtr AutoFollowPathCommand(frc::Pose2d targetPos, double maxspeed,
                                          double maxacc);
   frc2::CommandPtr GroundintakeprepareCommand();
@@ -36,11 +40,17 @@ class ComplexCommand
   frc2::CommandPtr FollowAndShootCommand2(frc::Pose2d targetPos);
 
   frc2::CommandPtr autoFollow(frc::Pose2d targetPos);
+  frc2::CommandPtr PassBump(bool atOppo);
+  frc2::CommandPtr PassTrench(bool atOppo);
+  frc2::CommandPtr GoToClimb();
 
+  frc2::CommandPtr assistPassing();
+  frc2::CommandPtr StartFeederCommand();
  private:
   subsystems::CommandSwerveDrivetrain* m_drivesubsystem;
   subsystems::VisionSubsystem* m_visionSubsystem;
   subsystems::ShooterSubsystem* m_shooterSubsystem;
   subsystems::FeederSubsystem* m_feederSubsystem;
   subsystems::GroundIntakeSubsystem* m_groundIntakeSubsystem;
+
 };

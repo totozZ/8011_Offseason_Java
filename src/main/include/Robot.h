@@ -33,7 +33,7 @@ public:
 private:
     static constexpr bool kUseLimelight = false;
 
-    frc2::Command *m_autonomousCommand;
+    std::optional<frc2::CommandPtr> m_autonomousCommand;
 
     RobotContainer m_container;
     frc::Field2d m_simField;
