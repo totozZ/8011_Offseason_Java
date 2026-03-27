@@ -134,20 +134,20 @@ class ShooterSubsystem : public ExampleSubsystem {
   double thetaMiddleLine = 0; // 在 Initialization 中计算
 };
 
-#ifndef M_PI
+#ifndef M_PI 
 #define M_PI 3.14159265358979323846
 #endif
 
 // --- 旧代码的回归与补偿常数 ---
 #define shooter_height_approx 0.46932
-#define shooter_max_composite 0
+#define shooter_max_composite 5
 
-#define shooter_vel_quadratic_regression_a 3.8
-#define shooter_vel_quadratic_regression_b 27.5
-#define shooter_vel_quadratic_regression_c 2.8
-#define shooter_vel_quadratic_regression_d 30.0
-#define shooter_vel_quadratic_regression_e 6.4
-#define shooter_vel_quadratic_regression_f 32.6
+#define shooter_vel_quadratic_regression_a 3
+#define shooter_vel_quadratic_regression_b 25.5
+#define shooter_vel_quadratic_regression_c 5.83333
+#define shooter_vel_quadratic_regression_d 18.41666666
+// #define shooter_vel_quadratic_regression_e 6.4
+// #define shooter_vel_quadratic_regression_f 32.6
 
 
 

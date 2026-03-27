@@ -138,7 +138,7 @@ bool VisionSubsystem::ShouldRejectMetatagPose(
   }
   // 检查距离，确保在合理范围内，仅在 tagCount > 0 时有效
   if (pose_estimate.tagCount > 0 &&
-      (pose_estimate.rawFiducials[0].distToCamera > 3.3 ||
+      (pose_estimate.rawFiducials[0].distToCamera > 6.0 ||
        pose_estimate.rawFiducials[0].distToCamera < 0.26)) {
     reject = true;
     reason += reason.empty() ? "DistToCamera" : " & DistToCamera";

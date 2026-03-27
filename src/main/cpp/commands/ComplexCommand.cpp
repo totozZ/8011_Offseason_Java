@@ -35,19 +35,19 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.93),
-          //m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(80.0),
-          m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.97),
+          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(75.0)
+          //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
 }
 
 frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
-      frc2::cmd::Wait(units::second_t{0.7}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.05),
+      frc2::cmd::Wait(units::second_t{0.5}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
       //m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
-      frc2::cmd::Wait(units::second_t{0.7}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.85)
+      frc2::cmd::Wait(units::second_t{0.5}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
       
   );
 }
@@ -85,7 +85,7 @@ frc2::CommandPtr ComplexCommand::ShootWithFeederCommand() {
             std::abs(m_shooterSubsystem->GetShootVelocity()-m_shooterSubsystem->realShootVelocity)<0.5
             &&m_drivesubsystem->SOMangleDiff<=5;})
           .WithTimeout(units::second_t{1.5}),
-          m_feederSubsystem->setdutyCommandPtr(1, 1)
+          m_feederSubsystem->setdutyCommandPtr(0.8, 0.8)
               ));
 }
 

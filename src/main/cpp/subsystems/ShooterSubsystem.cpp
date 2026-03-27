@@ -44,9 +44,9 @@ void ShooterSubsystem::Initialization() {
   configs::TalonFXConfiguration shooter_right_up_config{};
   shooter_right_up_config.MotorOutput.Inverted = 0;
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
-  shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 100_A;
+  shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 40_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 60_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -65,6 +65,9 @@ void ShooterSubsystem::Initialization() {
   shooter_left_down_.setfollowControl(shooter_right_up_.Getdata().deviceId, true);
   shooter_left_up_.setfollowControl(shooter_right_up_.Getdata().deviceId, true);
   shooter_right_down_.setfollowControl(shooter_right_up_.Getdata().deviceId, false);
+  shooter_left_down_.Control();
+  shooter_left_up_.Control();
+  shooter_right_down_.Control();
 
   // --- 4. 新代码的 Pitch 角度电机配置 ---
   configs::TalonFXConfiguration shooter_pitch_config{};
@@ -129,21 +132,23 @@ void ShooterSubsystem::Periodic() {
         CalculateShooterSpeedRegression(pass_distance_m);
       }
       
-      frc::SmartDashboard::PutNumber("shoot_velocity_expected", vel);
+      frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
     }
 
-    // 3. 将理论角度转换为新版电机的运动指令
-    SetShootPitchAngle(90-angle);
-
-  }
-
-  // 4. 合成速度并下发给飞轮
+    // 4. 合成速度并下发给飞轮
   getFinalVel();
   if (shooting) {
     shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
+    SetShootPitchAngle(90-angle);
   } else {
     Stop();
+    SetShootPitchAngle(0.2);
   }
+  
+
+  }
+
+  
 }
 
 // ==========================================
@@ -160,7 +165,7 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
     return angle;
   } else {
     
-    dis = dis * 1 / 8.0;
+    dis = dis * 1.5/ 8.0;
     const double height = 1.8288 + 1.8 - shooter_height_approx;
     constexpr double kRad2Deg = 180.0 / M_PI;
     
@@ -194,9 +199,12 @@ double ShooterSubsystem::CalculateShooterSpeedRegression(double dis) {
 
   return vel;
 }
+
 double ShooterSubsystem::GetShootVelocity() {
   // 返回主控电机 (右上) 的当前真实转速
-  return shooter_right_up_.Getdata().currentVelocity;
+  double sh=shooter_right_up_.GetVelocity();
+  frc::SmartDashboard::PutNumber("shootRealVelo", sh);
+  return sh;
 }
 void ShooterSubsystem::getFinalVel() {
   double feeder_upward_target_velocity = 0.0;

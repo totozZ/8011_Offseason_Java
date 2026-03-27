@@ -48,7 +48,7 @@ void FeederSubsystem::Initialization()
   upward_feeder_slot0.kD = 0.;         
   upward_feeder_slot0.GravityType = 0; 
 
-  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 40_A;
+  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 25_A;
   upward_feeder_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode upward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
