@@ -116,8 +116,9 @@ inline constexpr double kPitchMotorMaxposition = 12.005;
 }  // namespace ShooterConstants
 
 namespace GroundIntakeConstants {
-inline constexpr int IntakeRollerMotorID = 19;
-inline constexpr int IntakePivotMotorID = 20;
+inline constexpr int IntakeRollerLeftMotorID = 19;
+inline constexpr int IntakeRollerRightMotorID = 20;
+inline constexpr int IntakePivotMotorID = 21;
 
 // Auto intake assist: 当 intake pitch 力矩电流超过此阈值时触发 assist
 inline constexpr double kAssistPitchCurrentThreshold = 17.0;

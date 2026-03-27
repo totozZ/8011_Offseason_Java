@@ -7,7 +7,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/button/CommandXboxController.h>
-
+#include <frc2/command/sysid/SysIdRoutine.h>
 #include <cmath>
 #include <algorithm>
 
@@ -60,7 +60,13 @@ class ShooterSubsystem : public ExampleSubsystem {
   void startPassing() { /* isPassing = true; 保留旧代码结构 */ }
   void stopPassing() { /* isPassing = false; */ }
   bool isPassingEnabled() { return isPassing; }
-
+  // SysId 方法
+  frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction) {
+    return m_sysIdRoutine.Quasistatic(direction);
+  }
+  frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction) {
+    return m_sysIdRoutine.Dynamic(direction);
+  }
   frc2::CommandPtr DisableDefaultShoot() {
     return frc2::cmd::RunOnce([this] { onlyDefaultShoot = false; });
   }
@@ -76,7 +82,20 @@ class ShooterSubsystem : public ExampleSubsystem {
   double GetShootVelocity();
  private:
   void Initialization();
-
+  frc2::sysid::SysIdRoutine m_sysIdRoutine{
+      frc2::sysid::Config{std::nullopt,  // 默认斜坡率 (1 V/s)
+                          4_V,           // 动态电压
+                          std::nullopt,  // 默认超时 (10 s)
+                          nullptr},
+      frc2::sysid::Mechanism{
+          [this](units::volt_t output) { shooter_right_up_.setVoltage(output); },
+          [this](frc::sysid::SysIdRoutineLog* log) {
+            log->Motor("shooter")
+                .voltage(shooter_right_up_.Getmotor().GetMotorVoltage().GetValue())
+                .position(shooter_right_down_.Getmotor().GetPosition().GetValue())
+                .velocity(shooter_left_up_.Getmotor().GetVelocity().GetValue());
+          },
+          this}};
   // --- 新代码的新马达配置 (4个飞轮电机 + 1个角度电机) ---
   Wayimotor shooter_left_down_{ShooterConstants::ShooterLeftDownMotorID, kCANBus};
   Wayimotor shooter_left_up_{ShooterConstants::ShooterLeftUpMotorID, kCANBus};

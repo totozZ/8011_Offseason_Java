@@ -23,33 +23,39 @@ public:
   }
 
   void Periodic() override;
+  
+  // --- 保留的旧版旧接口 ---
   void SetRollerVelocity(double velocity);
   frc2::CommandPtr SetRollerVelocityCommandPtr(double velocity);
+  
   void SetRollerDutyCycle(double dutyCycle);
   frc2::CommandPtr SetRollerDutyCycleCommandPtr(double dutyCycle);
+  
   void SetPitchPosition(double position);
+  
   void Stop();
   frc2::CommandPtr StopCommandPtr();
 
   void SetPitchNormPosition(double norm);
+  frc2::CommandPtr SetPitchNormPositionCommandPtr(double norm);
+
   double GetPitchCurrent();
   double GetPitchNormPosition();
+  
   void BrakePitch();
-
-  frc2::CommandPtr SetPitchNormPositionCommandPtr(double norm);
   frc2::CommandPtr BrakePitchCommandPtr();
+
 private:
   void Initialization();
 
-  // Intake roller (spin to intake/eject game pieces).
-  Wayimotor intake_roller_{ GroundIntakeConstants::IntakeRollerMotorID, kCANBus };
-  // Intake pitch (position-loop for intake arm angle).
+  // --- 新版马达配置：由 2 个变为 3 个 ---
+  Wayimotor intake_roller_left_{ GroundIntakeConstants::IntakeRollerLeftMotorID, kCANBus };
+  Wayimotor intake_roller_right_{ GroundIntakeConstants::IntakeRollerRightMotorID, kCANBus }; // 主控
   Wayimotor intake_pitch_{ GroundIntakeConstants::IntakePivotMotorID, kCANBus };
+  
   bool pitch_reset_flag_ = false;
   int pitch_reset_counter_ = 0;
   void GroundIntakeReset();
-
-  
 };
 
 }  // namespace subsystems

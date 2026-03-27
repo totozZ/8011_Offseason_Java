@@ -85,7 +85,7 @@ frc2::CommandPtr ComplexCommand::ShootWithFeederCommand() {
             std::abs(m_shooterSubsystem->GetShootVelocity()-m_shooterSubsystem->realShootVelocity)<0.5
             &&m_drivesubsystem->SOMangleDiff<=5;})
           .WithTimeout(units::second_t{1.5}),
-          m_feederSubsystem->setdutyCommandPtr(0.8, 0.8)
+          m_feederSubsystem->setdutyCommandPtr(1, 1)
               ));
 }
 
@@ -179,10 +179,10 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
 
   return frc2::cmd::DeferredProxy([drive, atOppo]() {
     // 初始基准点
-    double innerX = 3.2;
+    double innerX = 3.1;
     double innerY = 7.4;
     double innerR = 0; 
-    double OuterX = 5.9;
+    double OuterX = 6.0;
     double OuterY = 7.4;
     double OuterR = 0;
 
@@ -202,29 +202,26 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     double virtualX = invertA ? (16.54 - x) : x;
     double virtualY = invertD ? (8.07 - y) : y;
 
-    double offsetDist = 0.3; 
+    double offsetDist = 0.5; 
 
     // 根据实时 X 坐标决定先后顺序
     if (x > 5 && x < 11.54) {
-      
-      // 1. 先算出从当前位置指向 Outer 点的绝对弧度
+      OuterX+=0.2;
+      OuterY-=0.1;
       double angleRad = std::atan2(OuterY - virtualY, OuterX - virtualX);
-      
-      // 2. 核心数学：将 Outer 点沿着这个角度“反向”移动 0.3 米
       OuterX -= offsetDist * std::cos(angleRad);
       OuterY -= offsetDist * std::sin(angleRad);
-      
-      // 3. 将弧度转回度数发给底盘
       OuterR = 180;
       innerR = 180; 
 
       return frc2::cmd::Sequence(
         AutoMoveOpen(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,OuterX-0.4,innerY-0.4,0.2,90,true,targetSpeed,false,180,false,invertA,invertD,0).ToPtr(),
+        AutoMoveCircle(drive,OuterX-0.6,innerY-0.5,0.3,90,true,targetSpeed,false,180,false,invertA,invertD,0).ToPtr(),
         AutoMoveClosed(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     } else {
-      
+      innerX-=0.2;
+      innerY-=0.1;
       // 1. 算出从当前位置指向 inner 点的绝对弧度
       double angleRad = std::atan2(innerY - virtualY, innerX - virtualX);
       
@@ -238,12 +235,13 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
 
       return frc2::cmd::Sequence(
         AutoMoveOpen(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,innerX+0.4,OuterY-0.4,0.2,90,false,targetSpeed,false,0,false,invertA,invertD,0).ToPtr(),
+        AutoMoveCircle(drive,innerX+0.6,OuterY-0.5,0.2,90,false,targetSpeed,false,0,false,invertA,invertD,0).ToPtr(),
         AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     }
   });
 }
+
 frc2::CommandPtr ComplexCommand::GoToClimb() {
   
   // 提前把底盘指针拿出来，避免在 Lambda 里使用 this

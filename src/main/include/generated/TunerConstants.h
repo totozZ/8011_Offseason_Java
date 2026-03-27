@@ -26,7 +26,7 @@ class TunerConstants {
     // output type specified by SwerveModuleConstants::DriveMotorClosedLoopOutput
     static constexpr configs::Slot0Configs driveGains = configs::Slot0Configs{}
         .WithKP(0.1).WithKI(0).WithKD(0)
-        .WithKS(0).WithKV(0.124);
+        .WithKS(0.23).WithKV(0.123).WithKA(0.1);
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors

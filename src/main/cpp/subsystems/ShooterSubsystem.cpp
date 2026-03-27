@@ -46,7 +46,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 100_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 25_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 40_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -54,7 +54,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_slot0.kS = 4.875;
   shooter_right_up_slot0.kV = 0;
   shooter_right_up_slot0.kA = 0;
-  shooter_right_up_slot0.kP = 8;
+  shooter_right_up_slot0.kP = 9;
   shooter_right_up_slot0.kI = 0;
   shooter_right_up_slot0.kD = 0;
 
@@ -160,7 +160,7 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
     return angle;
   } else {
     
-    dis = dis * 2 / 8.0;
+    dis = dis * 1 / 8.0;
     const double height = 1.8288 + 1.8 - shooter_height_approx;
     constexpr double kRad2Deg = 180.0 / M_PI;
     
@@ -213,30 +213,6 @@ void ShooterSubsystem::getFinalVel() {
   }
   realShootVelocity = vel + velOffsetFromDrive + add;
 }
-
-// ==========================================
-// 结合点：旧物理模型 -> 新马达控制
-// ==========================================
-
-void ShooterSubsystem::CalculateShooterPitch() {
-  // 1. 旧代码的物理几何映射：理论射出角度 -> 内部 Hood 角度
-  const double hood_target = (90.0 - angle) + thetaMiddleLine * 180.0 / M_PI;
-  
-  // 2. 将 Hood 角度转换为归一化的位置 [0, 1] 供新系统使用
-  // 当 hood_target == min 时，norm = 0； 当 hood_target == max 时，norm = 1
-  double norm_target = (hood_target - min_hood_angle) / (max_hood_angle - min_hood_angle);
-  norm_target = std::clamp(norm_target, 0.0, 1.0);
-
-  // 3. 下发给新版的 Motion Magic 控制器
-  SetShootPitchNormPosition(norm_target);
-  
-  frc::SmartDashboard::PutNumber("shooter_calculated_hood_target_deg", hood_target);
-  frc::SmartDashboard::PutNumber("shooter_norm_target_pitch", norm_target);
-}
-
-// ==========================================
-// 新代码核心：Pitch 电流归零与停止指令
-// ==========================================
 
 void ShooterSubsystem::ShootPitch_Reset() {
   if (!frc::DriverStation::IsEnabled()) {
