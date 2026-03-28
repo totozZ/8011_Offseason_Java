@@ -49,7 +49,7 @@ public:
   void SetUpwardDuty(double duty);
 
   frc2::CommandPtr HoldFeederVelocityCommandPtr(double backward_current,
-                                                double backward_current_speed,
+                                              
                                                 double upward_velocity);
 
   // --- 旧版战术逻辑接口 ---
@@ -86,7 +86,7 @@ private:
   // --- 战术状态变量 (从旧版移植) ---
   static constexpr double kUpperVelocityReachTolerance = 1.0;
   bool upper_velocity_reached_once_ = false;
-  double combo_target_velocity_ = 40.0;
+  double combo_target_velocity_ = 80.0;
 
   // SysId routine for feeder 
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt, 

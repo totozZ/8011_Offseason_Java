@@ -40,15 +40,15 @@ void FeederSubsystem::Initialization()
   upward_feeder_config.MotorOutput.Inverted = 0;
   configs::Slot0Configs &upward_feeder_slot0 = upward_feeder_config.Slot0;
   upward_feeder_slot0.kG = 0.;         
-  upward_feeder_slot0.kS = 7;          
-  upward_feeder_slot0.kV = 0.1;        
-  upward_feeder_slot0.kA = 3;          
-  upward_feeder_slot0.kP = 3.4;        
-  upward_feeder_slot0.kI = 1.5;        
+  upward_feeder_slot0.kS = 10;          
+  upward_feeder_slot0.kV = 0;        
+  upward_feeder_slot0.kA = 0;          
+  upward_feeder_slot0.kP = 9;        
+  upward_feeder_slot0.kI = 1.2;        
   upward_feeder_slot0.kD = 0.;         
   upward_feeder_slot0.GravityType = 0; 
 
-  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 25_A;
+  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 40_A;
   upward_feeder_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode upward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
@@ -106,9 +106,9 @@ void FeederSubsystem::SetUpwardDuty(double duty) {
 
 void FeederSubsystem::Stop() {
   // 使用新版安全的 coast 停止方式
-  // backward_feeder_.setcoast();
-  // upward_feeder_.setcoast();
-  setduty(0,0);
+  backward_feeder_.setcoast();
+  upward_feeder_.setcoast();
+  //setduty(0,0);
   // 重置 Combo 状态机
   upper_velocity_reached_once_ = false;
 }
@@ -167,13 +167,14 @@ frc2::CommandPtr FeederSubsystem::SetUpwardFeederVelocityCommandPtr(double veloc
   return frc2::cmd::RunOnce([this, velocity] { SetUpwardFeederVelocity(velocity); });
 }
 
-frc2::CommandPtr FeederSubsystem::HoldFeederVelocityCommandPtr(double backward_current, double backward_current_speed, double upward_velocity) {
-  return this->Run([this, backward_current, backward_current_speed, upward_velocity] {
-    SetBackwardFeederCurrent(backward_current, backward_current_speed);
+
+frc2::CommandPtr FeederSubsystem::HoldFeederVelocityCommandPtr(
+    double backward_velocity, double upward_velocity) {
+  return this->Run([this, backward_velocity, upward_velocity] {
+    SetBackwardFeederVelocity(backward_velocity);
     SetUpwardFeederVelocity(upward_velocity);
   });
 }
-
 // ==========================================
 // 战术特定逻辑 (保留自旧版)
 // ==========================================

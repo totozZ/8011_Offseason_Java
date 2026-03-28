@@ -143,15 +143,15 @@ class ShooterSubsystem : public ExampleSubsystem {
 #define shooter_max_composite 5
 
 #define shooter_vel_quadratic_regression_a 3
-#define shooter_vel_quadratic_regression_b 25.5
-#define shooter_vel_quadratic_regression_c 5.83333
-#define shooter_vel_quadratic_regression_d 18.41666666
+#define shooter_vel_quadratic_regression_b 21.3
+#define shooter_vel_quadratic_regression_c 4.2
+#define shooter_vel_quadratic_regression_d 18.3
 // #define shooter_vel_quadratic_regression_e 6.4
 // #define shooter_vel_quadratic_regression_f 32.6
 
 
 
-#define pass_m 7.5
-#define pass_b 13
+#define pass_m 6
+#define pass_b 10
 
 }  // namespace subsystems

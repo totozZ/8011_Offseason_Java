@@ -15,7 +15,7 @@ RealTimeAimDrive::RealTimeAimDrive(CommandSwerveDrivetrain* drive, ShooterSubsys
 // ==========================================
 void RealTimeAimDrive::Initialize() {
   //m_aimPID.Reset(); 
-  driveClosed.WithHeadingPID(7, 0, 0.1)
+  driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
                     .WithRotationalDeadband(units::radians_per_second_t{0.1})        
             .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*0.8})
@@ -85,8 +85,7 @@ void RealTimeAimDrive::Execute() {
   
   //假设射球出膛速度只有真正速度的0.2,need configuration and zone division
   //先横向测试不同距离所需的coeff，然后反求出速度，然后在计算coeff时考虑底盘垂直速度
-  double shootCoeff=0.17
-  ;
+  double shootCoeff=0.3;
   //shootCoeff=frc::SmartDashboard::GetNumber("shoot_velocity_test", 0.11);
   frc::SmartDashboard::PutNumber("shoot_coeff", shootCoeff);
   //把射球的速度转换成向量

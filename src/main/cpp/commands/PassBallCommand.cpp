@@ -133,7 +133,7 @@ void PassBallCommand::Execute() {
 frc::SmartDashboard::PutBoolean("shootOnMove/RightSpeed", rightSpeed);
 frc::SmartDashboard::PutBoolean("shootOnMove/RightRot", rightRot);
   if(rightPos&&rightSpeed&&rightRot){
-    m_feeder->setduty(0.8,0.8);
+    m_feeder->HoldFeederVelocityCommandPtr(1, FeederConstants::kUpwardVelocityTarget);
   }
   else{
      m_feeder->setduty(0,0);

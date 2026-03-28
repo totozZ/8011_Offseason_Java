@@ -188,22 +188,10 @@ frc2::CommandPtr autos::AutoHP(CommandSwerveDrivetrain* drivetrain, ShooterSubsy
         x = 16.54 - x;
         d = 180.0 - d;
     }
-
     frc::Rotation2d sR=drivetrain->GetState().Pose.Rotation();
-
     // 包装初始位姿
     frc::Pose2d start{units::meter_t{x}, units::meter_t{y}, sR};
     return frc2::cmd::Sequence(
-        // ==========================================
-        // 步骤 1：重置底盘里程计到起始点
-        // ==========================================
-        // frc2::cmd::RunOnce([drivetrain, start] {
-        //     drivetrain->ResetPose(start); 
-        // }, {drivetrain}),
-
-        // ==========================================
-        // 步骤 2：前半段跑点与吸球
-        // ==========================================
         complexcommand->GroundintakeprepareCommand(),
         AutoMoveOpen(drivetrain, AutoXHP[1], AutoYHP[1], AutoRHP[1], AutoSHP[1], invertA, invertD).ToPtr(),
              
@@ -220,9 +208,7 @@ frc2::CommandPtr autos::AutoHP(CommandSwerveDrivetrain* drivetrain, ShooterSubsy
         
         AutoMoveClosed(drivetrain, AutoXHP[6], AutoYHP[6], AutoRHP[6], AutoSHP[6], invertA, invertD).ToPtr(),
 
-        // ==========================================
-        // 步骤 3：战术动作 (边自瞄边吸球辅助) - Index 7
-        // ==========================================
+      
        frc2::cmd::Parallel(
         RealTimeAimDrive(drivetrain, shooter,[]{return 0;},[]{return 0;},180).ToPtr(),
         frc2::cmd::Parallel(
@@ -269,7 +255,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
           RealTimeAimDrive(drivetrain, shooter, []{return 0;}, []{return 0;},180).ToPtr(),
             frc2::cmd::Parallel(
             complexcommand->ShootWithFeederCommand(),
-              complexcommand->GroundintakeassistCommand().Repeatedly()
+            complexcommand->GroundintakeassistCommand().Repeatedly()
             )
         ).WithTimeout(units::second_t{2.5}),
         complexcommand->StopShootWithFeederCommand(),
@@ -283,7 +269,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         AutoMoveOpen(drivetrain, AutoXLow[10], AutoYLow[10], AutoRLow[10], AutoSLow[10], invertA, invertD).ToPtr(),
         
         AutoMoveCircle(drivetrain, (AutoXLow[10] + AutoXLow[11]) / 2, (AutoYLow[10] + AutoYLow[11]) / 2, 
-                       std::abs(AutoXLow[10] - AutoXLow[11]) / 2, 0, true, AutoSLow[11], false, 0, true, invertA, invertD, 0).ToPtr(),
+                       std::abs(AutoXLow[10] - AutoXLow[11]) / 2, 0, true, AutoSLow[11], false, 0, true, invertA, invertD,0).ToPtr(),
         
         AutoMoveOpen(drivetrain, AutoXLow[12], AutoYLow[12], AutoRLow[12], AutoSLow[12], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[12] - 0.8, AutoYLow[12], 0.8, 90, true, AutoSLow[12], false, -90, true, invertA, invertD, 0).ToPtr(),

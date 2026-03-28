@@ -103,52 +103,46 @@ void ShooterSubsystem::Periodic() {
   shooter_right_up_.Control();
   shooter_pitch_.Control();
   shooter_right_up_.Receive();
-  const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
-  frc::SmartDashboard::PutNumber("shooter_hub_distance_m", hub_distance_m);
+
 
   frc::SmartDashboard::PutNumber("shooter_pitch_currentPosition", shooter_pitch_.GetPosition());
 
   // 1. 判断是否需要归零
   if (shooter_pitch_reset_flag_ == 0) {
-    ShootPitch_Reset();
-  } else {
-    // 2. 如果已归零，获取底盘数据并计算
-    if (drivetrain_sub_ != nullptr) {
+       ShootPitch_Reset();
+       return;
+  } 
+
+  if (drivetrain_sub_ != nullptr) {
       const double hub_distance_m = drivetrain_sub_->GetDistanceToHub();
       const double pass_distance_m = drivetrain_sub_->GetState().Pose.Translation().Distance(passTarget).value();
-      
-      isPassing = drivetrain_sub_->GetState().Pose.X().value() <= 11.4 && 
-                  drivetrain_sub_->GetState().Pose.X().value() >= 5;
-      
+
+      frc::SmartDashboard::PutNumber("shooter_hub_distance_m", hub_distance_m);
+      auto alliance = frc::DriverStation::GetAlliance();
+      bool isRed=alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed;
+      double x = drivetrain_sub_->GetState().Pose.X().value();
+      isPassing=(!isRed&&x>=5.0) || (isRed&&x<=11.54);
       frc::SmartDashboard::PutBoolean("shootOnMove/isPassing", isPassing);
 
-      // 旧算法：计算角度
-      CalculatePitchAngleAboveHub(hub_distance_m);
+        CalculatePitchAngleAboveHub(hub_distance_m);
+        if (!isPassing) {
+          CalculateShooterSpeedRegression(hub_distance_m);
+        } else {
+          CalculateShooterSpeedRegression(pass_distance_m);
+        }
+        getFinalVel();
+        frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
+        if (shooting) {
+          shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
+          SetShootPitchAngle(90-angle);
+        } else {
+          Stop();
+          SetShootPitchAngle(0.2);
+        }
       
-      // 旧算法：计算速度
-      if (!isPassing) {
-        CalculateShooterSpeedRegression(hub_distance_m);
-      } else {
-        CalculateShooterSpeedRegression(pass_distance_m);
-      }
+
       
-      frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
     }
-
-    // 4. 合成速度并下发给飞轮
-  getFinalVel();
-  if (shooting) {
-    shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
-    SetShootPitchAngle(90-angle);
-  } else {
-    Stop();
-    SetShootPitchAngle(0.2);
-  }
-  
-
-  }
-
-  
 }
 
 // ==========================================
@@ -157,10 +151,10 @@ void ShooterSubsystem::Periodic() {
 
 double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
   if (onlyDefaultShoot) {
-    angle = 70;
-    return 70;
+    angle = 80;
+    return 80;
   } else if (isPassing) {
-    Tangle = 50; 
+    Tangle = 70; 
     angle = Tangle + angleOffsetFromDrive;
     return angle;
   } else {
