@@ -35,8 +35,8 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.95),
-          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(90.0)
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.925),
+          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0)
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
 }
@@ -45,7 +45,7 @@ frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
       frc2::cmd::Wait(units::second_t{0.5}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
-      //m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
+      m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
       frc2::cmd::Wait(units::second_t{0.5}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
       
@@ -132,7 +132,7 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
   auto drive = m_drivesubsystem;
 
   // 使用最清爽的 DeferredProxy
-  return frc2::cmd::DeferredProxy([drive,atOppo]() {
+  return frc2::DeferredCommand([drive, atOppo]() {
     double innerX = 3.43;
     double innerY = 5.6;
     double innerR = 135; 
@@ -168,7 +168,7 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
         AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     }
-  });
+  },{drive}).ToPtr();
 }
 
 #include <cmath>
@@ -177,7 +177,7 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
   
   auto drive = m_drivesubsystem;
 
-  return frc2::cmd::DeferredProxy([drive, atOppo]() {
+  return frc2::DeferredCommand([drive, atOppo]()  {
     // 初始基准点
     double innerX = 3.1;
     double innerY = 7.4;
@@ -185,13 +185,21 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     double OuterX = 6.0;
     double OuterY = 7.4;
     double OuterR = 0;
-
+    double currentR=drive->GetState().Pose.Rotation().Degrees().value();
+    if(currentR<=90&&currentR>=-90){
+      innerR=0;
+      OuterR=0;
+    }
+    else{
+      innerR=180;
+      OuterR=180;
+    }
     auto alliance = frc::DriverStation::GetAlliance();
     
     double x = drive->GetState().Pose.X().value();
     double y = drive->GetState().Pose.Y().value(); 
 
-    double targetSpeed = 0.3*TunerConstants::kSpeedAt12Volts.value();
+    double targetSpeed = 0.6*TunerConstants::kSpeedAt12Volts.value();
     bool invertD = y <= 4;
     bool invertA = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
     if(atOppo){
@@ -211,16 +219,13 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       frc::Rotation2d ou{units::radian_t{PI}};
       frc::Rotation2d angleRad{units::radian_t{std::atan2(OuterY - virtualY, OuterX - virtualX)}};
       double deltaA=std::abs((ou-angleRad).Degrees().value());
-
-      OuterR = 180;
-      innerR = 180; 
       if(deltaA>=35){
       OuterX -= offsetDist * std::cos(angleRad.Radians().value());
       OuterY -= offsetDist * std::sin(angleRad.Radians().value());
       return frc2::cmd::Sequence(
         
         AutoMoveOpen(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,OuterX-0.6,innerY-0.6,0.3,90,true,targetSpeed,false,180,false,invertA,invertD,0).ToPtr(),
+        AutoMoveCircle(drive,OuterX-0.6,innerY-0.6,0.3,90,true,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
         AutoMoveClosed(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else{
@@ -235,15 +240,12 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       // 算出从当前位置指向 inner 点的绝对弧度
       frc::Rotation2d angleRad{units::radian_t{ std::atan2(innerY - virtualY, innerX - virtualX)}};
       double deltaA=std::abs((ou-angleRad).Degrees().value());
-   
-      innerR = 0;
-      OuterR = 0; 
       if(deltaA>=35){
       innerX -= offsetDist * std::cos(angleRad.Radians().value());
       innerY -= offsetDist * std::sin(angleRad.Radians().value());
       return frc2::cmd::Sequence(
         AutoMoveOpen(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,innerX+0.6,OuterY-0.6,0.2,90,false,targetSpeed,false,0,false,invertA,invertD,0).ToPtr(),
+        AutoMoveCircle(drive,innerX+0.6,OuterY-0.6,0.2,90,false,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
         AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else
@@ -252,7 +254,7 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
         AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     }
-  });
+  },{drive}).ToPtr();
 }
 
 frc2::CommandPtr ComplexCommand::GoToClimb() {

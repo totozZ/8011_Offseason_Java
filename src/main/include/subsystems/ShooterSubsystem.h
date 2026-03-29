@@ -138,20 +138,19 @@ class ShooterSubsystem : public ExampleSubsystem {
 #define M_PI 3.14159265358979323846
 #endif
 
-// --- 旧代码的回归与补偿常数 ---
 #define shooter_height_approx 0.46932
-#define shooter_max_composite 5
+#define shooter_max_composite 6.5
 
-#define shooter_vel_quadratic_regression_a 3
+#define shooter_vel_quadratic_regression_a 2.8
 #define shooter_vel_quadratic_regression_b 21.3
 #define shooter_vel_quadratic_regression_c 4.2
-#define shooter_vel_quadratic_regression_d 18.3
+#define shooter_vel_quadratic_regression_d 17.8
 // #define shooter_vel_quadratic_regression_e 6.4
 // #define shooter_vel_quadratic_regression_f 32.6
 
 
 
-#define pass_m 6
-#define pass_b 10
+#define pass_m 5
+#define pass_b 7
 
 }  // namespace subsystems

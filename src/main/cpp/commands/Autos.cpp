@@ -9,7 +9,7 @@
 #include "commands/ExampleCommand.h"
 
 frc2::CommandPtr autos::AutoSlowLeft(CommandSwerveDrivetrain* drivetrain, ShooterSubsystem* shooter, 
-                                     FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complexcommand, bool invertA, bool invertD) {
+                                    FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complexcommand, bool invertA, bool invertD) {
     
     // 1. 获取 Index 0 的初始点
     double x = slowXLeft[0];
@@ -48,7 +48,7 @@ frc2::CommandPtr autos::AutoSlowLeft(CommandSwerveDrivetrain* drivetrain, Shoote
         // AutoMoveOpen(drivetrain, slowXLeft[3], slowYLeft[3], slowRLeft[3], slowSLeft[3], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, slowXLeft[3]-0.8, slowYLeft[3]+0.1,0.4,30,false, slowSLeft[3],false,-90,false, invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, slowXLeft[4], slowYLeft[4], slowRLeft[4], slowSLeft[4], invertA, invertD).ToPtr(),
-        AutoMoveCircle(drivetrain, slowXLeft[4]-0.65,slowYLeft[4]+0.2,0.65,-150,false, slowSLeft[4],false,180,true,invertA, invertD,0).ToPtr(),
+        AutoMoveCircle(drivetrain, slowXLeft[4]-0.65,slowYLeft[4]+0.2,0.65,-150,false, 2.4,false,180,true,invertA, invertD,0).ToPtr(),
         
         AutoMoveOpen(drivetrain, slowXLeft[5], slowYLeft[5], slowRLeft[5], slowSLeft[5], invertA, invertD).ToPtr(),
         complexcommand->GroundintakeresetCommand(),
@@ -56,7 +56,7 @@ frc2::CommandPtr autos::AutoSlowLeft(CommandSwerveDrivetrain* drivetrain, Shoote
         AutoMoveClosed(drivetrain, slowXLeft[6], slowYLeft[6], slowRLeft[6], slowSLeft[6], invertA, invertD).ToPtr(),
 
         frc2::cmd::Parallel(
-        AutoRealTimeAimDrive(drivetrain, shooter,feeder,slowXLeft[8],slowYLeft[8],invertA,invertD,180).ToPtr(),
+        RealTimeAimDrive(drivetrain,shooter, []{return 0;},[]{return 0;},180).ToPtr(),
         frc2::cmd::Parallel(
           complexcommand->ShootWithFeederCommand(),
           complexcommand->GroundintakeassistCommand().Repeatedly()
@@ -246,7 +246,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[2]-0.8, AutoYLow[2]+0.1,0.4,30,false, AutoSLow[2],false,-90,false, invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, AutoXLow[3], AutoYLow[3]+0.3, AutoRLow[3], AutoSLow[3], invertA, invertD).ToPtr(),
-        AutoMoveCircle(drivetrain, AutoXLow[3]-0.8,AutoYLow[3]+0.3,0.8,-130,false, AutoSLow[3],false,0,true,invertA, invertD,0).ToPtr(),
+        AutoMoveCircle(drivetrain, AutoXLow[3]-0.8,AutoYLow[3]+0.3,0.8,-130,false, AutoSLow[1],false,0,true,invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, AutoXLow[4], AutoYLow[4], AutoRLow[4], AutoSLow[4], invertA, invertD).ToPtr(),
         complexcommand->GroundintakeresetCommand(),
         shooter->EnableShooter(),
@@ -287,8 +287,9 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
             )
         ).WithTimeout(units::second_t{2.5}),
         complexcommand->StopShootWithFeederCommand(),
-        AutoMoveOpen(drivetrain, slowXLeft[12], slowYLeft[12], slowRLeft[12], slowSLeft[12], invertA, invertD).ToPtr(),
-        intakeNextToHub(drivetrain,shooter,intaker,true).ToPtr()
+        // AutoMoveOpen(drivetrain, slowXLeft[12], slowYLeft[12], slowRLeft[12], slowSLeft[12], invertA, invertD).ToPtr(),
+        // intakeNextToHub(drivetrain,shooter,intaker,true).ToPtr()
+        complexcommand->PassTrench(false)
 
       );
 

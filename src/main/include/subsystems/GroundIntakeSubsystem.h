@@ -35,7 +35,7 @@ public:
   
   void Stop();
   frc2::CommandPtr StopCommandPtr();
-
+  void SetTeleopRollerCurrentLimit();
   void SetPitchNormPosition(double norm);
   frc2::CommandPtr SetPitchNormPositionCommandPtr(double norm);
 

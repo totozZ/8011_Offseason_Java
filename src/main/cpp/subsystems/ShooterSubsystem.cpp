@@ -154,7 +154,7 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
     angle = 80;
     return 80;
   } else if (isPassing) {
-    Tangle = 70; 
+    Tangle = 60; 
     angle = Tangle + angleOffsetFromDrive;
     return angle;
   } else {

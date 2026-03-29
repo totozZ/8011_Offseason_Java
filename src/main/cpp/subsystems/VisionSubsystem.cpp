@@ -132,13 +132,13 @@ bool VisionSubsystem::ShouldRejectMetatagPose(
   }
   // 检查 ambiguity（模糊度），仅在 tagCount > 0 时有效
   if (pose_estimate.tagCount > 0 &&
-      pose_estimate.rawFiducials[0].ambiguity > 0.7) {
+      pose_estimate.rawFiducials[0].ambiguity > 0.5) {
     reject = true;
     reason += reason.empty() ? "High Ambiguity" : " & High Ambiguity";
   }
   // 检查距离，确保在合理范围内，仅在 tagCount > 0 时有效
   if (pose_estimate.tagCount > 0 &&
-      (pose_estimate.rawFiducials[0].distToCamera > 6.0 ||
+      (pose_estimate.rawFiducials[0].distToCamera > 4.50 ||
        pose_estimate.rawFiducials[0].distToCamera < 0.26)) {
     reject = true;
     reason += reason.empty() ? "DistToCamera" : " & DistToCamera";
@@ -146,6 +146,8 @@ bool VisionSubsystem::ShouldRejectMetatagPose(
   // 如果拒绝，记录原因到 SmartDashboard
   if (reject) {
     frc::SmartDashboard::PutString("Vision_Reject_Reason", reason);
+  } else {
+    frc::SmartDashboard::PutString("Vision_Reject_Reason", "None");
   }
   return reject;
 }
@@ -232,6 +234,7 @@ void VisionSubsystem::LimelightMeasurement() {
       double thetaDev = 0.03 * std::pow(avgDistance, 1.2) * kVisionStdScale;
       std::array<double, 3> estStdDevs = {xyDev, xyDev, thetaDev};
 
+    
       switch (vision_modes_[i]) {
         case 1:                      // 使用 mt2 更新
           estStdDevs[2] = 10000000;  // 使用外部 IMU 时不信任 Limelight 的 yaw

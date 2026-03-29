@@ -63,7 +63,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
   LimelightIMUMode currentIMUMode = LimelightIMUMode::ExternalIMU;
 
   // 信任度阈值常量
-  const double kMaxAngularVelocity_ = 360.0;  // 超过 360度/秒 则不信任视觉
+  const double kMaxAngularVelocity_ = 40.0;  // 超过 360度/秒 则不信任视觉
 
   /**
    * @brief 设置limelight工作模式，一共有四种，具体见LimelightIMUMode枚举

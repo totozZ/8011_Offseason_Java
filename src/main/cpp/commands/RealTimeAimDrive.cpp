@@ -43,8 +43,8 @@ void RealTimeAimDrive::Execute() {
   // double dy = m_drive->GetHubPosition().Y().value() - currentPose.Y().value();
   // double targetAngleRad = std::atan2(dy, dx);
 
-  double nowX=frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.25;
-  double nowY=frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.25;
+  double nowX=frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.2;
+  double nowY=frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.2;
   //为了测试，先把固定底盘移动围着hub绕圈
   //double rawrad=m_drive->CalculateTargetAngleToHub().Radians().value();
   // nowX=nowY*cos(rawrad+PI/2);
@@ -62,7 +62,7 @@ void RealTimeAimDrive::Execute() {
     realX=nowX;
     realY=nowY;
   }
-  double latencySeconds = 0.45;
+  double latencySeconds = 0;
   double predictedX = currentPose.X().value() + (realX * latencySeconds);
   double predictedY = currentPose.Y().value() + (realY * latencySeconds);
   frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseX",currentPose.X().value() );
@@ -85,7 +85,7 @@ void RealTimeAimDrive::Execute() {
   
   //假设射球出膛速度只有真正速度的0.2,need configuration and zone division
   //先横向测试不同距离所需的coeff，然后反求出速度，然后在计算coeff时考虑底盘垂直速度
-  double shootCoeff=0.3;
+  double shootCoeff=0.45;
   //shootCoeff=frc::SmartDashboard::GetNumber("shoot_velocity_test", 0.11);
   frc::SmartDashboard::PutNumber("shoot_coeff", shootCoeff);
   //把射球的速度转换成向量

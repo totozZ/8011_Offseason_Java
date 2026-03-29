@@ -22,7 +22,7 @@ void GroundIntakeSubsystem::Initialization() {
   intake_roller_right_slot0.kD = 0;
   intake_roller_right_slot0.GravityType = 0;
 
-  intake_roller_right_config.CurrentLimits.SupplyCurrentLimit = 30_A;
+  intake_roller_right_config.CurrentLimits.SupplyCurrentLimit = 50_A;
   intake_roller_right_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode intake_roller_right_status =
@@ -173,5 +173,20 @@ void GroundIntakeSubsystem::GroundIntakeReset() {
 
   }
 
+}
+void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
+  
+  configs::CurrentLimitsConfigs current_limits{};
 
+  current_limits.SupplyCurrentLimit = 40_A;
+  current_limits.SupplyCurrentLimitEnable = true;
+
+  ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
+  for (int i = 0; i < 5; ++i) {
+    status = intake_roller_right_.Getmotor().GetConfigurator().Apply(current_limits);
+    
+    if (status.IsOK()) {
+      break;
+    }
+  }
 }
