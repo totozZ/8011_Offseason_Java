@@ -43,7 +43,7 @@ frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
 
 frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
-      frc2::cmd::Wait(units::second_t{0.5}),
+      frc2::cmd::Wait(units::second_t{1.4}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
       frc2::cmd::Wait(units::second_t{0.5}),
@@ -131,18 +131,15 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
   // 提前把底盘指针拿出来，避免在 Lambda 里使用 this
   auto drive = m_drivesubsystem;
 
-  // 使用最清爽的 DeferredProxy
   return frc2::DeferredCommand([drive, atOppo]() {
     double innerX = 3.43;
-    double innerY = 5.6;
-    double innerR = 135; 
+    double innerY = 5.5;
+    double innerR = 45; 
     double OuterX = 6;
-    double OuterY = 5.6;
-    double OuterR = 135;
+    double OuterY = 5.5;
+    double OuterR = 45;
 
     auto alliance = frc::DriverStation::GetAlliance();
-    
-    // 全部使用局部的 drive 指针，断绝一切内存生命周期烦恼
     double x = drive->GetState().Pose.X().value();
     double y = drive->GetState().Pose.Y().value(); 
 
@@ -155,8 +152,8 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
     // 根据实时 X 坐标决定先后顺序
     if (x > 5 && x < 11.54) {
       innerX-=0.5;
-      innerR=45;
-      OuterR=45;
+      innerR=135;
+      OuterR=135;
       return frc2::cmd::Sequence(
         AutoMoveOpen(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
         AutoMoveClosed(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
@@ -204,6 +201,10 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     bool invertA = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
     if(atOppo){
       invertA = !invertA;
+    }
+    if(invertA){
+      innerR-=180;
+      OuterR-=180;
     }
 
     // 将机器人的实际坐标反向投射到基准坐标系

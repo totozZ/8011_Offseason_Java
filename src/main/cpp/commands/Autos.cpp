@@ -83,6 +83,7 @@ frc2::CommandPtr autos::AutoSlowLeft(CommandSwerveDrivetrain* drivetrain, Shoote
             drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
             shooter,   // 你的 ShooterSubsystem 实例指针
             intaker,
+            nullptr,
             true    // 你的 GroundIntakeSubsystem 实例指针
         ).ToPtr()
     );
@@ -165,7 +166,7 @@ frc2::CommandPtr autos::AutoDoubleLeft(CommandSwerveDrivetrain* drivetrain, Shoo
         ).WithTimeout(units::second_t{2.5}),
         complexcommand->StopShootWithFeederCommand(),
         AutoMoveOpen(drivetrain, slowXLeft[12], slowYLeft[12], slowRLeft[12], slowSLeft[12], invertA, invertD).ToPtr(),
-        intakeNextToHub(drivetrain, shooter,intaker,true).ToPtr()
+        intakeNextToHub(drivetrain, shooter,intaker,nullptr,true).ToPtr()
 
 
     );

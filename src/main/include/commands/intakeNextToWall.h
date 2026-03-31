@@ -6,19 +6,19 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/GroundIntakeSubsystem.h"
-
+#include "frc2/command/button/CommandXboxController.h"
 using namespace subsystems;
 
 class intakeNextToWall : public frc2::CommandHelper<frc2::Command, intakeNextToWall> {
 public:
-  intakeNextToWall(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool oppo);
-
+  intakeNextToWall(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, frc2::CommandXboxController* j, bool oppo);
   void Initialize() override;
   void Execute() override;
   bool IsFinished() override;
   void End(bool interrupted) override;
 
 private:
+  frc2::CommandXboxController* joy;
   CommandSwerveDrivetrain* m_drive;
   ShooterSubsystem* m_shooter;
   GroundIntakeSubsystem* m_ground;

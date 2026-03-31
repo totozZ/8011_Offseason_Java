@@ -246,18 +246,12 @@ joystick.LeftBumper().OnTrue(
 
   joystick.A().WhileTrue(
     intakeNextToSide(          
-            &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
-            &shooterSub,   // 你的 ShooterSubsystem 实例指针
+            &drivetrain,  
+            &shooterSub, 
             &groundIntakeSub,
+            &joystick,
             true ).ToPtr()).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
-  // joystick.LeftTrigger().OnTrue(
-  //     frc2::cmd::Either(
-  //         complexcommand.GroundintakeresetCommand(),
-  //         complexcommand.GroundintakeprepareCommand(),
-  //         [this] { return ground_intake_prepared_; }))
-  //         .OnFalse(frc2::cmd::RunOnce(
-  //             [this] { ground_intake_prepared_ = !ground_intake_prepared_; }));
   joystick.LeftTrigger().OnFalse(
           complexcommand.GroundintakeresetCommand())
           .OnTrue(
@@ -290,9 +284,10 @@ joystick.LeftBumper().OnTrue(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
             &shooterSub,   // 你的 ShooterSubsystem 实例指针
             &groundIntakeSub,
+            &joystick,
             true    // 你的 GroundIntakeSubsystem 实例指针
         ).ToPtr(), 
-        intakeNextToWall(&drivetrain, &shooterSub, &groundIntakeSub, true).ToPtr(),
+        intakeNextToWall(&drivetrain, &shooterSub, &groundIntakeSub,&joystick, true).ToPtr(),
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
@@ -305,9 +300,10 @@ joystick.LeftBumper().OnTrue(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
             &shooterSub,   // 你的 ShooterSubsystem 实例指针
             &groundIntakeSub,
+            &joystick,
             false    // 你的 GroundIntakeSubsystem 实例指针
         ).ToPtr(), 
-        intakeNextToWall(&drivetrain, &shooterSub, &groundIntakeSub, false).ToPtr(),
+        intakeNextToWall(&drivetrain, &shooterSub, &groundIntakeSub, &joystick,false).ToPtr(),
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
