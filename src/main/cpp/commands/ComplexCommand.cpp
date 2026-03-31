@@ -35,7 +35,7 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.925),
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.985),
           m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0)
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
@@ -296,4 +296,16 @@ frc2::CommandPtr ComplexCommand::GoToClimb() {
       ); 
     }
   });
+}
+
+frc2::CommandPtr ComplexCommand::StartStorageCommand() {
+  return frc2::cmd::Sequence(
+      m_feederSubsystem->SetStorageNormPositionCommandPtr(1.0)
+  );
+}
+
+frc2::CommandPtr ComplexCommand::CloseStorageCommand() {
+  return frc2::cmd::Sequence(
+      m_feederSubsystem->SetStorageNormPositionCommandPtr(0.02)
+  );
 }

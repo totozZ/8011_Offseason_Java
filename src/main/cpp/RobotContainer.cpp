@@ -177,13 +177,22 @@ drivetrain.SetDefaultCommand(
     )
 );
 
-  joystick.LeftBumper().OnTrue(frc2::cmd::Either(
+  joystick.POVLeft().OnTrue(frc2::cmd::Either(
     shooterSub.EnableShooter(),
     complexcommand.StopShootWithFeederCommand(),
     [this]{return !shooterEnabled;}
   ).AndThen(frc2::cmd::RunOnce(
               [this] { shooterEnabled = !shooterEnabled; }))
   );
+
+// 根据storage位置切换
+joystick.LeftBumper().OnTrue(
+    frc2::cmd::Either(
+        complexcommand.StartStorageCommand(),
+        complexcommand.CloseStorageCommand(),
+        [this] { return feederSub.GetStorageNormPosition() < 0.5; }
+    )
+);
  
   // joystick.B().WhileTrue(
   //     frc2::cmd::StartEnd(銆併€戙€愩€戙€愩€?

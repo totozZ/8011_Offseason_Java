@@ -46,6 +46,10 @@ class ComplexCommand
 
   frc2::CommandPtr assistPassing();
   frc2::CommandPtr StartFeederCommand();
+
+  frc2::CommandPtr StartStorageCommand();
+  frc2::CommandPtr CloseStorageCommand();
+
  private:
   subsystems::CommandSwerveDrivetrain* m_drivesubsystem;
   subsystems::VisionSubsystem* m_visionSubsystem;

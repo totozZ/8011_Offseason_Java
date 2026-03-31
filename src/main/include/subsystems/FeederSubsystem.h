@@ -52,6 +52,13 @@ public:
                                               
                                                 double upward_velocity);
 
+  // --- Storage 机构 (位置环) ---
+  void SetStorageNormPosition(double norm);
+  frc2::CommandPtr SetStorageNormPositionCommandPtr(double norm);
+  double GetStorageCurrent();
+  double GetStorageNormPosition();
+  bool IsStorageResetDone() const { return storage_reset_flag_; }
+
   // --- 旧版战术逻辑接口 ---
   void SetPreload();
   frc2::CommandPtr SetPreloadCommandPtr();
@@ -79,14 +86,18 @@ public:
 
 private:
   void Initialization();
+  void StorageReset();
 
   Wayimotor backward_feeder_{ FeederConstants::BackwardFeederMotorID, kCANBus };
   Wayimotor upward_feeder_{ FeederConstants::UpwardFeederMotorID, kCANBus };
+  Wayimotor storage_{ FeederConstants::StorageMotorID, kCANBus };
 
   // --- 战术状态变量 (从旧版移植) ---
   static constexpr double kUpperVelocityReachTolerance = 1.0;
   bool upper_velocity_reached_once_ = false;
   double combo_target_velocity_ = 80.0;
+  bool storage_reset_flag_ = false;
+  int storage_reset_counter_ = 0;
 
   // SysId routine for feeder 
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt, 

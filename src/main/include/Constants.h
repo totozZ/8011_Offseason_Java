@@ -74,6 +74,7 @@ inline constexpr double AdjustSpeed = 0.4;
 namespace FeederConstants {
 inline constexpr int BackwardFeederMotorID = 17;
 inline constexpr int UpwardFeederMotorID = 18;
+inline constexpr int StorageMotorID = 22;
 inline constexpr double kBackwardHoldCurrent = 60.0;
 inline constexpr double kBackwardHoldCurrentSpeed = 0.1;
 inline constexpr double kBackwardShootCurrent = 80.0;
@@ -145,13 +146,12 @@ constexpr double kIDriveAiming = 0.0;
 constexpr double kDDriveAiming = 0.0;
 
 // 旋转限制
-static constexpr units::radians_per_second_t MaxDriveAimingOmega =
-    3.5_rad_per_s;
+static constexpr units::radians_per_second_t MaxDriveAimingOmega = 3.5_rad_per_s;
 constexpr double DriveAimingAngleTolerance = 0.5;  // 度
 }  // namespace DriveAimingConstants
 
 namespace VisionConstants {
-inline const std::array<std::string, 2> limelightNames = {"limelight-front", "limelight-back"};
+inline const std::array<std::string, 2> limelightNames = {"limelight-left", "limelight-back"};
 }  // namespace VisionConstants
 
 namespace ClimbConstants {
