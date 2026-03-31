@@ -37,29 +37,30 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.985),
-          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0)
-          //StartStorageCommand()
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.965),
+          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0),
+          StartStorageCommand()
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
 }
 
 frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
-      frc2::cmd::Wait(units::second_t{1.4}),
+      frc2::cmd::Wait(units::second_t{1}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{0.8}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
+      frc2::cmd::Wait(units::second_t{1}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.80)
       
   );
 }
 
 frc2::CommandPtr ComplexCommand::GroundintakeresetCommand() {
   return frc2::cmd::Sequence(
-      m_groundIntakeSubsystem->StopCommandPtr(),
-          m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0)
+    m_groundIntakeSubsystem->StopCommandPtr(),
+
+    m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0)
     );
 }
 
@@ -175,10 +176,8 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
 #include <cmath>
 
 frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
-  
-  auto drive = m_drivesubsystem;
 
-  return frc2::DeferredCommand([drive, atOppo]()  {
+  return frc2::DeferredCommand([this,atOppo]()  {
     // 初始基准点
     double innerX = 3.1;
     double innerY = 7.4;
@@ -186,7 +185,7 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     double OuterX = 6.0;
     double OuterY = 7.4;
     double OuterR = 0;
-    double currentR=drive->GetState().Pose.Rotation().Degrees().value();
+    double currentR=m_drivesubsystem->GetState().Pose.Rotation().Degrees().value();
     if(currentR<=90&&currentR>=-90){
       innerR=0;
       OuterR=0;
@@ -197,8 +196,8 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     }
     auto alliance = frc::DriverStation::GetAlliance();
     
-    double x = drive->GetState().Pose.X().value();
-    double y = drive->GetState().Pose.Y().value(); 
+    double x = m_drivesubsystem->GetState().Pose.X().value();
+    double y = m_drivesubsystem->GetState().Pose.Y().value(); 
 
     double targetSpeed = 0.6*TunerConstants::kSpeedAt12Volts.value();
     bool invertD = y <= 4;
@@ -228,15 +227,16 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       OuterX -= offsetDist * std::cos(angleRad.Radians().value());
       OuterY -= offsetDist * std::sin(angleRad.Radians().value());
       return frc2::cmd::Sequence(
-        
-        AutoMoveOpen(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,OuterX-0.6,innerY-0.6,0.3,90,true,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
-        AutoMoveClosed(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
+        CloseStorageCommand(),
+        AutoMoveOpen(m_drivesubsystem,OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
+        AutoMoveCircle(m_drivesubsystem,OuterX-0.6,innerY-0.6,0.3,90,true,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
+        AutoMoveClosed(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else{
         return frc2::cmd::Sequence(
-        AutoMoveOpen(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveClosed(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr());
+        CloseStorageCommand(),
+        AutoMoveOpen(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
+        AutoMoveClosed(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr());
       }
     } else {
       innerX-=0.2;
@@ -249,17 +249,19 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       innerX -= offsetDist * std::cos(angleRad.Radians().value());
       innerY -= offsetDist * std::sin(angleRad.Radians().value());
       return frc2::cmd::Sequence(
-        AutoMoveOpen(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveCircle(drive,innerX+0.6,OuterY-0.6,0.2,90,false,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
-        AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
+        CloseStorageCommand(),
+        AutoMoveOpen(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
+        AutoMoveCircle(m_drivesubsystem,innerX+0.6,OuterY-0.6,0.2,90,false,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
+        AutoMoveClosed(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else
       return frc2::cmd::Sequence(
-        AutoMoveOpen(drive, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveClosed(drive, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
+        CloseStorageCommand(),
+        AutoMoveOpen(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
+        AutoMoveClosed(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     }
-  },{drive}).ToPtr();
+  },{m_drivesubsystem}).ToPtr();
 }
 
 frc2::CommandPtr ComplexCommand::GoToClimb() {

@@ -105,8 +105,10 @@ drivetrain.SetDefaultCommand(
   
   joystick.Start().OnTrue(
     frc2::cmd::Sequence(
-    groundIntakeSub.SetPitchNormPositionCommandPtr(0.03),
+    complexcommand.StartStorageCommand(),
+    frc2::cmd::WaitUntil([this]{return weidaiSub.GetStorageNormPosition()>0.7;}),
     complexcommand.GroundintakeresetCommand(),
+    groundIntakeSub.SetPitchNormPositionCommandPtr(0.03),
     frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
   ));
 
@@ -259,8 +261,7 @@ joystick.LeftBumper().OnTrue(
           complexcommand.GroundintakeprepareCommand());
 
 
-   joystick.Y().
-   OnTrue(complexcommand.CloseStorageCommand())
+   joystick.Y()
    .WhileTrue(
     frc2::cmd::Sequence(
       complexcommand.StopShootWithFeederCommand(),

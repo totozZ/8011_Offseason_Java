@@ -179,7 +179,7 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
   
   configs::CurrentLimitsConfigs current_limits{};
 
-  current_limits.SupplyCurrentLimit = 20_A;
+  current_limits.SupplyCurrentLimit = 40_A;
   current_limits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
