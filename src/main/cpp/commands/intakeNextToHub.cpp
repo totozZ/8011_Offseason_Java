@@ -36,18 +36,18 @@ void intakeNextToHub::Initialize(){
     if(startY<=4.035){//离右边近，从右边吸
         targetY=1.5; 
         rawTargetRotation=70;
-        speedYDef=1.7;
+        speedYDef=2.2;
       }
       else {
         targetY=6.5;
         rawTargetRotation=-70;
-        speedYDef=-1.7;
+        speedYDef=-2.2;
       }
     if(targetX<=8.27){
       rawTargetRotation=180-rawTargetRotation;
     }
     arrived=false;
-    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetPitchNormPosition(0.965);
     m_ground->SetRollerVelocity(100.0);
         
 }
@@ -76,7 +76,7 @@ void intakeNextToHub::Execute(){
       }
       //抵达了，直接开吸
       else{
-        if(joy==nullptr){//自动给nullptr
+        if(joy==nullptr){//自动阶段给nullptr
           speedX=0;
         }
         else{

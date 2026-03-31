@@ -258,7 +258,9 @@ joystick.LeftBumper().OnTrue(
           complexcommand.GroundintakeprepareCommand());
 
 
-   joystick.Y().WhileTrue(
+   joystick.Y().
+   OnTrue(complexcommand.CloseStorageCommand())
+   .WhileTrue(
     frc2::cmd::Sequence(
       complexcommand.StopShootWithFeederCommand(),
       //complexcommand.GroundintakeresetCommand(),

@@ -264,6 +264,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         complexcommand->GroundintakeprepareCommand(),
         AutoMoveOpen(drivetrain, AutoXLow[6], AutoYLow[6], AutoRLow[6], AutoSLow[6], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[7]-0.2, AutoYLow[6],std::abs(AutoYLow[7]-AutoYLow[6]), 90,false, AutoSLow[7],false,AutoRLow[7],false,invertA, invertD,0).ToPtr(),
+        //complexcommand->PassTrench(false).Until([drivetrain, invertA]{return (!invertA&&drivetrain->GetState().Pose.X().value()>AutoXLow[8])||(invertA&&drivetrain->GetState().Pose.X().value()<16.54-AutoXLow[8]);}),
         AutoMoveOpen(drivetrain, AutoXLow[8], AutoYLow[8], AutoRLow[8], AutoSLow[8], invertA, invertD).ToPtr(),
 
         AutoMoveCircle(drivetrain, AutoXLow[9]-0.9, AutoYLow[9],0.7,0,false, AutoSLow[9],false,-90,false, invertA, invertD,0).ToPtr(),

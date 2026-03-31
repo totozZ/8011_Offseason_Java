@@ -31,9 +31,9 @@ inline const std::vector<double> OutR={-45 ,-45 ,-45 ,-90 ,-90 ,-90 ,-90 ,60  ,4
 inline const std::vector<double> OutS={0   ,3.0 ,3.0 ,3.1 ,3.2 ,3.4 ,3.5 ,3.1 ,3.3 ,3.2 ,3.1 ,3.0 ,3.0 ,3.0 ,3.1 ,2.0 ,2.0 ,3.0 ,   0,2   ,1.5 ,2   ,0   ,1   };
 //                                                                             shoot          IaD  shoot
 inline const std::vector<double> slowXLeft={4.40,5.70,7.00,7.80,7.80,5.80,3.20,1.50,1.10,0.50,0.50,3.20,9};
-inline const std::vector<double> slowYLeft={7.30,7.30,7.10,5.90,4.70,5.30,5.30,5.70,7.00,6.90,5.60,5.50,5.50};
+inline const std::vector<double> slowYLeft={7.30,7.30,7.10,5.90,4.70,5.40,5.40,5.70,7.00,6.90,5.60,5.40,5.50};
 inline const std::vector<double> slowRLeft={0   ,0   ,-90 ,-90 ,-90 ,135 ,135 ,135 ,-110,-110,-110,135 ,135   };
-inline const std::vector<double> slowSLeft={0   ,2.80,2.40,1.70,1.50,2.30,2.00,0.8 ,2.30,0.90,0.90,2.4 ,2.4 };
+inline const std::vector<double> slowSLeft={0   ,2.80,2.40,2.80,1.50,2.30,2.00,0.8 ,2.30,0.90,0.90,2.4 ,2.4 };
 //                                                         r b c                sh      S   R    B    C E                    sh
 inline const std::vector<double> AutoXDouble={3.60,5.80,7.00,7.80,7.80,5.80,3.20,5.90,5.90,3.50,7.20,7.80,7.80,7.00,5.80,3.20};
 inline const std::vector<double> AutoYDouble={5.60,5.50,7.10,6.40,4.70,5.50,5.50,5.50,3.80,3.00,3.30,3.80,4.70,5.50,5.50,5.50};

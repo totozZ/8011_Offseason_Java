@@ -37,6 +37,7 @@ frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
           m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.985),
           m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0)
+          //StartStorageCommand()
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
 }
@@ -46,7 +47,8 @@ frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
       frc2::cmd::Wait(units::second_t{1.4}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(20),
-      frc2::cmd::Wait(units::second_t{0.5}),
+      //CloseStorageCommand(),
+      frc2::cmd::Wait(units::second_t{0.8}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
       
   );

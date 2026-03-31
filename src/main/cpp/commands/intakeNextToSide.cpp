@@ -87,7 +87,7 @@ void intakeNextToSide::Initialize() {
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
     stopRightAway=std::sqrt(diffX*diffX+diffY*diffY)>=10;
-    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetPitchNormPosition(0.965);
     m_ground->SetRollerVelocity(100.0);
 }
 
@@ -153,7 +153,7 @@ void intakeNextToSide::Execute() {
     // === 第二阶段：开往最终墙边点并吸球 ===
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=1.7;
+        targetSpeed=2.2;
         speedX = m_movePIDX.Calculate(currentX, targetX_2);
         speedX=std::clamp(speedX,-targetSpeed,targetSpeed);
         speedY = -joystick->GetLeftX()*TunerConstants::kSpeedAt12Volts.value()*0.2;

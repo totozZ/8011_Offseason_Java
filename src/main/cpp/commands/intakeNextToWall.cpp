@@ -84,7 +84,7 @@ void intakeNextToWall::Initialize() {
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
     stopRightAway=std::sqrt(diffX*diffX+diffY*diffY)>=10;
-    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetPitchNormPosition(0.965);
     m_ground->SetRollerVelocity(100.0);
 }
 
@@ -118,7 +118,7 @@ void intakeNextToWall::Execute() {
     // }
     if (!arrivedAtFirstPoint) {
         double disToFirst = std::sqrt(std::pow(currentX - targetX_1, 2) + std::pow(currentY - targetY_1, 2));
-        targetSpeed=2;
+        targetSpeed=2.2;
         speedX = m_movePIDX.Calculate(currentX, targetX_1);
         speedY = m_movePIDY.Calculate(currentY, targetY_1);
         // if(disToFirst<1){
@@ -144,7 +144,7 @@ void intakeNextToWall::Execute() {
     } 
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=1.5;
+        targetSpeed=1.7;
         speedX =  -joy->GetLeftY()*TunerConstants::kSpeedAt12Volts.value()*0.2;
         
         speedY = m_movePIDY.Calculate(currentY, targetY_2);
