@@ -10,6 +10,7 @@
 #include "subsystems/GroundIntakeSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
+#include "subsystems/WeidaiSub.h"
 #include "commands/AutoMoveOpen.h"
 #include "commands/AutoMoveClosed.h"
 #include "commands/AutoMoveCircle.h"
@@ -21,6 +22,7 @@ class ComplexCommand
                           subsystems::VisionSubsystem* visionSubsystem,
                           subsystems::ShooterSubsystem* shooterSubsystem,
                           subsystems::FeederSubsystem* feederSubsystem,
+                          subsystems::WeidaiSub* weidaiSub,
                           subsystems::GroundIntakeSubsystem* groundIntakeSubsystem);                                                       
 
   frc2::CommandPtr FollowPathCommand(frc::Pose2d targetPos);
@@ -55,6 +57,7 @@ class ComplexCommand
   subsystems::VisionSubsystem* m_visionSubsystem;
   subsystems::ShooterSubsystem* m_shooterSubsystem;
   subsystems::FeederSubsystem* m_feederSubsystem;
+  subsystems::WeidaiSub* m_weidaiSub;
   subsystems::GroundIntakeSubsystem* m_groundIntakeSubsystem;
 
 };

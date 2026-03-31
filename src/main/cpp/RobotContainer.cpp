@@ -13,8 +13,9 @@ RobotContainer::RobotContainer()
     : visionSub(&drivetrain, nullptr),
       shooterSub(joystick),
       feederSub(joystick),
+      weidaiSub(joystick),
       groundIntakeSub(joystick),
-      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub,
+      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub, &weidaiSub,
                      &groundIntakeSub)
 {
   shooterSub.SetFeederSubsystem(&feederSub);
@@ -190,7 +191,7 @@ joystick.LeftBumper().OnTrue(
     frc2::cmd::Either(
         complexcommand.StartStorageCommand(),
         complexcommand.CloseStorageCommand(),
-        [this] { return feederSub.GetStorageNormPosition() < 0.5; }
+        [this] { return weidaiSub.GetStorageNormPosition() < 0.5; }
     )
 );
  

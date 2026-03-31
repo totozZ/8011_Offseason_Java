@@ -22,6 +22,7 @@
 #include "subsystems/GroundIntakeSubsystem.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/VisionSubsystem.h"
+#include "subsystems/WeidaiSub.h"
 #include "commands/Autos.h"
 #include "commands/intakeNextToSide.h"
 #include "commands/PassBallCommand.h"
@@ -71,6 +72,7 @@ public:
   subsystems::VisionSubsystem visionSub;
   subsystems::ShooterSubsystem shooterSub;
   subsystems::FeederSubsystem feederSub;
+  subsystems::WeidaiSub weidaiSub;
   //subsystems::ClientSubsystem clientSub;
   subsystems::GroundIntakeSubsystem groundIntakeSub;
   frc2::CommandXboxController joystick{ 0 };

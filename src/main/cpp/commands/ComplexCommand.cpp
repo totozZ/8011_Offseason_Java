@@ -9,11 +9,13 @@ ComplexCommand::ComplexCommand(
     subsystems::VisionSubsystem* visionSubsystem,
     subsystems::ShooterSubsystem* shooterSubsystem,
     subsystems::FeederSubsystem* feederSubsystem,
+    subsystems::WeidaiSub* weidaiSub,
     subsystems::GroundIntakeSubsystem* groundIntakeSubsystem)
     : m_drivesubsystem(driveSubsystem),
       m_visionSubsystem(visionSubsystem),
       m_shooterSubsystem(shooterSubsystem),
       m_feederSubsystem(feederSubsystem),
+      m_weidaiSub(weidaiSub),
       m_groundIntakeSubsystem(groundIntakeSubsystem)
     {}
 
@@ -303,12 +305,12 @@ frc2::CommandPtr ComplexCommand::GoToClimb() {
 
 frc2::CommandPtr ComplexCommand::StartStorageCommand() {
   return frc2::cmd::Sequence(
-      m_feederSubsystem->SetStorageNormPositionCommandPtr(1.0)
+      m_weidaiSub->SetStorageNormPositionCommandPtr(1.0)
   );
 }
 
 frc2::CommandPtr ComplexCommand::CloseStorageCommand() {
   return frc2::cmd::Sequence(
-      m_feederSubsystem->SetStorageNormPositionCommandPtr(0.02)
+      m_weidaiSub->SetStorageNormPositionCommandPtr(0.02)
   );
 }
