@@ -1,8 +1,8 @@
 #include "commands/intakeNextToHub.h"
 #include <numbers>
 
-intakeNextToHub::intakeNextToHub(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g), opposite(oppo){
+intakeNextToHub::intakeNextToHub(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* j, bool oppo)
+  : m_drive(drive), m_shooter(sh), m_ground(g), joy(j),opposite(oppo){
   
   AddRequirements({drive}); // 声明占用底盘
   AddRequirements({g});//占用地吸
@@ -33,19 +33,22 @@ void intakeNextToHub::Initialize(){
       targetX=16.54-targetX;
     }
 
-    if(startY<=4){//离右边近，从右边吸
+    if(startY<=4.035){//离右边近，从右边吸
         targetY=1.5; 
-        rawTargetRotation=90;
-        speedYDef=2.;
+        rawTargetRotation=70;
+        speedYDef=1.7;
       }
       else {
         targetY=6.5;
-        rawTargetRotation=-90;
-        speedYDef=-2.;
+        rawTargetRotation=-70;
+        speedYDef=-1.7;
       }
+    if(targetX<=8.27){
+      rawTargetRotation=180-rawTargetRotation;
+    }
     arrived=false;
-    m_ground->SetPitchNormPosition(0.995);
-     //m_ground->SetRollerVelocity(80.0);
+    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetRollerVelocity(100.0);
         
 }
 
@@ -63,21 +66,30 @@ void intakeNextToHub::Execute(){
       if(!arrived){
         speedX=m_movePIDX.Calculate(currentX, targetX);
         speedY=m_movePIDY.Calculate(currentY, targetY);
+        double speedT=sqrt(speedX*speedX+speedY*speedY);
+        double maxSpeed=2.4;
+        if(speedT>=maxSpeed){
+          double coeff=speedT/maxSpeed;
+          speedX/=coeff;
+          speedY/=coeff;
+        }
       }
       //抵达了，直接开吸
       else{
-        speedX=m_movePIDX.Calculate(currentX, targetX);
+        if(joy==nullptr){//自动给nullptr
+          speedX=0;
+        }
+        else{
+          speedX=-joy->GetLeftY()*TunerConstants::kSpeedAt12Volts.value()*0.2;
+        }
+        if(isRed){
+          speedX=-speedX;
+        }
         speedY=speedYDef;
         // m_ground->SetPitchNormPosition(0.99);
         // m_ground->SetRollerDutyCycle(0.6);
       }
-      double speedT=sqrt(speedX*speedX+speedY*speedY);
-      double maxSpeed=2.;
-      if(speedT>=maxSpeed){
-        double coeff=speedT/maxSpeed;
-        speedX/=coeff;
-        speedY/=coeff;
-      }
+     
       if(isRed){
         speedX=-speedX;
         speedY=-speedY;
@@ -86,8 +98,6 @@ void intakeNextToHub::Execute(){
       else{
         targetDire=rawTargetRotation;
       }
-      while(rawTargetRotation>180)rawTargetRotation-=360;
-      while(rawTargetRotation<-180)rawTargetRotation+=360;
       frc::Rotation2d rott{units::degree_t(targetDire)};
       m_drive->SetControl(driveClosed
         .WithVelocityX(units::meters_per_second_t(speedX))
@@ -106,7 +116,7 @@ void intakeNextToHub::Execute(){
     else{
       rota=angleDiff<=20;
     }
-    if(dis<0.3&&rota)
+    if(dis<0.1&&rota)
     arrived=true;
     frc::SmartDashboard::PutBoolean("arrived", arrived);
     frc::SmartDashboard::PutNumber("aDis", dis);

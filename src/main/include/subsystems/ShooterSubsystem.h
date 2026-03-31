@@ -143,8 +143,8 @@ class ShooterSubsystem : public ExampleSubsystem {
 
 #define shooter_vel_quadratic_regression_a 2.8
 #define shooter_vel_quadratic_regression_b 21.3
-#define shooter_vel_quadratic_regression_c 4.2
-#define shooter_vel_quadratic_regression_d 17.8
+#define shooter_vel_quadratic_regression_c 4.1
+#define shooter_vel_quadratic_regression_d 18.05
 // #define shooter_vel_quadratic_regression_e 6.4
 // #define shooter_vel_quadratic_regression_f 32.6
 

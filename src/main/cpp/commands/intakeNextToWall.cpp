@@ -3,8 +3,8 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cmath>
 
-intakeNextToWall::intakeNextToWall(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g), opposite(oppo) {
+intakeNextToWall::intakeNextToWall(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* j ,bool oppo)
+  : m_drive(drive), m_shooter(sh), m_ground(g),joy(j), opposite(oppo) {
   
   AddRequirements({drive}); 
   AddRequirements({g});
@@ -42,15 +42,15 @@ void intakeNextToWall::Initialize() {
         currentY=8.07-currentY;
     }
     if(currentY<3.7){
-        targetX_0=3;
-        targetY_0=0.75;
+        targetX_0=0.6;
+        targetY_0=0.6;
         targetR_0=-135;
-        targetX_1=0.75;
+        targetX_1=0.6;
         targetY_1=0.5;
-        targetR_1=180;
+        targetR_1=110;
         targetX_2=0.45;
         targetY_2=2.7;
-        targetR_2=90;
+        targetR_2=110;
         
     }
     else{
@@ -59,10 +59,10 @@ void intakeNextToWall::Initialize() {
         targetR_0=135;
         targetX_1=0.75;
         targetY_1=7.5;
-        targetR_1=-180;
+        targetR_1=-110;
         targetX_2=0.45;
         targetY_2=5;
-        targetR_2=-90;
+        targetR_2=-110;
     }
 
     if(sym){
@@ -84,8 +84,8 @@ void intakeNextToWall::Initialize() {
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
     stopRightAway=std::sqrt(diffX*diffX+diffY*diffY)>=10;
-    m_ground->SetPitchNormPosition(0.995);
-    // m_ground->SetRollerVelocity(80.0);
+    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetRollerVelocity(100.0);
 }
 
 void intakeNextToWall::Execute() {
@@ -134,26 +134,30 @@ void intakeNextToWall::Execute() {
             m_movePIDY.Reset();
         }
         targetDire=targetR_1;
+
+        double speedT = std::sqrt(speedX * speedX + speedY * speedY);
+        if (speedT >= targetSpeed) {
+            double coeff = speedT / targetSpeed;
+            speedX /= coeff;
+            speedY /= coeff;
+        }
     } 
-    // === 第二阶段：开往最终墙边点并吸球 ===
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=2;
-        speedX = m_movePIDX.Calculate(currentX, targetX_2);
+        targetSpeed=1.5;
+        speedX =  -joy->GetLeftY()*TunerConstants::kSpeedAt12Volts.value()*0.2;
+        
         speedY = m_movePIDY.Calculate(currentY, targetY_2);
-        // 如果到达最终点
-        if (disToSecond < 0.1) {
-            finishedAll = true; // 触发 IsFinished
+        speedY=std::clamp(speedY,-targetSpeed,targetSpeed);
+        if(isRed){
+            speedX=-speedX;
+        }
+        if (targetY_1 < targetY_2) {
+            finishedAll = (currentY >= targetY_2);
+        } else {
+            finishedAll = (currentY <= targetY_2);
         }
         targetDire=targetR_2;
-    }
-
-    // === 速度限制与归一化 ===
-    double speedT = std::sqrt(speedX * speedX + speedY * speedY);
-    if (speedT >= targetSpeed) {
-        double coeff = speedT / targetSpeed;
-        speedX /= coeff;
-        speedY /= coeff;
     }
 
     // === 处理联盟镜像 ===
@@ -162,10 +166,6 @@ void intakeNextToWall::Execute() {
         speedY = -speedY;
         
     } 
-
-    // 角度限制在 -180 到 180 之间
-    while (targetDire > 180) targetDire -= 360;
-    while (targetDire < -180) targetDire += 360;
 
     // === 发送底盘指令 ===
     m_drive->SetControl(driveClosed

@@ -6,12 +6,12 @@
 #include "subsystems/CommandSwerveDrivetrain.h"
 #include "subsystems/ShooterSubsystem.h"
 #include "subsystems/GroundIntakeSubsystem.h"
-
+#include <frc2/command/button/CommandXboxController.h>
 using namespace subsystems;
 
 class intakeNextToSide : public frc2::CommandHelper<frc2::Command, intakeNextToSide> {
 public:
-  intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool oppo);
+  intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* joy, bool oppo);
 
   void Initialize() override;
   void Execute() override;
@@ -22,6 +22,7 @@ private:
   CommandSwerveDrivetrain* m_drive;
   ShooterSubsystem* m_shooter;
   GroundIntakeSubsystem* m_ground;
+  frc2::CommandXboxController* joystick;
   bool opposite;
   bool isRed;
 
@@ -47,6 +48,8 @@ private:
   double rawTargetRotation = 0;
   double targetDire = 0;
   double speedT=0;
+  
+  double secondMoveDown=false;
   units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts; // 确保你有这个常量
 
   frc::PIDController m_movePIDX{3.0, 0.0, 0.1}; // 请根据你的实际情况调整 PID

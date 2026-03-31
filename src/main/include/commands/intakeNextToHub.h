@@ -9,10 +9,11 @@
 #include "subsystems/ShooterSubsystem.h" 
 #include <ctre/phoenix6/swerve/SwerveRequest.hpp>
 #include "subsystems/GroundIntakeSubsystem.h"
+#include <frc2/command/button/CommandXboxController.h>
 using namespace subsystems;
 class intakeNextToHub : public frc2::CommandHelper<frc2::Command, intakeNextToHub> {
  public:
-  intakeNextToHub(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool Oppo);
+  intakeNextToHub(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, frc2::CommandXboxController* j, bool Oppo);
 
   void Initialize() override;
   void Execute() override;
@@ -21,6 +22,7 @@ class intakeNextToHub : public frc2::CommandHelper<frc2::Command, intakeNextToHu
 
  private:
   bool opposite;
+  frc2::CommandXboxController* joy;
   CommandSwerveDrivetrain* m_drive;
   ShooterSubsystem*  m_shooter;
   GroundIntakeSubsystem* m_ground;

@@ -3,8 +3,8 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cmath>
 
-intakeNextToSide::intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g), opposite(oppo) {
+intakeNextToSide::intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, frc2::CommandXboxController* joy, bool oppo)
+  : m_drive(drive), m_shooter(sh), m_ground(g), joystick(joy),opposite(oppo) {
   
   AddRequirements({drive}); 
   AddRequirements({g});
@@ -34,76 +34,61 @@ void intakeNextToSide::Initialize() {
     }
     double currentY=m_drive->GetState().Pose.Y().value();
     double currentX=m_drive->GetState().Pose.X().value();
-    if(currentY<3.7){
-        targetY_1=0.45;
-        targetY_2=0.45;
-        targetR_1=-targetR_1;
-        targetR_2=-targetR_2;
-    }
-    else{
-        targetY_1=8.07-0.45;
-        targetY_2=8.07-0.45;
-    }
     if(currentX<11.54&&currentX>5){
         targetX_1=10.54;
         targetX_2=6;
-        targetR_1=180;
-        targetR_2=180;
+        targetR_1=160;
+        targetR_2=160;
         if(currentX<8.27){
         targetX_1=16.54-targetX_1;
         targetY_1=8.07-targetY_1;
         targetX_2=16.54-targetX_2;
         targetY_2=8.07-targetY_2;
-        targetR_1=0;
-        targetR_2=0;
+        targetR_1=20;
+        targetR_2=20;
         }
     }
     else if(currentX<5){
         targetX_1=3.5;
-        targetX_2=0.75;
-        targetR_1=180;
-        targetR_2=180;
+        targetX_2=0.55;
+        targetR_1=160;
+        targetR_2=160;
         if(currentX<2){
             double a =targetX_1;
             targetX_1=targetX_2;
             targetX_2=a;
-            targetR_1=0;
-            targetR_2=0;
+            targetR_1=20;
+            targetR_2=20;
         }
     }
     else{
         targetX_1=16.54-3.5;
-        targetX_2=16.54-0.75;
-        targetR_1=0;
-        targetR_2=0;
+        targetX_2=16.54-0.55;
+        targetR_1=20;
+        targetR_2=20;
         if(currentX>14.56){
             double a =targetX_1;
             targetX_1=targetX_2;
             targetX_2=a;
-            targetR_1=180;
-            targetR_2=180;
+            targetR_1=160;
+            targetR_2=160;
         }
     }
-    
-    if(currentY<3.7){
-        targetY_1=0.45;
-        targetY_2=0.45;
+    if(currentY<4.035){
+        targetY_1=0.60;
+        targetY_2=0.60;
         targetR_1=-targetR_1;
         targetR_2=-targetR_2;
     }
     else{
-        targetY_1=8.07-0.45;
-        targetY_2=8.07-0.45;
-    }
-    if(isRed){
-        targetR_1-=180;
-        targetR_2-=180;
+        targetY_1=8.07-0.60;
+        targetY_2=8.07-0.60;
     }
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
     stopRightAway=std::sqrt(diffX*diffX+diffY*diffY)>=10;
-    m_ground->SetPitchNormPosition(0.995);
-    //m_ground->SetRollerVelocity(80.0);
+    m_ground->SetPitchNormPosition(0.925);
+    m_ground->SetRollerVelocity(100.0);
 }
 
 void intakeNextToSide::Execute() {
@@ -136,7 +121,7 @@ void intakeNextToSide::Execute() {
     // }
     if (!arrivedAtFirstPoint) {
         double disToFirst = std::sqrt(std::pow(currentX - targetX_1, 2) + std::pow(currentY - targetY_1, 2));
-        targetSpeed=2.;
+        targetSpeed=2.4;
         
         speedX = m_movePIDX.Calculate(currentX, targetX_1);
         speedY = m_movePIDY.Calculate(currentY, targetY_1);
@@ -146,9 +131,9 @@ void intakeNextToSide::Execute() {
         // m_ground->SetRollerDutyCycle(0.6);
         // }
         // 如果距离第一个点足够近（例如小于 0.3 米），切换状态
-        if (disToFirst < 0.2) {
+        if (disToFirst < 0.1) {
             arrivedAtFirstPoint = true;
-            // 可以在这里重置 PID，为了第二段移动更平滑
+           
             m_movePIDX.Reset();
             m_movePIDY.Reset();
         }
@@ -159,37 +144,35 @@ void intakeNextToSide::Execute() {
             speedX /= coeff;
             speedY /= coeff;
         }
-    } 
-    // === 第二阶段：开往最终墙边点并吸球 ===
-    else {
-        double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=2.;
-        speedX = m_movePIDX.Calculate(currentX, targetX_2);
-        speedY = m_movePIDY.Calculate(currentY, targetY_2);
-        // 如果到达最终点
-        if (disToSecond < 0.1) {
-            finishedAll = true; // 触发 IsFinished
-        }
-        targetDire=targetR_2;
-        speedT = std::sqrt(speedX * speedX + speedY * speedY);
-    }
-
-    if (speedT >= targetSpeed) {
+        if (speedT >= targetSpeed) {
             double coeff = speedT / targetSpeed;
             speedX /= coeff;
             speedY /= coeff;
         }
+    } 
+    // === 第二阶段：开往最终墙边点并吸球 ===
+    else {
+        double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
+        targetSpeed=1.7;
+        speedX = m_movePIDX.Calculate(currentX, targetX_2);
+        speedX=std::clamp(speedX,-targetSpeed,targetSpeed);
+        speedY = -joystick->GetLeftX()*TunerConstants::kSpeedAt12Volts.value()*0.2;
+        if(isRed){
+            speedY=-speedY;
+        }
+        // 如果到达最终点
+        bool goForward= targetR_2<=90&&targetR_2>=-90;
+        finishedAll = (goForward&&currentX>targetX_2)||(!goForward&&currentX<targetX_2); 
+        
+        targetDire=targetR_2;
+    }
+
     // === 处理联盟镜像 ===
     if (isRed) {
         speedX = -speedX;
         speedY = -speedY;
-        
+        targetDire-=180;
     } 
-
-    // 角度限制在 -180 到 180 之间
-    while (targetDire > 180) targetDire -= 360;
-    while (targetDire < -180) targetDire += 360;
-
     // === 发送底盘指令 ===
     m_drive->SetControl(driveClosed
         .WithVelocityX(units::meters_per_second_t(speedX))
