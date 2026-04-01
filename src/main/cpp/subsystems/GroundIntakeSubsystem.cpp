@@ -143,6 +143,14 @@ frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(
   return this->RunOnce([this, norm] { SetPitchNormPosition(norm); });
 }
 
+double GroundIntakeSubsystem::GetPitchCurrent() {
+  return intake_pitch_.GetCurrent();
+}
+
+double GroundIntakeSubsystem::GetPitchNormPosition() {
+  return intake_pitch_.GetNormalizedPosition();
+}
+
 void GroundIntakeSubsystem::GroundIntakeReset() {
   // Disabled state should not advance homing.
   if (!frc::DriverStation::IsEnabled()) {

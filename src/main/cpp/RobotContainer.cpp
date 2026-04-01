@@ -110,12 +110,13 @@ drivetrain.SetDefaultCommand(
   joystick.Start().OnTrue(
     frc2::cmd::Sequence(
     complexcommand.StartStorageCommand(),
-    frc2::cmd::WaitUntil([this]{return weidaiSub.GetStorageNormPosition()>0.7;}),
+    frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
     complexcommand.GroundintakeresetCommand(),
     groundIntakeSub.SetPitchNormPositionCommandPtr(0.03),
-    frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;}),
-    frc2::cmd::WaitUntil([this]{return groundIntakeSub.GetPitchNormPosition()<0.2;}),
-    complexcommand.CloseStorageCommand()
+    frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
+        .WithTimeout(units::second_t{1.0}),
+    complexcommand.CloseStorageCommand(),
+    frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
   ));
 
   joystick.RightTrigger()
