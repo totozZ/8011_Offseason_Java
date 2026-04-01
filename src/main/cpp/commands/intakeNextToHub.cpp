@@ -47,7 +47,7 @@ void intakeNextToHub::Initialize(){
       rawTargetRotation=180-rawTargetRotation;
     }
     arrived=false;
-    m_ground->SetPitchNormPosition(0.965);
+    m_ground->SetPitchNormPosition(0.95);
     m_ground->SetRollerVelocity(100.0);
         
 }

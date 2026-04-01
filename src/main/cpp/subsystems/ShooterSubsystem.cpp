@@ -46,7 +46,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 60_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 30_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -73,7 +73,7 @@ void ShooterSubsystem::Initialization() {
   configs::TalonFXConfiguration shooter_pitch_config{};
   shooter_pitch_config.MotorOutput.Inverted = 0;
   shooter_pitch_config.MotorOutput.NeutralMode = 1; // Brake
-  shooter_pitch_config.CurrentLimits.StatorCurrentLimit = 60_A;
+  shooter_pitch_config.CurrentLimits.StatorCurrentLimit = 50_A;
   shooter_pitch_config.CurrentLimits.StatorCurrentLimitEnable = true;
   shooter_pitch_config.CurrentLimits.SupplyCurrentLimit = 20_A;
   shooter_pitch_config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -102,10 +102,10 @@ void ShooterSubsystem::Periodic() {
   // 必须调用以维持封装好的 Wayimotor 的通讯
   shooter_right_up_.Control();
   shooter_pitch_.Control();
-  shooter_right_up_.Receive();
+  shooter_right_up_.ReceiveVelocity();
 
 
-  frc::SmartDashboard::PutNumber("shooter_pitch_currentPosition", shooter_pitch_.GetPosition());
+  //frc::SmartDashboard::PutNumber("shooter_pitch_currentPosition", shooter_pitch_.GetPosition());
 
   // 1. 判断是否需要归零
   if (shooter_pitch_reset_flag_ == 0) {
@@ -122,7 +122,7 @@ void ShooterSubsystem::Periodic() {
       bool isRed=alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed;
       double x = drivetrain_sub_->GetState().Pose.X().value();
       isPassing=(!isRed&&x>=5.0) || (isRed&&x<=11.54);
-      frc::SmartDashboard::PutBoolean("shootOnMove/isPassing", isPassing);
+      //frc::SmartDashboard::PutBoolean("shootOnMove/isPassing", isPassing);
 
         CalculatePitchAngleAboveHub(hub_distance_m);
         if (!isPassing) {
@@ -175,8 +175,10 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
 }
 
 double ShooterSubsystem::CalculateShooterSpeedRegression(double dis) {
-  bool s=frc::SmartDashboard::GetBoolean("shootUseDash",false);
-  double sp=frc::SmartDashboard::GetNumber("shootVelWant",40);
+  //bool s=frc::SmartDashboard::GetBoolean("shootUseDash",false);
+  bool s=false;
+  //double sp=frc::SmartDashboard::GetNumber("shootVelWant",40);
+  double sp=0;
   if(!s){
   if (onlyDefaultShoot) {
     vel = 40.9;

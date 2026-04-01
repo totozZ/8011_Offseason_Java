@@ -85,6 +85,7 @@ void Robot::AutonomousExit() {
   m_container.feederSub.Stop();
   m_container.shooterSub.DisableShooterNonCmd();
   m_container.groundIntakeSub.Stop();
+  m_container.drivetrain.SetControl(m_container.drivetrain.Idle);
 }
 
 void Robot::TeleopInit() {

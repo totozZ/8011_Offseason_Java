@@ -79,8 +79,8 @@ void RealTimeAimDrive::Execute() {
   double Normvx=realX*cos(-targetAngleRad)+realY*cos(PI/2-targetAngleRad);
   //向旁边的速度
   double Normvy=realX*sin(-targetAngleRad)+realY*sin(PI/2-targetAngleRad);
-  frc::SmartDashboard::PutNumber("shootOnMove/vxToHub",vx );
-  frc::SmartDashboard::PutNumber("shootOnMove/vyToHub",vy );
+  // frc::SmartDashboard::PutNumber("shootOnMove/vxToHub",vx );
+  // frc::SmartDashboard::PutNumber("shootOnMove/vyToHub",vy );
   
   
   //假设射球出膛速度只有真正速度的0.2,need configuration and zone division

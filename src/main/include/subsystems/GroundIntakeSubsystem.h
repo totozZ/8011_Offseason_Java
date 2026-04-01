@@ -41,7 +41,6 @@ public:
 
   double GetPitchCurrent();
   double GetPitchNormPosition();
-  
   void BrakePitch();
   frc2::CommandPtr BrakePitchCommandPtr();
 

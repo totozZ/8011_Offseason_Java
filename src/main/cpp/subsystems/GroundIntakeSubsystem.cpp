@@ -134,7 +134,7 @@ frc2::CommandPtr GroundIntakeSubsystem::StopCommandPtr() {
 }
 
 void GroundIntakeSubsystem::SetPitchNormPosition(double norm) {
-  frc::SmartDashboard::PutNumber("SetPitchNormPosition", norm);
+  //frc::SmartDashboard::PutNumber("SetPitchNormPosition", norm);
   intake_pitch_.setNormalizedMotionPosition(norm);
 }
 
@@ -147,28 +147,25 @@ void GroundIntakeSubsystem::GroundIntakeReset() {
   // Disabled state should not advance homing.
   if (!frc::DriverStation::IsEnabled()) {
     pitch_reset_counter_ = 0;
-    frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
+    //frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
     return;
   }
 
   intake_pitch_.setcurrent(-50);
 
-  frc::SmartDashboard::PutNumber("intake_pitch Current",
-                                 intake_pitch_.GetCurrent());
+  //frc::SmartDashboard::PutNumber("intake_pitch Current",intake_pitch_.GetCurrent());
 
-  frc::SmartDashboard::PutNumber(
-      "intake_pitch Position",
-      intake_pitch_.GetPosition());
+  frc::SmartDashboard::PutNumber("intake_pitch Position",intake_pitch_.GetPosition());
 
   if (intake_pitch_.GetCurrent() < -46) {
     ++pitch_reset_counter_;
   } else {
     pitch_reset_counter_ = 0;
   }
-    frc::SmartDashboard::PutBoolean("pitch_reset_counter_", pitch_reset_counter_);
+    //frc::SmartDashboard::PutBoolean("pitch_reset_counter_", pitch_reset_counter_);
 
   if (pitch_reset_counter_ >= 3) {
-    frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
+    //frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
     intake_pitch_.Reset(intake_pitch_.GetAbsPosition());
     pitch_reset_flag_ = true;
 
@@ -179,7 +176,7 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
   
   configs::CurrentLimitsConfigs current_limits{};
 
-  current_limits.SupplyCurrentLimit = 40_A;
+  current_limits.SupplyCurrentLimit = 30_A;
   current_limits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
@@ -190,4 +187,7 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
       break;
     }
   }
+}
+double GroundIntakeSubsystem::GetPitchNormPosition(){
+ return intake_pitch_.GetNormalizedPosition();
 }

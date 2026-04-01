@@ -63,6 +63,10 @@ drivetrain.SetDefaultCommand(
         // 算出平移速度指令 (不论什么模式都要用到)
         auto vXCmd = rawVx * MaxSpeed * OperatorConstants::SpeedRate;
         auto vYCmd = rawVy * MaxSpeed * OperatorConstants::SpeedRate;
+        if(ground_intake_prepared_){
+          vXCmd*=0.7;
+          vYCmd*=0.7;
+        }
         if(driveLikeTank) {
             double rate = 0.0; // 默认不旋转
             
@@ -109,7 +113,9 @@ drivetrain.SetDefaultCommand(
     frc2::cmd::WaitUntil([this]{return weidaiSub.GetStorageNormPosition()>0.7;}),
     complexcommand.GroundintakeresetCommand(),
     groundIntakeSub.SetPitchNormPositionCommandPtr(0.03),
-    frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
+    frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;}),
+    frc2::cmd::WaitUntil([this]{return groundIntakeSub.GetPitchNormPosition()<0.2;}),
+    complexcommand.CloseStorageCommand()
   ));
 
   joystick.RightTrigger()
@@ -174,8 +180,9 @@ drivetrain.SetDefaultCommand(
         }
     )
 ).OnFalse(
-    frc2::cmd::Parallel(
+    frc2::cmd::Sequence(
         complexcommand.StopShootWithFeederCommand(),
+        complexcommand.GroundintakeresetCommand(),
         frc2::cmd::RunOnce([this] { shooterEnabled = false; })
     )
 );
@@ -256,15 +263,23 @@ joystick.LeftBumper().OnTrue(
             true ).ToPtr()).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
   joystick.LeftTrigger().OnFalse(
-          complexcommand.GroundintakeresetCommand())
+
+        frc2::cmd::Sequence(
+          complexcommand.GroundintakeresetCommand(),
+          frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;})))
           .OnTrue(
-          complexcommand.GroundintakeprepareCommand());
+            frc2::cmd::Sequence(
+            frc2::cmd::Parallel(
+              complexcommand.GroundintakeprepareCommand(),
+              complexcommand.StartStorageCommand()),
+            frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = true;})));
 
 
    joystick.Y()
    .WhileTrue(
     frc2::cmd::Sequence(
       complexcommand.StopShootWithFeederCommand(),
+      complexcommand.CloseStorageCommand(),
       //complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
         complexcommand.PassTrench(false),

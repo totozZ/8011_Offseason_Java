@@ -53,7 +53,7 @@ class TunerConstants {
     static constexpr configs::TalonFXConfiguration driveInitialConfigs =
       configs::TalonFXConfiguration{}.WithCurrentLimits(
           configs::CurrentLimitsConfigs{}
-          .WithSupplyCurrentLimit(50_A)
+          .WithSupplyCurrentLimit(40_A)
               // Swerve azimuth does not require much torque output, so we
               // can set a relatively low stator current limit to help
               // avoid brownouts without impacting performance.

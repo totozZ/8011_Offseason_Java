@@ -243,8 +243,9 @@ frc2::CommandPtr autos::AutoHP(CommandSwerveDrivetrain* drivetrain, ShooterSubsy
 frc2::CommandPtr autos::AutoLow(CommandSwerveDrivetrain* drivetrain, ShooterSubsystem* shooter, 
 FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complexcommand, bool invertA, bool invertD){
       return frc2::cmd::Sequence(
-        AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
         complexcommand->GroundintakeprepareCommand(),
+        AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
+        complexcommand->StartStorageCommand(),
         AutoMoveCircle(drivetrain, AutoXLow[2]-0.8, AutoYLow[2]+0.1,0.4,30,false, AutoSLow[2],false,-90,false, invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, AutoXLow[3], AutoYLow[3]+0.3, AutoRLow[3], AutoSLow[3], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[3]-0.8,AutoYLow[3]+0.3,0.8,-130,false, AutoSLow[1],false,0,true,invertA, invertD,0).ToPtr(),
@@ -262,11 +263,15 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         complexcommand->StopShootWithFeederCommand(),
         shooter->DisableShooter(),
         intaker->SetPitchNormPositionCommandPtr(0.965),
-        AutoMoveOpen(drivetrain, AutoXLow[6], AutoYLow[6]-0.3, AutoRLow[6], AutoSLow[6], invertA, invertD).ToPtr(),
+        AutoMoveOpen(drivetrain, AutoXLow[6], AutoYLow[6]-0.3, AutoRLow[6], AutoSLow[6], invertA, invertD).ToPtr().Until([drivetrain, invertA]{
+          double r = drivetrain->GetState().Pose.Rotation().Degrees().value();
+          return (!invertA&&r<80&&r>-80)||(invertA&&(r>100||r<-100));}),
         //AutoMoveCircle(drivetrain, AutoXLow[7]-0.2, AutoYLow[6],std::abs(AutoYLow[7]-AutoYLow[6]), 90,false, AutoSLow[7],false,AutoRLow[7],false,invertA, invertD,0).ToPtr(),
-        complexcommand->PassTrench(false).Until([drivetrain, invertA]{return (!invertA&&drivetrain->GetState().Pose.X().value()>AutoXLow[8])||(invertA&&drivetrain->GetState().Pose.X().value()<16.54-AutoXLow[8]);}),
-        //AutoMoveOpen(drivetrain, AutoXLow[8], AutoYLow[8], AutoRLow[8], AutoSLow[8], invertA, invertD).ToPtr(),
+        complexcommand->CloseStorageCommand(),
         complexcommand->GroundintakeprepareCommand(),
+        complexcommand->PassTrench(false).Until([drivetrain, invertA]{return (!invertA&&drivetrain->GetState().Pose.X().value()>AutoXLow[8])||(invertA&&drivetrain->GetState().Pose.X().value()<16.54-AutoXLow[8]);}),
+        complexcommand->StartStorageCommand(),
+        //AutoMoveOpen(drivetrain, AutoXLow[8], AutoYLow[8], AutoRLow[8], AutoSLow[8], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[9]-0.9, AutoYLow[9],0.7,0,false, AutoSLow[9],false,-90,false, invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, AutoXLow[10], AutoYLow[10], AutoRLow[10], AutoSLow[10], invertA, invertD).ToPtr(),
         
@@ -284,7 +289,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         frc2::cmd::Parallel(
           RealTimeAimDrive(drivetrain, shooter, []{return 0;}, []{return 0;},180).ToPtr(),
             frc2::cmd::Parallel(
-            complexcommand->ShootWithFeederCommand(),
+              complexcommand->ShootWithFeederCommand(),
               complexcommand->GroundintakeassistCommand().Repeatedly()
             )
         ).WithTimeout(units::second_t{2.5}),

@@ -135,6 +135,11 @@ void AutoMoveOpen::End(bool interrupted) {
     auto currentSpeeds = m_drivetrain->GetState().Speeds;
 
     // 把这些速度赋给底盘身上那个绝对安全的滑行 Request
+    if(interrupted){
+        m_drivetrain->SetControl(
+        m_drivetrain->Idle );
+    }
+    else
     m_drivetrain->SetControl(
         m_drivetrain->m_safeCoastRequest
             .WithVelocityX(currentSpeeds.vx)
