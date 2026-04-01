@@ -37,7 +37,7 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.965),
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.95),
           m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0),
           StartStorageCommand()
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
