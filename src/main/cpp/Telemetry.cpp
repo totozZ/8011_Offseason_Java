@@ -23,6 +23,12 @@ void Telemetry::Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveSta
     // driveModulePositions.Set(state.ModulePositions);
     // driveTimestamp.Set(state.Timestamp.value());
     // driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
+    // driveSpeeds.Set(state.Speeds);
+    // driveModuleStates.Set(state.ModuleStates);
+    // driveModuleTargets.Set(state.ModuleTargets);
+    // driveModulePositions.Set(state.ModulePositions);
+    // driveTimestamp.Set(state.Timestamp.value());
+    // driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
 
     /* Also write to log file */
     SignalLogger::WriteStruct("DriveState/Pose", state.Pose);
