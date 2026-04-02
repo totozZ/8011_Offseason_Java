@@ -144,7 +144,7 @@ void intakeNextToWall::Execute() {
     } 
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=1.7;
+        targetSpeed=1.5;
         speedX =  -joy->GetLeftY()*TunerConstants::kSpeedAt12Volts.value()*0.2;
         
         speedY = m_movePIDY.Calculate(currentY, targetY_2);

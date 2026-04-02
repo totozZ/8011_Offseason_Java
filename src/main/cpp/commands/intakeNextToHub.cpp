@@ -23,11 +23,11 @@ void intakeNextToHub::Initialize(){
     auto alliance=frc::DriverStation::GetAlliance();
 
     if(alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed){
-        targetX=10.85; 
+        targetX=10.65; 
         isRed=true;
     }
     else{
-        targetX=5.7; 
+        targetX=5.5; 
     }
     if(opposite){
       targetX=16.54-targetX;
@@ -36,12 +36,12 @@ void intakeNextToHub::Initialize(){
     if(startY<=4.035){//离右边近，从右边吸
         targetY=1.5; 
         rawTargetRotation=70;
-        speedYDef=2.2;
+        speedYDef=1.7;
       }
       else {
         targetY=6.5;
         rawTargetRotation=-70;
-        speedYDef=-2.2;
+        speedYDef=-1.7;
       }
     if(targetX<=8.27){
       rawTargetRotation=180-rawTargetRotation;

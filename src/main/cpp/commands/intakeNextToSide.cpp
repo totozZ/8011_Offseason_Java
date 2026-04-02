@@ -121,7 +121,7 @@ void intakeNextToSide::Execute() {
     // }
     if (!arrivedAtFirstPoint) {
         double disToFirst = std::sqrt(std::pow(currentX - targetX_1, 2) + std::pow(currentY - targetY_1, 2));
-        targetSpeed=2.4;
+        targetSpeed=2.2;
         
         speedX = m_movePIDX.Calculate(currentX, targetX_1);
         speedY = m_movePIDY.Calculate(currentY, targetY_1);
@@ -153,7 +153,7 @@ void intakeNextToSide::Execute() {
     // === 第二阶段：开往最终墙边点并吸球 ===
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=2.2;
+        targetSpeed=1.6;
         speedX = m_movePIDX.Calculate(currentX, targetX_2);
         speedX=std::clamp(speedX,-targetSpeed,targetSpeed);
         speedY = -joystick->GetLeftX()*TunerConstants::kSpeedAt12Volts.value()*0.2;

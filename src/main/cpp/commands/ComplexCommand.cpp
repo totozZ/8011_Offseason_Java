@@ -46,11 +46,11 @@ frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
 
 frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
-      frc2::cmd::Wait(units::second_t{1}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.50),
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(30),
+      frc2::cmd::Wait(units::second_t{0.7}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.70),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{1}),
+      frc2::cmd::Wait(units::second_t{1.3}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
       
   );
@@ -303,7 +303,7 @@ frc2::CommandPtr ComplexCommand::GoToClimb() {
 
 frc2::CommandPtr ComplexCommand::StartStorageCommand() {
   return frc2::cmd::Sequence(
-      m_weidaiSub->SetStorageNormPositionCommandPtr(1.0)
+      m_weidaiSub->SetStorageNormPositionCommandPtr(0.8)
   );
 }
 

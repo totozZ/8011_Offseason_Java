@@ -78,7 +78,9 @@ frc2::CommandPtr autos::AutoSlowLeft(CommandSwerveDrivetrain* drivetrain, Shoote
             )
         ).WithTimeout(units::second_t{2}),
         complexcommand->StopShootWithFeederCommand(),
-        AutoMoveOpen(drivetrain, slowXLeft[12], slowYLeft[12], slowRLeft[12], slowSLeft[12], invertA, invertD).ToPtr(),
+        // AutoMoveOpen(drivetrain, slowXLeft[12], slowYLeft[12], slowRLeft[12], slowSLeft[12], invertA, invertD).ToPtr(),
+        complexcommand->CloseStorageCommand(),
+        complexcommand->PassTrench(false).Until([drivetrain, invertA]{return (!invertA&&drivetrain->GetState().Pose.X().value()>AutoXLow[8]+1)||(invertA&&drivetrain->GetState().Pose.X().value()<16.54-AutoXLow[8]-1);}),
         intakeNextToHub(
             drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
             shooter,   // 你的 ShooterSubsystem 实例指针
@@ -117,6 +119,7 @@ frc2::CommandPtr autos::AutoDoubleLeft(CommandSwerveDrivetrain* drivetrain, Shoo
         // }, {drivetrain}),
         complexcommand->GroundintakeprepareCommand(),
         AutoMoveOpen(drivetrain, AutoXDouble[1], AutoYDouble[1], AutoRDouble[1], AutoSDouble[1], invertA, invertD).ToPtr(),
+        complexcommand->StartStorageCommand(),
         // AutoMoveOpen(drivetrain, AutoXDouble[2], AutoYDouble[2], AutoRDouble[2], AutoSDouble[2], invertA, invertD).ToPtr(),
         // AutoMoveOpen(drivetrain, AutoXDouble[3], AutoYDouble[3], AutoRDouble[3], AutoSDouble[3], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXDouble[3]-0.6, AutoYDouble[3]-0.5, 0.1,30,false,AutoSDouble[3],false,-70,false,invertA,invertD,0 ).ToPtr(),
@@ -259,7 +262,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
             complexcommand->ShootWithFeederCommand(),
             complexcommand->GroundintakeassistCommand().Repeatedly()
             )
-        ).WithTimeout(units::second_t{2.5}),
+        ).WithTimeout(units::second_t{2.8}),
         complexcommand->StopShootWithFeederCommand(),
         shooter->DisableShooter(),
         intaker->SetPitchNormPositionCommandPtr(0.965),
@@ -311,8 +314,8 @@ frc2::CommandPtr autos::AutoLowOnlyOneSide(CommandSwerveDrivetrain* drivetrain, 
         AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
         complexcommand->StartStorageCommand(),
         AutoMoveCircle(drivetrain, AutoXLow[2]-0.8, AutoYLow[2]+0.1,0.4,30,false, AutoSLow[2],false,-90,false, invertA, invertD,0).ToPtr(),
-        AutoMoveOpen(drivetrain, AutoXLow[3], AutoYLow[3]+0.5, AutoRLow[3], AutoSLow[3], invertA, invertD).ToPtr(),
-        AutoMoveCircle(drivetrain, AutoXLow[3]-0.8,AutoYLow[3]+0.5,0.8,-130,false, AutoSLow[1]-0.4,false,0,true,invertA, invertD,0).ToPtr(),
+        AutoMoveOpen(drivetrain, AutoXLow[3], AutoYLow[3]+0.8, AutoRLow[3], AutoSLow[3], invertA, invertD).ToPtr(),
+        AutoMoveCircle(drivetrain, AutoXLow[3]-0.8,AutoYLow[3]+0.8,0.8,-130,false, AutoSLow[1]-0.8,false,0,true,invertA, invertD,0).ToPtr(),
         AutoMoveOpen(drivetrain, AutoXLow[4], AutoYLow[4], AutoRLow[4], AutoSLow[4], invertA, invertD).ToPtr(),
         complexcommand->GroundintakeresetCommand(),
         shooter->EnableShooter(),
@@ -323,7 +326,7 @@ frc2::CommandPtr autos::AutoLowOnlyOneSide(CommandSwerveDrivetrain* drivetrain, 
             complexcommand->ShootWithFeederCommand(),
             complexcommand->GroundintakeassistCommand().Repeatedly()
             )
-        ).WithTimeout(units::second_t{2.5}),
+        ).WithTimeout(units::second_t{2.8}),
         complexcommand->StopShootWithFeederCommand(),
         shooter->DisableShooter(),
         intaker->SetPitchNormPositionCommandPtr(0.965),
@@ -343,9 +346,9 @@ frc2::CommandPtr autos::AutoLowOnlyOneSide(CommandSwerveDrivetrain* drivetrain, 
                        std::abs(AutoXLow[10] - AutoXLow[11]) / 2, 0, true, AutoSLow[11], false, 0, true, invertA, invertD,0).ToPtr(),
         
         AutoMoveOpen(drivetrain, AutoXLow[12], AutoYLow[12]+1.2, AutoRLow[12], AutoSLow[12], invertA, invertD).ToPtr(),
-        AutoMoveCircle(drivetrain, AutoXLow[12] - 0.5, AutoYLow[12]+1.2, 0.5, 110, true, AutoSLow[12], false, -90, true, invertA, invertD, 0).ToPtr(),
+        AutoMoveCircle(drivetrain, AutoXLow[12] - 0.7, AutoYLow[12]+1.2, 0.7, 130, true, AutoSLow[12], false, -90, true, invertA, invertD, 0).ToPtr(),
         
-        AutoMoveOpen(drivetrain, AutoXLow[14], AutoYLow[14], -130, AutoSLow[14], invertA, invertD).ToPtr(),
+        AutoMoveOpen(drivetrain, AutoXLow[14]-0.4, AutoYLow[14], 135, AutoSLow[14], invertA, invertD).ToPtr(),
         // AutoMoveCircle(drivetrain, AutoXLow[14] - 0.5, AutoYLow[14]+0.5, 0.1, -90, false, AutoSLow[14],false, -90, true, invertA, invertD, 0).ToPtr(),
         
         complexcommand->GroundintakeresetCommand(),
