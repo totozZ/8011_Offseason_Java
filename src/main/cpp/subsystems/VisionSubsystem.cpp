@@ -51,14 +51,14 @@ void VisionSubsystem::Periodic() {
     LED_control();
     if (g_publish_vision_debug) {
       for (size_t i = 0; i < VisionConstants::limelightNames.size(); ++i) {
-        frc::SmartDashboard::PutNumber(
-            "vision_mode_" + VisionConstants::limelightNames[i],
-            vision_modes_[i]);
+        // frc::SmartDashboard::PutNumber(
+        //     "vision_mode_" + VisionConstants::limelightNames[i],
+        //     vision_modes_[i]);
       }
     }
 
   } catch (const std::exception& e) {
-    std::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
+    //Sstd::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
   }
 
   const double periodic_ms =
@@ -69,10 +69,10 @@ void VisionSubsystem::Periodic() {
   if (periodic_ms > kPeriodicOverrunMs) {
     ++periodic_overrun_count;
   }
-  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMs", periodic_ms);
-  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMsMax", periodic_ms_max);
-  frc::SmartDashboard::PutNumber("Perf/VisionPeriodicOverrunCount",
-                                 periodic_overrun_count);
+  // frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMs", periodic_ms);
+  // frc::SmartDashboard::PutNumber("Perf/VisionPeriodicMsMax", periodic_ms_max);
+  // frc::SmartDashboard::PutNumber("Perf/VisionPeriodicOverrunCount",
+  //                                periodic_overrun_count);
 }
 
 void VisionSubsystem::UpdateAngularVelocity() {
@@ -82,8 +82,8 @@ void VisionSubsystem::UpdateAngularVelocity() {
                                 .GetValueAsDouble();  // 获取当前角速度
 
   if (g_publish_vision_debug) {
-    frc::SmartDashboard::PutNumber("Vision_AngularVelocity",
-                                   currentAngularVelocity_);
+    // frc::SmartDashboard::PutNumber("Vision_AngularVelocity",
+    //                                currentAngularVelocity_);
   }
 }
 
@@ -144,11 +144,11 @@ bool VisionSubsystem::ShouldRejectMetatagPose(
     reason += reason.empty() ? "DistToCamera" : " & DistToCamera";
   }
   // 如果拒绝，记录原因到 SmartDashboard
-  if (reject) {
-    frc::SmartDashboard::PutString("Vision_Reject_Reason", reason);
-  } else {
-    frc::SmartDashboard::PutString("Vision_Reject_Reason", "None");
-  }
+  // if (reject) {
+  //   frc::SmartDashboard::PutString("Vision_Reject_Reason", reason);
+  // } else {
+  //   frc::SmartDashboard::PutString("Vision_Reject_Reason", "None");
+  // }
   return reject;
 }
 
@@ -200,10 +200,10 @@ void VisionSubsystem::LimelightMeasurement() {
   //                      : LimelightIMUMode::FusedIMU;
   //currentIMUMode=LimelightIMUMode::FusedIMU;
   currentIMUMode=LimelightIMUMode::ExternalIMU;
-  if (g_publish_vision_debug) {
-    frc::SmartDashboard::PutNumber("limelight_imu_mode",
-                                   static_cast<int>(currentIMUMode));
-  }
+  // if (g_publish_vision_debug) {
+  //   frc::SmartDashboard::PutNumber("limelight_imu_mode",
+  //                                  static_cast<int>(currentIMUMode));
+  // }
 
   for (size_t i = 0; i < VisionConstants::limelightNames.size(); ++i) {
     std::string camera_name = VisionConstants::limelightNames[i];

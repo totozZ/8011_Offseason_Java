@@ -131,7 +131,7 @@ void ShooterSubsystem::Periodic() {
           CalculateShooterSpeedRegression(pass_distance_m);
         }
         getFinalVel();
-        frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
+        //frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
         if (shooting) {
           shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
           SetShootPitchAngle(90-angle);
@@ -199,7 +199,7 @@ double ShooterSubsystem::CalculateShooterSpeedRegression(double dis) {
 double ShooterSubsystem::GetShootVelocity() {
   // 返回主控电机 (右上) 的当前真实转速
   double sh=shooter_right_up_.GetVelocity();
-  frc::SmartDashboard::PutNumber("shootRealVelo", sh);
+  //frc::SmartDashboard::PutNumber("shootRealVelo", sh);
   return sh;
 }
 void ShooterSubsystem::getFinalVel() {

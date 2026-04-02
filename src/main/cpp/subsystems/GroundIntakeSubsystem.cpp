@@ -105,15 +105,15 @@ void GroundIntakeSubsystem::Periodic() {
 
   if (publish_debug) {
 
-    frc::SmartDashboard::PutNumber(
-        "ground_intake_pitch_currentnormalizedPosition",
-        intake_pitch_.GetNormalizedPosition());
-    frc::SmartDashboard::PutNumber("ground_intake_pitch_wayiconfig.offset",
-                                   intake_pitch_.Getdata().offset);
-    frc::SmartDashboard::PutNumber("ground_intake_pitch_currentPosition",
-                                   intake_pitch_.GetPosition());
-    frc::SmartDashboard::PutNumber("ground_intake_pitch_targetnormalizedPosition",
-                                   intake_pitch_.Getdata().normalizedPosition);
+    // frc::SmartDashboard::PutNumber(
+    //     "ground_intake_pitch_currentnormalizedPosition",
+    //     intake_pitch_.GetNormalizedPosition());
+    // frc::SmartDashboard::PutNumber("ground_intake_pitch_wayiconfig.offset",
+    //                                intake_pitch_.Getdata().offset);
+    // frc::SmartDashboard::PutNumber("ground_intake_pitch_currentPosition",
+    //                                intake_pitch_.GetPosition());
+    // frc::SmartDashboard::PutNumber("ground_intake_pitch_targetnormalizedPosition",
+    //                                intake_pitch_.Getdata().normalizedPosition);
 
   }
 }
