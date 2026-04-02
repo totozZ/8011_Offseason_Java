@@ -169,7 +169,7 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
     
     Tangle = angle;
     angle += angleOffsetFromDrive;
-    frc::SmartDashboard::PutNumber("shootIdealAngle",angle);
+    //frc::SmartDashboard::PutNumber("shootIdealAngle",angle);
     return angle;
   }
 }

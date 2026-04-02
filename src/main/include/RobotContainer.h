@@ -54,6 +54,8 @@ private:
 
   enum class AutoMode {
     kDoNothing,
+    LowLeftNoBounce,
+    LowRightNoBounce,
     OutDepot,
     DoubleOutLeft,
     DoubleOutRight,

@@ -163,7 +163,7 @@ void GroundIntakeSubsystem::GroundIntakeReset() {
 
   //frc::SmartDashboard::PutNumber("intake_pitch Current",intake_pitch_.GetCurrent());
 
-  frc::SmartDashboard::PutNumber("intake_pitch Position",intake_pitch_.GetPosition());
+  //frc::SmartDashboard::PutNumber("intake_pitch Position",intake_pitch_.GetPosition());
 
   if (intake_pitch_.GetCurrent() < -46) {
     ++pitch_reset_counter_;
@@ -195,7 +195,4 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
       break;
     }
   }
-}
-double GroundIntakeSubsystem::GetPitchNormPosition(){
- return intake_pitch_.GetNormalizedPosition();
 }

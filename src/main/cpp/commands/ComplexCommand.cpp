@@ -229,12 +229,12 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       return frc2::cmd::Sequence(
         AutoMoveOpen(m_drivesubsystem,OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
         AutoMoveCircle(m_drivesubsystem,OuterX-0.6,innerY-0.6,0.3,90,true,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
-        AutoMoveClosed(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
+        AutoMoveClosed(m_drivesubsystem, innerX-1, innerY, innerR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else{
         return frc2::cmd::Sequence(
         AutoMoveOpen(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveClosed(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr());
+        AutoMoveClosed(m_drivesubsystem, innerX-1, innerY, innerR, targetSpeed, invertA, invertD).ToPtr());
       }
     } else {
       innerX-=0.2;
@@ -249,12 +249,12 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
       return frc2::cmd::Sequence(
         AutoMoveOpen(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
         AutoMoveCircle(m_drivesubsystem,innerX+0.6,OuterY-0.6,0.2,90,false,targetSpeed,false,OuterR,false,invertA,invertD,0).ToPtr(),
-        AutoMoveClosed(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
+        AutoMoveClosed(m_drivesubsystem, OuterX+1, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); }
       else
       return frc2::cmd::Sequence(
         AutoMoveOpen(m_drivesubsystem, innerX, innerY, innerR, targetSpeed, invertA, invertD).ToPtr(),
-        AutoMoveClosed(m_drivesubsystem, OuterX, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
+        AutoMoveClosed(m_drivesubsystem, OuterX+1, OuterY, OuterR, targetSpeed, invertA, invertD).ToPtr()
       ); 
     }
   },{m_drivesubsystem}).ToPtr();

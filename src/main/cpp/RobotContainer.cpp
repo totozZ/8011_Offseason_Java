@@ -39,6 +39,8 @@ RobotContainer::RobotContainer()
   // m_autoChooser.AddOption("OutAndHPRed",AutoMode::RedOutAndHP);
   m_autoChooser.AddOption("LowLeft",AutoMode::LowLeft);
   m_autoChooser.AddOption("LowRight", AutoMode::LowRight);
+  m_autoChooser.AddOption("LowLeftNoBounce",AutoMode::LowLeftNoBounce);
+  m_autoChooser.AddOption("LowRightNoBounce", AutoMode::LowRightNoBounce);
   // 3. 推送到 Shuffleboard / SmartDashboard
   frc::SmartDashboard::PutData("Auto Mode", &m_autoChooser);
   ConfigureBindings();
@@ -366,9 +368,12 @@ frc2::CommandPtr RobotContainer::GenerateAutoCommand() {
     
     case AutoMode::LowRight:
       return autos::AutoLow(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
+    case AutoMode::LowRightNoBounce:
+      return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
+    case AutoMode::LowLeftNoBounce:
+      return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,isRed);
     
-
-      case AutoMode::kDoNothing:
+    case AutoMode::kDoNothing:
     default:
       return frc2::cmd::None();
   }
