@@ -47,10 +47,10 @@ frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
 frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
   return frc2::cmd::Sequence(
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(30),
-      frc2::cmd::Wait(units::second_t{0.7}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.70),
+      frc2::cmd::Wait(units::second_t{0.9}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{1.3}),
+      frc2::cmd::Wait(units::second_t{1.0}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
       
   );
@@ -87,10 +87,10 @@ frc2::CommandPtr ComplexCommand::ShootWithFeederCommand() {
         m_shooterSubsystem->EnableShooter(),
       frc2::cmd::Sequence(
           frc2::cmd::WaitUntil([this]{return 
-            std::abs(m_shooterSubsystem->GetShootVelocity()-m_shooterSubsystem->realShootVelocity)<0.3
+            std::abs(m_shooterSubsystem->GetShootVelocity()-m_shooterSubsystem->realShootVelocity)<0.7
             &&m_drivesubsystem->SOMangleDiff<=5;})
           .WithTimeout(units::second_t{1.5}),
-          m_feederSubsystem->HoldFeederVelocityCommandPtr(1, FeederConstants::kUpwardVelocityTarget)
+          m_feederSubsystem->HoldFeederVelocityCommandPtr(1.0, FeederConstants::kUpwardVelocityTarget)
               ));
 }
 
@@ -106,7 +106,6 @@ frc2::CommandPtr ComplexCommand::assistPassing(){
               frc2::cmd::Sequence(
                 frc2::cmd::Wait(units::second_t{1}),
                 ComplexCommand::GroundintakeassistCommand()).Repeatedly()
-              
               ));
 }
 
@@ -303,7 +302,7 @@ frc2::CommandPtr ComplexCommand::GoToClimb() {
 
 frc2::CommandPtr ComplexCommand::StartStorageCommand() {
   return frc2::cmd::Sequence(
-      m_weidaiSub->SetStorageNormPositionCommandPtr(0.8)
+      m_weidaiSub->SetStorageNormPositionCommandPtr(0.99)
   );
 }
 

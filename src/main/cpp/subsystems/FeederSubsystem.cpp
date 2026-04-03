@@ -61,7 +61,7 @@ void FeederSubsystem::Initialization()
   upward_feeder_.setinvert(-1);
   upward_feeder_.SetStatusSignalUpdateFrequency(50_Hz);
   upward_feeder_.setPhysicalLimits(0, 360000, 100, 40); 
-  upward_feeder_.setgearRatio(1.4); 
+  upward_feeder_.setgearRatio(1.0); 
 
 }
 
