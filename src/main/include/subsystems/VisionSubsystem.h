@@ -50,7 +50,7 @@ class VisionSubsystem : public frc2::SubsystemBase {
   std::array<LimelightHelpers::PoseEstimate, VisionConstants::limelightNames.size()> mt2_poses_;
 
   std::array<int, VisionConstants::limelightNames.size()> vision_modes_{};           // 0视觉不更新，1更新mt2, 2更新混合
-  double switch_distance_ = 1.3;  // 1米，距离阈值，低于此距离使用混合模式
+  double switch_distance_ = 1.4;  // 1米，距离阈值，低于此距离使用混合模式
 
   // IMU 模式
   enum class LimelightIMUMode {

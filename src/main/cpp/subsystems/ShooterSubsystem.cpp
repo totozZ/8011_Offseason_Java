@@ -46,7 +46,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 60_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 45_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -210,7 +210,7 @@ void ShooterSubsystem::getFinalVel() {
   if (feeder_sub_ != nullptr) {
     feeder_upward_target_velocity = feeder_sub_->GetComboTargetVelocity();
     // 防零除保护
-    if (feeder_upward_target_velocity > 0.01) {
+    if (feeder_upward_target_velocity > 0.01&&std::abs(feeder_sub_->GetUpwardFeederVelocity())<std::abs(feeder_upward_target_velocity)) {
       feeder_upward_velocity_difference = -feeder_sub_->GetUpwardFeederVelocity() + feeder_upward_target_velocity;
       add = feeder_upward_velocity_difference / feeder_upward_target_velocity * shooter_max_composite;
     }

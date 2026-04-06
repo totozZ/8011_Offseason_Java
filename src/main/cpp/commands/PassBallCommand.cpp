@@ -65,7 +65,7 @@ void PassBallCommand::Execute() {
   double realY = isRed ? -nowY : nowY;
 
   // 预测 0.4 秒后的未来位置
-  double latencySeconds = 0.4;
+  double latencySeconds = 0.;
   double predictedX = currentPose.X().value() + (realX * latencySeconds);
   double predictedY = currentPose.Y().value() + (realY * latencySeconds);
 
@@ -95,7 +95,7 @@ void PassBallCommand::Execute() {
   double Normvx = realX * cos(-targetAngleRad) + realY * cos(PI/2 - targetAngleRad);
   double Normvy = realX * sin(-targetAngleRad) + realY * sin(PI/2 - targetAngleRad);
   
-  double shootCoeff = 0.17; 
+  double shootCoeff = 0.45; 
   
   // 这时候 m_shooter->vel 已经是我们在 Init 里触发的传球专用速度了
   double Shootvx = m_shooter->vel * cos(m_shooter->Tangle / 180.0 * PI) * shootCoeff;
@@ -123,11 +123,11 @@ void PassBallCommand::Execute() {
   //没被hub挡住时启动feeder
   bool rightPos=currentPose.Y().value()<=3.5||currentPose.Y().value()>=4.5;
   //同时飞轮速度达标
-  bool rightSpeed=std::abs(m_shooter->realShootVelocity-m_shooter->GetShootVelocity())<=10;
+  bool rightSpeed=std::abs(m_shooter->realShootVelocity-m_shooter->GetShootVelocity())<=15;
   frc::SmartDashboard::PutNumber("shootOnMove/passShooterVreal",m_shooter->GetShootVelocity());
   frc::SmartDashboard::PutNumber("shootOnMove/passShooterVexpected",m_shooter->realShootVelocity);
   //同时底盘旋转ok
-  bool rightRot=m_drive->SOMangleDiff<=13;
+  bool rightRot=m_drive->SOMangleDiff<=20;
 
   frc::SmartDashboard::PutBoolean("shootOnMove/RightPos", rightPos);
 frc::SmartDashboard::PutBoolean("shootOnMove/RightSpeed", rightSpeed);

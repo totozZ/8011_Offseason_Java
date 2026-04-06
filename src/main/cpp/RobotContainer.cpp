@@ -240,7 +240,7 @@ joystick.LeftBumper().OnTrue(
 
   joystick.RightBumper().WhileTrue(
     frc2::cmd::Sequence(
-      complexcommand.StopShootWithFeederCommand(),
+      //complexcommand.StopShootWithFeederCommand(),
       complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
         complexcommand.PassBump(false),
@@ -258,12 +258,14 @@ joystick.LeftBumper().OnTrue(
 
 
   joystick.A().WhileTrue(
+    frc2::cmd::Parallel(
+      complexcommand.StartStorageCommand(),
     intakeNextToSide(          
             &drivetrain,  
             &shooterSub, 
             &groundIntakeSub,
             &joystick,
-            true ).ToPtr()).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
+            true ).ToPtr())).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
   joystick.LeftTrigger().OnFalse(
 
@@ -281,7 +283,7 @@ joystick.LeftBumper().OnTrue(
    joystick.Y()
    .WhileTrue(
     frc2::cmd::Sequence(
-      complexcommand.StopShootWithFeederCommand(),
+      //complexcommand.StopShootWithFeederCommand(),
       complexcommand.CloseStorageCommand(),
       //complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
@@ -301,6 +303,8 @@ joystick.LeftBumper().OnTrue(
 
   
   joystick.B().WhileTrue(
+    frc2::cmd::Parallel(
+      complexcommand.StartStorageCommand(),
    frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
@@ -313,10 +317,12 @@ joystick.LeftBumper().OnTrue(
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
-              )).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));    // 转换为 WPILib 最新架构的 CommandPtr
+              ))).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));    // 转换为 WPILib 最新架构的 CommandPtr
   
   
   joystick.X().WhileTrue(
+    frc2::cmd::Parallel(
+      complexcommand.StartStorageCommand(),
     frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
@@ -329,7 +335,7 @@ joystick.LeftBumper().OnTrue(
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
-              )).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
+              ))).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
 }
 

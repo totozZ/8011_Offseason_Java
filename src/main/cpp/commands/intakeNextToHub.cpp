@@ -23,11 +23,11 @@ void intakeNextToHub::Initialize(){
     auto alliance=frc::DriverStation::GetAlliance();
 
     if(alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed){
-        targetX=10.15; 
+        targetX=10.45; 
         isRed=true;
     }
     else{
-        targetX=6.0; 
+        targetX=5.7; 
     }
     if(opposite){
       targetX=16.54-targetX;
