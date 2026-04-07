@@ -37,8 +37,9 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.94),
-          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0)
+          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0),
+          m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(GroundIntakeConstants::PitchNormPosition)
+          
           //StartStorageCommand()
           //m_feederSubsystem->SetBackwardFeederDutyCommandPtr(0.1)
         );
@@ -49,10 +50,10 @@ frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(30),
       // frc2::cmd::Wait(units::second_t{0.7}),
       // m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.8),
-      frc2::cmd::Wait(units::second_t{1}),
+      frc2::cmd::Wait(units::second_t{0.8}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{0.6}),
+      frc2::cmd::Wait(units::second_t{1}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
   );
 }

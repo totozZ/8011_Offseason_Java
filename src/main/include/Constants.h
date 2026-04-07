@@ -78,7 +78,7 @@ inline constexpr double kBackwardHoldCurrent = 60.0;
 inline constexpr double kBackwardHoldCurrentSpeed = 0.1;
 inline constexpr double kBackwardShootCurrent = 80.0;
 inline constexpr double kBackwardShootCurrentSpeed = 0.6;
-inline constexpr double kUpwardVelocityTarget = 90.0;
+inline constexpr double kUpwardVelocityTarget = 80.0;
 }  // namespace FeederConstants
 
 namespace WeidaiConstants {
@@ -129,6 +129,7 @@ inline constexpr int IntakePivotMotorID = 21;
 inline constexpr double kAssistPitchCurrentThreshold = 17.0;
 // assist 触发后的冷却时间(秒)
 inline constexpr double kAssistCooldownS = 1.2;
+inline constexpr double PitchNormPosition =0.94;
 }  // namespace GroundIntakeConstants
 
 namespace LinearServoConstants {
@@ -140,8 +141,8 @@ inline constexpr double MaxPositionMm = 58.0;
 namespace DriveAimingConstants {
 // 蓝方Hub坐标
 //  static constexpr frc::Translation2d BlueHubPosition{4.625467_m, 4.034536_m};
-static constexpr frc::Translation2d BlueHubPosition{4.611624_m, 4.021328_m};
-static constexpr frc::Translation2d RedHubPosition{11.874533_m, 4.034536_m};
+static constexpr frc::Translation2d BlueHubPosition{4.625594_m, 4.034536_m};
+static constexpr frc::Translation2d RedHubPosition{11.915394_m, 4.034536_m};
 
 // DriveAiming pid
 constexpr double kPDriveAiming = 0.135;

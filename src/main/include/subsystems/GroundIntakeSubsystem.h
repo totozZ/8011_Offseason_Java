@@ -43,7 +43,9 @@ public:
   double GetPitchNormPosition();
   void BrakePitch();
   frc2::CommandPtr BrakePitchCommandPtr();
-
+  bool getPitchResetFlag(){
+    return pitch_reset_flag_;
+  }
 private:
   void Initialization();
 

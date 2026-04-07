@@ -139,7 +139,7 @@ class ShooterSubsystem : public ExampleSubsystem {
 #endif
 
 #define shooter_height_approx 0.46932
-#define shooter_max_composite 13.5
+#define shooter_max_composite 12.5
 
 #define shooter_vel_quadratic_regression_a 2.8
 #define shooter_vel_quadratic_regression_b 25.0

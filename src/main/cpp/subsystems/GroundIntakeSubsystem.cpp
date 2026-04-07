@@ -159,20 +159,20 @@ void GroundIntakeSubsystem::GroundIntakeReset() {
     return;
   }
 
-  intake_pitch_.setcurrent(-50);
+  intake_pitch_.setcurrent(-60);
 
   //frc::SmartDashboard::PutNumber("intake_pitch Current",intake_pitch_.GetCurrent());
 
   //frc::SmartDashboard::PutNumber("intake_pitch Position",intake_pitch_.GetPosition());
 
-  if (intake_pitch_.GetCurrent() < -46) {
-    ++pitch_reset_counter_;
-  } else {
-    pitch_reset_counter_ = 0;
-  }
+  if (intake_pitch_.GetCurrent() < -20) {
+    ++pitch_reset_counter_;}
+  // } else {
+  //   pitch_reset_counter_ = 0;
+  // }
     //frc::SmartDashboard::PutBoolean("pitch_reset_counter_", pitch_reset_counter_);
 
-  if (pitch_reset_counter_ >= 3) {
+  if (pitch_reset_counter_ >= 1) {
     //frc::SmartDashboard::PutBoolean("pitch_reset_flag", pitch_reset_flag_);
     intake_pitch_.Reset(intake_pitch_.GetAbsPosition());
     pitch_reset_flag_ = true;

@@ -84,7 +84,7 @@ void intakeNextToWall::Initialize() {
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
     stopRightAway=std::sqrt(diffX*diffX+diffY*diffY)>=10;
-    m_ground->SetPitchNormPosition(0.95);
+    m_ground->SetPitchNormPosition(GroundIntakeConstants::PitchNormPosition);
     m_ground->SetRollerVelocity(100.0);
 }
 

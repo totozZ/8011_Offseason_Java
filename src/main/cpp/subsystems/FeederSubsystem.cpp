@@ -46,7 +46,7 @@ void FeederSubsystem::Initialization()
   upward_feeder_slot0.kV = 0;        
   upward_feeder_slot0.kA = 0;          
   upward_feeder_slot0.kP = 9;        
-  upward_feeder_slot0.kI = 1.2;        
+  upward_feeder_slot0.kI = 0;        
   upward_feeder_slot0.kD = 0.;         
   upward_feeder_slot0.GravityType = 0; 
 

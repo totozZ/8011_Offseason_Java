@@ -23,11 +23,11 @@ void intakeNextToHub::Initialize(){
     auto alliance=frc::DriverStation::GetAlliance();
 
     if(alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed){
-        targetX=10.45; 
+        targetX=10.55; 
         isRed=true;
     }
     else{
-        targetX=5.7; 
+        targetX=5.6; 
     }
     if(opposite){
       targetX=16.54-targetX;
@@ -47,7 +47,7 @@ void intakeNextToHub::Initialize(){
       rawTargetRotation=180-rawTargetRotation;
     }
     arrived=false;
-    m_ground->SetPitchNormPosition(0.95);
+    m_ground->SetPitchNormPosition(GroundIntakeConstants::PitchNormPosition);
     m_ground->SetRollerVelocity(100.0);
         
 }
