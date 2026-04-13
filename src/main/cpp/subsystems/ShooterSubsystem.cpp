@@ -46,7 +46,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 45_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 60_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -131,7 +131,7 @@ void ShooterSubsystem::Periodic() {
           CalculateShooterSpeedRegression(pass_distance_m);
         }
         getFinalVel();
-        //frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
+        frc::SmartDashboard::PutNumber("shoot_velocity_expected", realShootVelocity);
         if (shooting) {
           shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
           SetShootPitchAngle(90-angle);
@@ -199,7 +199,7 @@ double ShooterSubsystem::CalculateShooterSpeedRegression(double dis) {
 double ShooterSubsystem::GetShootVelocity() {
   // 返回主控电机 (右上) 的当前真实转速
   double sh=shooter_right_up_.GetVelocity();
-  //frc::SmartDashboard::PutNumber("shootRealVelo", sh);
+  frc::SmartDashboard::PutNumber("shootRealVelo", sh);
   return sh;
 }
 void ShooterSubsystem::getFinalVel() {

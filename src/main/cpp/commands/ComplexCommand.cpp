@@ -53,11 +53,16 @@ frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
       frc2::cmd::Wait(units::second_t{0.8}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{1}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
+      frc2::cmd::Wait(units::second_t{0.8}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.20)
   );
 }
-
+frc2::CommandPtr ComplexCommand::GroundintakeantiCommand(){
+  return //frc2::cmd::Sequence(
+          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(-20.0);
+          //m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(GroundIntakeConstants::PitchNormPosition)
+        //);
+}
 frc2::CommandPtr ComplexCommand::GroundintakeresetCommand() {
   return frc2::cmd::Sequence(
     m_groundIntakeSubsystem->StopCommandPtr(),
@@ -113,8 +118,9 @@ frc2::CommandPtr ComplexCommand::assistPassing(){
 
 frc2::CommandPtr ComplexCommand::StopShootWithFeederCommand() {
   return frc2::cmd::Sequence(m_shooterSubsystem->DisableShooter(),
-                             m_feederSubsystem->StopCommandPtr(),
-                            m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5));
+                             m_feederSubsystem->StopCommandPtr()
+                            //m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5)
+                            );
 }
 
 frc2::CommandPtr ComplexCommand::autoFollow(frc::Pose2d targetPos) {
@@ -150,7 +156,7 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
     double x = drive->GetState().Pose.X().value();
     double y = drive->GetState().Pose.Y().value(); 
 
-    double targetSpeed = 2;
+    double targetSpeed = 0.6*TunerConstants::kSpeedAt12Volts.value();
     bool invertD = y <= 4;
     bool invertA = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
     if(atOppo){

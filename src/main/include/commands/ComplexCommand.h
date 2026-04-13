@@ -32,6 +32,7 @@ class ComplexCommand
   frc2::CommandPtr AutoFollowPathCommand(frc::Pose2d targetPos, double maxspeed,
                                          double maxacc);
   frc2::CommandPtr GroundintakeprepareCommand();
+  frc2::CommandPtr GroundintakeantiCommand();
   frc2::CommandPtr GroundintakeassistCommand();
   frc2::CommandPtr GroundintakeresetCommand();
   frc2::CommandPtr PreloadCommand();

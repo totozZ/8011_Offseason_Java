@@ -18,7 +18,7 @@ void RealTimeAimDrive::Initialize() {
   driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
                     .WithRotationalDeadband(units::radians_per_second_t{0.1})        
-            .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*0.8})
+            .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*1.2})
             .WithDriveRequestType(swerve::DriveRequestType::Velocity)
             .WithSteerRequestType(swerve::SteerRequestType::Position);
 }

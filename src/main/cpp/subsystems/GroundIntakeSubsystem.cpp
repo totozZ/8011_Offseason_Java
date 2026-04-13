@@ -102,7 +102,7 @@ void GroundIntakeSubsystem::Periodic() {
 
   intake_roller_right_.Control();
   intake_pitch_.Control();
-
+  frc::SmartDashboard::PutBoolean("GI_pitch_reset", getPitchResetFlag());
   if (publish_debug) {
 
     // frc::SmartDashboard::PutNumber(
@@ -187,7 +187,7 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
 
   current_limits.SupplyCurrentLimit = 30_A;
   current_limits.SupplyCurrentLimitEnable = true;
-
+  current_limits.SupplyCurrentLowerLimit = 30_A;
   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i) {
     status = intake_roller_right_.Getmotor().GetConfigurator().Apply(current_limits);
@@ -197,3 +197,4 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
     }
   }
 }
+                                            

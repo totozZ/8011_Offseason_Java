@@ -114,7 +114,7 @@ drivetrain.SetDefaultCommand(
     complexcommand.StartStorageCommand(),
     frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
     complexcommand.GroundintakeresetCommand(),
-    groundIntakeSub.SetPitchNormPositionCommandPtr(0.03),
+    groundIntakeSub.SetPitchNormPositionCommandPtr(0.20),
     frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
         .WithTimeout(units::second_t{1.0}),
     complexcommand.CloseStorageCommand(),
@@ -185,7 +185,7 @@ drivetrain.SetDefaultCommand(
 ).OnFalse(
     frc2::cmd::Sequence(
         complexcommand.StopShootWithFeederCommand(),
-        complexcommand.GroundintakeresetCommand(),
+        //complexcommand.GroundintakeresetCommand(),
         frc2::cmd::RunOnce([this] { shooterEnabled = false; })
     )
 );
@@ -255,7 +255,7 @@ joystick.LeftBumper().OnTrue(
   //增加使用默认速度选项，以防Limelight出问题
   joystick.POVUp().OnTrue(shooterSub.EnableDefaultShoot());
   joystick.POVDown().OnTrue(shooterSub.DisableDefaultShoot());
-
+  joystick.POVRight().OnTrue(complexcommand.GroundintakeantiCommand()).OnFalse(complexcommand.GroundintakeresetCommand());
 
   joystick.A().WhileTrue(
     frc2::cmd::Parallel(
@@ -272,12 +272,13 @@ joystick.LeftBumper().OnTrue(
         frc2::cmd::Sequence(
           complexcommand.GroundintakeresetCommand(),
           frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;})))
-          .OnTrue(
+          .WhileTrue(
             frc2::cmd::Sequence(
+              frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = true;}),
             frc2::cmd::Parallel(
               complexcommand.GroundintakeprepareCommand(),
-              complexcommand.StartStorageCommand()),
-            frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = true;})));
+              complexcommand.StartStorageCommand().Repeatedly())
+            ));
 
 
    joystick.Y()
