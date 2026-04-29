@@ -30,6 +30,7 @@ class RealTimeAimDrive : public frc2::CommandHelper<frc2::Command, RealTimeAimDr
   std::function<double()> m_vYSupplier;
 
   swerve::requests::FieldCentricFacingAngle driveClosed;
+  swerve::requests::SwerveDriveBrake driveBrake;
                     
   double angleOfShooter;
   bool useClosedLoop = true;

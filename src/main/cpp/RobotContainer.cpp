@@ -66,8 +66,8 @@ drivetrain.SetDefaultCommand(
         auto vXCmd = rawVx * MaxSpeed * OperatorConstants::SpeedRate;
         auto vYCmd = rawVy * MaxSpeed * OperatorConstants::SpeedRate;
         if(ground_intake_prepared_){
-          vXCmd*=0.7;
-          vYCmd*=0.7;
+          vXCmd*=1;
+          vYCmd*=1;
         }
         if(driveLikeTank) {
             double rate = 0.0; // 默认不旋转

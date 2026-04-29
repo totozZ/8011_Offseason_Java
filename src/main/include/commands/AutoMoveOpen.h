@@ -14,13 +14,17 @@ public:
      * @param targetVel 目标速度
      */
     AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, double targetY, double targetHeading, double targetVel, bool invert1, bool invert2);
-
+    AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, double targetY, double targetHeading, double targetVel, bool invert1, bool invert2, double endSpeed);
     void Initialize() override;
     void Execute() override;
     bool IsFinished() override;
     void End(bool interrupted) override;
 
 private:
+
+    double initialDis=0;
+    bool ChangeEnd=false;
+    double endSpeed=0;
     bool invertA=false;
     bool invertD=false;
     double x=0;

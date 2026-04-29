@@ -25,7 +25,7 @@
 namespace OperatorConstants {
 
 // inline constexpr int kDriverControllerPort = 0;
-inline double SpeedRate = 0.7;
+inline double SpeedRate = 0.8;
 inline double AngularSpeedRate = 0.95;
 
 }  // namespace OperatorConstants
@@ -78,7 +78,7 @@ inline constexpr double kBackwardHoldCurrent = 60.0;
 inline constexpr double kBackwardHoldCurrentSpeed = 0.1;
 inline constexpr double kBackwardShootCurrent = 80.0;
 inline constexpr double kBackwardShootCurrentSpeed = 0.6;
-inline constexpr double kUpwardVelocityTarget = 80.0;
+inline constexpr double kUpwardVelocityTarget = 85.0;
 }  // namespace FeederConstants
 
 namespace WeidaiConstants {

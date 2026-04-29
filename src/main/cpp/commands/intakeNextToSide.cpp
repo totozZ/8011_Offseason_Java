@@ -37,41 +37,41 @@ void intakeNextToSide::Initialize() {
     if(currentX<11.54&&currentX>5){
         targetX_1=10.54;
         targetX_2=6;
-        targetR_1=160;
-        targetR_2=160;
+        targetR_1=180;
+        targetR_2=180;
         if(currentX<8.27){
         targetX_1=16.54-targetX_1;
         targetY_1=8.07-targetY_1;
         targetX_2=16.54-targetX_2;
         targetY_2=8.07-targetY_2;
-        targetR_1=20;
-        targetR_2=20;
+        targetR_1=00;
+        targetR_2=00;
         }
     }
     else if(currentX<5){
         targetX_1=3.5;
         targetX_2=0.55;
-        targetR_1=160;
-        targetR_2=160;
+        targetR_1=180;
+        targetR_2=180;
         if(currentX<2){
             double a =targetX_1;
             targetX_1=targetX_2;
             targetX_2=a;
-            targetR_1=20;
-            targetR_2=20;
+            targetR_1=00;
+            targetR_2=00;
         }
     }
     else{
         targetX_1=16.54-3.5;
         targetX_2=16.54-0.55;
-        targetR_1=20;
-        targetR_2=20;
+        targetR_1=00;
+        targetR_2=00;
         if(currentX>14.56){
             double a =targetX_1;
             targetX_1=targetX_2;
             targetX_2=a;
-            targetR_1=160;
-            targetR_2=160;
+            targetR_1=180;
+            targetR_2=180;
         }
     }
     if(currentY<4.035){
@@ -153,7 +153,7 @@ void intakeNextToSide::Execute() {
     // === 第二阶段：开往最终墙边点并吸球 ===
     else {
         double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
-        targetSpeed=1.6;
+        targetSpeed=2.0;
         speedX = m_movePIDX.Calculate(currentX, targetX_2);
         speedX=std::clamp(speedX,-targetSpeed,targetSpeed);
         speedY = -joystick->GetLeftX()*TunerConstants::kSpeedAt12Volts.value()*0.2;

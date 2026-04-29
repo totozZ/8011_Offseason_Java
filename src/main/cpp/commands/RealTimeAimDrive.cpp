@@ -21,8 +21,8 @@ void RealTimeAimDrive::Initialize() {
             .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*1.2})
             .WithDriveRequestType(swerve::DriveRequestType::Velocity)
             .WithSteerRequestType(swerve::SteerRequestType::Position);
+  //m_drive->changeDriveCurrentLimit(20.0);
 }
-
 
 void RealTimeAimDrive::Execute() {
 
@@ -37,42 +37,60 @@ void RealTimeAimDrive::Execute() {
       vx = 0.0;
       vy = 0.0;
   }
-  // 获取底盘当前绝对坐标，并计算对准 Hub 的目标角度
+  
   frc::Pose2d currentPose = m_drive->GetState().Pose;
-  // double dx = m_drive->GetHubPosition().X().value() - currentPose.X().value();
-  // double dy = m_drive->GetHubPosition().Y().value() - currentPose.Y().value();
-  // double targetAngleRad = std::atan2(dy, dx);
+  double curX = currentPose.X().value();
+  double curY = currentPose.Y().value();
+  double hubX = m_drive->GetHubPosition().X().value();
+  double hubY = m_drive->GetHubPosition().Y().value();
 
-  double nowX=frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.2;
-  double nowY=frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.2;
-  //为了测试，先把固定底盘移动围着hub绕圈
-  //double rawrad=m_drive->CalculateTargetAngleToHub().Radians().value();
-  // nowX=nowY*cos(rawrad+PI/2);
-  // nowY=nowY*sin(rawrad+PI/2);
-  //预测自己未来的位置
-  //注意红方时需要反转
-  double realX=0;
-  double realY=0;
-  if(frc::DriverStation::GetAlliance().has_value()&&frc::DriverStation::GetAlliance().value()==frc::DriverStation::Alliance::kRed){
-    realX=-nowX;
-    realY=-nowY;
-    //rawrad-=PI;
-  }
-  else{
-    realX=nowX;
-    realY=nowY;
-  }
-  double latencySeconds = 0;
-  double predictedX = currentPose.X().value() + (realX * latencySeconds);
-  double predictedY = currentPose.Y().value() + (realY * latencySeconds);
-  frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseX",currentPose.X().value() );
-  frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseY",currentPose.Y().value() );
-  frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseR",robotHeading.Degrees().value() );
+  double dx_current = hubX - curX;
+  double dy_current = hubY - curY;
+  // 当前真实的 Hub 角度 
+  double currentAngleToHubRad = std::atan2(dy_current, dx_current); 
 
-  // 使用预测的“未来坐标”来计算对准 Hub 的目标角度和距离
-  double dx = m_drive->GetHubPosition().X().value() - predictedX;
-  double dy = m_drive->GetHubPosition().Y().value() - predictedY;
-  double targetAngleRad = atan2(dy, dx);
+  // 获取手柄输入的预期场地方向速度
+  double nowX = frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.3;
+  double nowY = frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.3;
+  
+  // 注意红方时需要反转
+  double realX = 0;
+  double realY = 0;
+  if (frc::DriverStation::GetAlliance().has_value() && frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
+    realX = -nowX;
+    realY = -nowY;
+  } else {
+    realX = nowX;
+    realY = nowY;
+  }
+
+  // v_radial: 径向速度 (正代表靠近 Hub，负代表远离)  
+  double v_radial = realX * cos(currentAngleToHubRad) + realY * sin(currentAngleToHubRad);
+  
+  // v_tangential: 切向/横向速度 (正代表逆时针绕 Hub 走)
+  // 相当于把场地方向旋转 -currentAngleToHubRad
+  double v_tangential = -realX * sin(currentAngleToHubRad) + realY * cos(currentAngleToHubRad);
+
+  double latencyRadialSeconds = 0.3;     // 竖向（靠近/远离）的预测时间
+  double latencyTangentialSeconds = -0.1; // 横向（绕圈）的预测时间
+
+  double d_radial = v_radial * latencyRadialSeconds;
+  double d_tangential = v_tangential * latencyTangentialSeconds;
+
+  double deltaX = d_radial * cos(currentAngleToHubRad) - d_tangential * sin(currentAngleToHubRad);
+  double deltaY = d_radial * sin(currentAngleToHubRad) + d_tangential * cos(currentAngleToHubRad);
+
+  double predictedX = curX + deltaX;
+  double predictedY = curY + deltaY;
+
+  frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseX", curX);
+  frc::SmartDashboard::PutNumber("shootOnMove/CurrentPoseY", curY);
+  frc::SmartDashboard::PutNumber("shootOnMove/PredictedX", predictedX);
+  frc::SmartDashboard::PutNumber("shootOnMove/PredictedY", predictedY);
+
+  double dx_pred = hubX - predictedX;
+  double dy_pred = hubY - predictedY;
+  double targetAngleRad = std::atan2(dy_pred, dx_pred);
 
   //把底盘即时转换到以机器人与hub的连线为0度的速度向量
   //向前（hub）的速读,依旧使用手柄数据
@@ -85,7 +103,7 @@ void RealTimeAimDrive::Execute() {
   
   //假设射球出膛速度只有真正速度的0.2,need configuration and zone division
   //先横向测试不同距离所需的coeff，然后反求出速度，然后在计算coeff时考虑底盘垂直速度
-  double shootCoeff=0.45;
+  double shootCoeff=0.25;
   //shootCoeff=frc::SmartDashboard::GetNumber("shoot_velocity_test", 0.11);
   frc::SmartDashboard::PutNumber("shoot_coeff", shootCoeff);
   //把射球的速度转换成向量
@@ -99,18 +117,13 @@ void RealTimeAimDrive::Execute() {
   if(m_shooter->vel>=10)chassisAngleOffset=atan2(Normvy, Shootvx);
   targetAngleRad+=chassisAngleOffset;
   targetAngleRad-=angleOfShooter/180*PI;
-  //保证angle不越界
   if(frc::DriverStation::GetAlliance().has_value()&&frc::DriverStation::GetAlliance().value()==frc::DriverStation::Alliance::kRed){
     targetAngleRad-=PI;
   }
-  // while(targetAngleRad<-PI)targetAngleRad+=2*PI;
-  // while(targetAngleRad>PI)targetAngleRad-=2*PI;
   double shootAngleOffset=atan2(Shootvz,Shootvx)/PI*180-m_shooter->Tangle;
   m_shooter->SetAngleOffset(shootAngleOffset);
   m_shooter->SetSpeedOffset(ShooterVelOff);
 
- 
-  // 把当前角度和目标角度喂给 PID，算出旋转速度 (omega)
   double currentAngleRad = robotHeading.Radians().value();
   //double omega_rad_per_sec = m_aimPID.Calculate(currentAngleRad, targetAngleRad);
 
@@ -118,22 +131,28 @@ void RealTimeAimDrive::Execute() {
   // frc::SmartDashboard::PutNumber("shootOnMove/xsupplier",m_vXSupplier() );
   units::meters_per_second_t vxt{nowX};
   units::meters_per_second_t vyt{nowY};
-  // 下发给底盘
-  
   
   frc::Rotation2d rott{units::radian_t(targetAngleRad)};
-  m_drive->SetControl(
-     driveClosed
-          .WithVelocityX(vxt)
-          .WithVelocityY(vyt)
-          .WithTargetDirection(rott)
-  );
   frc::Rotation2d ttall{units::radian_t(targetAngleRad)};
   frc::Rotation2d tlow{units::radian_t(currentAngleRad)};
   double angledi=std::abs((ttall-tlow).Degrees().value());
+  
   if(frc::DriverStation::GetAlliance().has_value()&&frc::DriverStation::GetAlliance().value()==frc::DriverStation::Alliance::kRed){
     angledi=180-angledi;
   }
+
+  // 下发给底盘：加入刹车判定
+  if (std::abs(m_vXSupplier()) < 0.1 && std::abs(m_vYSupplier()) < 0.1 && angledi < 2.0) {
+      m_drive->SetControl(driveBrake);
+  } else {
+      m_drive->SetControl(
+          driveClosed
+              .WithVelocityX(vxt)
+              .WithVelocityY(vyt)
+              .WithTargetDirection(rott)
+      );
+  }
+
   frc::SmartDashboard::PutNumber("shootOnMove/AngleDiff", angledi);
   m_drive->SOMangleDiff=angledi;
   frc::SmartDashboard::PutNumber("shootOnMove/ShootVX", Shootvx);
@@ -151,6 +170,7 @@ void RealTimeAimDrive::End(bool interrupted) {
   //         .WithVelocityY(0_mps)
   //         .WithRotationalRate(units::radians_per_second_t{0})
   //);
+ // m_drive->changeDriveCurrentLimit(40.0);
   m_shooter->SetAngleOffset(0);
   m_shooter->SetSpeedOffset(0);
   auto currentSpeeds = m_drive->GetState().Speeds;

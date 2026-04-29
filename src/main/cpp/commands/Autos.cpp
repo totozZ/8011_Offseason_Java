@@ -278,7 +278,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         AutoMoveOpen(drivetrain, AutoXLow[4], AutoYLow[4], AutoRLow[4], AutoSLow[4], invertA, invertD).ToPtr(),
         complexcommand->GroundintakeresetCommand(),
         shooter->EnableShooter(),
-        AutoMoveClosed(drivetrain, AutoXLow[5], AutoYLow[5], AutoRLow[5], AutoSLow[5], invertA, invertD).ToPtr(),
+        AutoMoveOpen(drivetrain, AutoXLow[5], AutoYLow[5], AutoRLow[5], AutoSLow[5], invertA, invertD,1.0).ToPtr(),
         frc2::cmd::Parallel(
           RealTimeAimDrive(drivetrain, shooter, []{return 0;}, []{return 0;},180).ToPtr(),
             frc2::cmd::Parallel(
@@ -313,7 +313,7 @@ FeederSubsystem* feeder, GroundIntakeSubsystem* intaker, ComplexCommand* complex
         complexcommand->GroundintakeresetCommand(),
         shooter->EnableShooter(),
         
-        AutoMoveClosed(drivetrain, AutoXLow[15], AutoYLow[15], AutoRLow[15], AutoSLow[15], invertA, invertD).ToPtr(),
+        AutoMoveOpen(drivetrain, AutoXLow[15], AutoYLow[15], AutoRLow[15], AutoSLow[15], invertA, invertD,1.0).ToPtr(),
         
         frc2::cmd::Parallel(
           RealTimeAimDrive(drivetrain, shooter, []{return 0;}, []{return 0;},180).ToPtr(),

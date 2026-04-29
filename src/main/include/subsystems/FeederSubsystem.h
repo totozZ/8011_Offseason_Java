@@ -86,7 +86,7 @@ private:
   // --- 战术状态变量 (从旧版移植) ---
   static constexpr double kUpperVelocityReachTolerance = 1.0;
   bool upper_velocity_reached_once_ = false;
-  double combo_target_velocity_ =70;
+  double combo_target_velocity_ =FeederConstants::kUpwardVelocityTarget;
 
   // SysId routine for feeder 
   frc2::sysid::SysIdRoutine m_sysIdRoutine{ frc2::sysid::Config{ std::nullopt, 

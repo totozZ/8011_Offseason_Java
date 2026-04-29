@@ -11,7 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
-
+#include <thread>
 
 using namespace subsystems;
 
@@ -789,4 +789,26 @@ frc2::CommandPtr CommandSwerveDrivetrain::followShootOnMovePathCommand(int direc
   else{
     return frc2::cmd::None();
   }
+}
+
+
+void CommandSwerveDrivetrain::changeDriveCurrentLimit(double newLim) {
+  // 启动一个后台线程 
+  std::thread([this, newLim]() {
+      ctre::phoenix6::configs::CurrentLimitsConfigs current_limits{};
+      current_limits.SupplyCurrentLimit = newLim*1_A; 
+      current_limits.SupplyCurrentLimitEnable = true;
+      current_limits.StatorCurrentLimit = 90.0_A;
+      current_limits.StatorCurrentLimitEnable = true;
+
+      ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
+      for (int i = 0; i < 4; ++i) {
+        for(int j = 0; j < 5; j++){
+          status = GetModule(i).GetDriveMotor().GetConfigurator().Apply(current_limits);
+          if(status.IsOK()){
+            break; 
+          }
+        }
+      }
+  }).detach(); 
 }

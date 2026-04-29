@@ -212,7 +212,9 @@ void ShooterSubsystem::getFinalVel() {
     // 防零除保护
     if (feeder_upward_target_velocity > 0.01&&std::abs(feeder_sub_->GetUpwardFeederVelocity())<std::abs(feeder_upward_target_velocity)) {
       feeder_upward_velocity_difference = -feeder_sub_->GetUpwardFeederVelocity() + feeder_upward_target_velocity;
-      add = feeder_upward_velocity_difference / feeder_upward_target_velocity * shooter_max_composite;
+      //使用圆形模型来计算补偿，减少补偿降低的速度 
+      double addCoeff=std::sqrt(1-(1-feeder_upward_velocity_difference / feeder_upward_target_velocity)*(1-feeder_upward_velocity_difference / feeder_upward_target_velocity));
+      add = addCoeff * shooter_max_composite;
     }
   }
   realShootVelocity = vel + velOffsetFromDrive + add;

@@ -402,7 +402,7 @@ private:
   double GetDistanceToHub();
 
 
-
+  void changeDriveCurrentLimit(double newLim);
   GPDetection *GetGPDetection() const { return gpdetection_; }
 
   /**

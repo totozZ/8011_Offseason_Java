@@ -34,14 +34,14 @@ void intakeNextToHub::Initialize(){
     }
 
     if(startY<=4.035){//离右边近，从右边吸
-        targetY=1.5; 
-        rawTargetRotation=70;
-        speedYDef=1.7;
+        targetY=2.0; 
+        rawTargetRotation=90;
+        speedYDef=2.0;
       }
       else {
-        targetY=6.5;
-        rawTargetRotation=-70;
-        speedYDef=-1.7;
+        targetY=6.0;
+        rawTargetRotation=-90;
+        speedYDef=-2.0;
       }
     if(targetX<=8.27){
       rawTargetRotation=180-rawTargetRotation;

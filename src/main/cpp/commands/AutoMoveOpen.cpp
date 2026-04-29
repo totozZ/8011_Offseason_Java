@@ -13,7 +13,8 @@ AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, 
       y(targetY),
       d(targetHeading),
       invertA(invert1),
-      invertD(invert2) {
+      invertD(invert2),
+      endSpeed(targetVel) {
     
         driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
@@ -26,7 +27,27 @@ AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, 
     AddRequirements({m_drivetrain});
     
 }
-      
+AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, double targetY, double targetHeading, double targetVel,bool invert1, bool invert2, double speedEnd)
+    : m_drivetrain(drivetrain),  
+      targetVelocity(targetVel),
+      x(targetX),
+      y(targetY),
+      d(targetHeading),
+      invertA(invert1),
+      invertD(invert2),
+      endSpeed(speedEnd) {
+    
+        driveClosed.WithHeadingPID(8, 0, 0.1)
+                    .WithDeadband(MaxSpeed * 0.05)
+                    .WithRotationalDeadband(units::radians_per_second_t{0.1})
+            .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*1.5})
+            .WithDriveRequestType(swerve::DriveRequestType::Velocity)
+            .WithSteerRequestType(swerve::SteerRequestType::Position);
+    
+    // 声明底盘依赖，防止指令冲突
+    AddRequirements({m_drivetrain});
+    
+}
 void AutoMoveOpen::Initialize() {
     if(invertD){
         d=0.0-d;
@@ -52,6 +73,9 @@ void AutoMoveOpen::Initialize() {
     if(angleToTarget<0){
         angleToTarget+=360;
     }
+    frc::Pose2d currentPose = m_drivetrain->GetState().Pose;
+    initialDis = currentPose.Translation().Distance(m_targetWaypoint.Translation()).value();
+    
 }
 
 void AutoMoveOpen::Execute() {
@@ -99,8 +123,11 @@ void AutoMoveOpen::Execute() {
     
     // 4. 直接把标量速度沿着这个直线角度分解为 X 和 Y 的分量
     // Rotation2d 自带 Cos() 和 Sin()，极其安全且不会有弧度转换的 Bug
-    double suppX = targetVelocity * angleTo.Cos();
-    double suppY = targetVelocity * angleTo.Sin();
+    double distance = currentPose.Translation().Distance(m_targetWaypoint.Translation()).value();
+    
+    double realTargetVel=distance/initialDis*targetVelocity+(1-distance/initialDis)*endSpeed;
+    double suppX = realTargetVel * angleTo.Cos();
+    double suppY = realTargetVel * angleTo.Sin();
     
     // 5. 保留你的红蓝方反转逻辑
     auto alliance = frc::DriverStation::GetAlliance();
