@@ -46,7 +46,7 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 60_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 45_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
@@ -96,6 +96,7 @@ void ShooterSubsystem::Initialization() {
   shooter_pitch_.setCurrent_Speed(0.1);
   frc::SmartDashboard::SetDefaultNumber("shootVelWant",40);
   frc::SmartDashboard::SetDefaultBoolean("shootUseDash",false);
+  frc::SmartDashboard::SetDefaultBoolean("autoGoOppo",false);
 }
 
 void ShooterSubsystem::Periodic() {

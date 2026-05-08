@@ -140,9 +140,6 @@ void AutoRealTimeAimDrive::Execute() {
   m_drive->SOMangleDiff=angledi;
 }
 
-// ==========================================
-// End：松开按钮瞬间，强制刹车
-// ==========================================
 void AutoRealTimeAimDrive::End(bool interrupted) {
   //  m_drive->SetControl(
   //    driveClosed
@@ -150,8 +147,6 @@ void AutoRealTimeAimDrive::End(bool interrupted) {
   //         .WithVelocityY(0_mps)
   //         .WithRotationalRate(units::radians_per_second_t{0})
   //);
-  feeder->SetBackwardFeederVelocity(0);
-    feeder->SetUpwardFeederVelocity(0);
   m_shooter->SetAngleOffset(0);
   m_shooter->SetSpeedOffset(0);
   //停止底盘

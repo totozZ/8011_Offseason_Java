@@ -25,7 +25,7 @@
 namespace OperatorConstants {
 
 // inline constexpr int kDriverControllerPort = 0;
-inline double SpeedRate = 0.8;
+inline double SpeedRate = 0.75;
 inline double AngularSpeedRate = 0.95;
 
 }  // namespace OperatorConstants

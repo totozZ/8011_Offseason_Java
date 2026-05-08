@@ -10,6 +10,8 @@
 using namespace subsystems;
 
 void GroundIntakeSubsystem::Initialization() {
+  normTargetStatus=0;
+  previousStatus=0;
   configs::TalonFXConfiguration intake_roller_right_config{};
   intake_roller_right_config.MotorOutput.Inverted = 0;
   configs::Slot0Configs& intake_roller_right_slot0 = intake_roller_right_config.Slot0;
@@ -93,12 +95,10 @@ void GroundIntakeSubsystem::Periodic() {
   if (pitch_reset_flag_ == 0) {
     GroundIntakeReset();
   }
-  else {  
-  // Pitch manual test: RightY top -> max pitch, bottom -> min pitch.
-  // const double right_y = joystick_.GetRightY();
-  // const double normalized = std::clamp((1.0 - right_y) / 2.0, 0.0, 1.0);
-  // SetPitchNormPosition(normalized);
-  }
+  else if(normTargetStatus!=previousStatus){
+      intake_pitch_.setNormalizedMotionPosition(normTargetStatus);
+      previousStatus=normTargetStatus;
+    }
 
   intake_roller_right_.Control();
   intake_pitch_.Control();
@@ -122,6 +122,14 @@ void GroundIntakeSubsystem::SetRollerVelocity(double velocity) {
   intake_roller_right_.setvelocitytorquecurrent(velocity);
 }
 
+void GroundIntakeSubsystem::SetRollerDutyCycle(double dutyCycle){
+  intake_roller_right_.setNormalizedDutyCircle(dutyCycle);
+}
+
+frc2::CommandPtr GroundIntakeSubsystem::SetRollerDutyCycleCommandPtr(double dutyCycle){
+  return this->RunOnce([this, dutyCycle]{SetRollerDutyCycle(dutyCycle);});
+}
+
 frc2::CommandPtr GroundIntakeSubsystem::SetRollerVelocityCommandPtr(
     double velocity) {
   return this->RunOnce([this, velocity] { SetRollerVelocity(velocity); });
@@ -134,8 +142,8 @@ frc2::CommandPtr GroundIntakeSubsystem::StopCommandPtr() {
 }
 
 void GroundIntakeSubsystem::SetPitchNormPosition(double norm) {
-  //frc::SmartDashboard::PutNumber("SetPitchNormPosition", norm);
-  intake_pitch_.setNormalizedMotionPosition(norm);
+  //intake_pitch_.setNormalizedMotionPosition(norm);
+  normTargetStatus=norm;
 }
 
 frc2::CommandPtr GroundIntakeSubsystem::SetPitchNormPositionCommandPtr(
@@ -150,6 +158,8 @@ double GroundIntakeSubsystem::GetPitchCurrent() {
 double GroundIntakeSubsystem::GetPitchNormPosition() {
   return intake_pitch_.GetNormalizedPosition();
 }
+
+
 
 void GroundIntakeSubsystem::GroundIntakeReset() {
   // Disabled state should not advance homing.
@@ -185,9 +195,9 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
   
   configs::CurrentLimitsConfigs current_limits{};
 
-  current_limits.SupplyCurrentLimit = 30_A;
+  current_limits.SupplyCurrentLimit = 40_A;
   current_limits.SupplyCurrentLimitEnable = true;
-  current_limits.SupplyCurrentLowerLimit = 30_A;
+  current_limits.SupplyCurrentLowerLimit = 40_A;
   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
   for (int i = 0; i < 5; ++i) {
     status = intake_roller_right_.Getmotor().GetConfigurator().Apply(current_limits);

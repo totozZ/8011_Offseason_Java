@@ -48,7 +48,8 @@ public:
   }
 private:
   void Initialization();
-
+  double previousStatus=0;
+  double normTargetStatus=0;
   // --- 新版马达配置：由 2 个变为 3 个 ---
   Wayimotor intake_roller_left_{ GroundIntakeConstants::IntakeRollerLeftMotorID, kCANBus };
   Wayimotor intake_roller_right_{ GroundIntakeConstants::IntakeRollerRightMotorID, kCANBus }; // 主控

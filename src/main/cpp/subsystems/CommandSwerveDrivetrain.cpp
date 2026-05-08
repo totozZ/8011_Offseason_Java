@@ -812,3 +812,55 @@ void CommandSwerveDrivetrain::changeDriveCurrentLimit(double newLim) {
       }
   }).detach(); 
 }
+
+void CommandSwerveDrivetrain::SetCoast() {
+    std::thread([this]() {
+        for (int i = 0; i < 4; ++i) {
+            auto& driveMotor = GetModule(i).GetDriveMotor();
+            ctre::phoenix6::configs::MotorOutputConfigs currentConfig;
+            
+            // 1. 先安全读取当前的 MotorOutput 配置（保留正反转等设置）
+            driveMotor.GetConfigurator().Refresh(currentConfig);
+            
+            // 2. 仅仅修改 NeutralMode 为 Coast
+            currentConfig.NeutralMode = ctre::phoenix6::signals::NeutralModeValue::Coast;
+            for (int j = 0; j < 3; j++) {
+                if (driveMotor.GetConfigurator().Apply(currentConfig).IsOK()) {
+                    break; 
+                }
+            }
+        }
+    }).detach();
+}
+
+void CommandSwerveDrivetrain::SetBrake() {
+    std::thread([this]() {
+        for (int i = 0; i < 4; ++i) {
+            auto& driveMotor = GetModule(i).GetDriveMotor();
+            ctre::phoenix6::configs::MotorOutputConfigs currentConfig;
+            
+            driveMotor.GetConfigurator().Refresh(currentConfig);
+            
+            // 修改 NeutralMode 为 Brake
+            currentConfig.NeutralMode = ctre::phoenix6::signals::NeutralModeValue::Brake;
+            
+            for (int j = 0; j < 3; j++) {
+                if (driveMotor.GetConfigurator().Apply(currentConfig).IsOK()) {
+                    break;
+                }
+            }
+        }
+    }).detach();
+}
+
+frc2::CommandPtr CommandSwerveDrivetrain::SetCoastCommand() {
+    return this->RunOnce([this] { SetCoast(); })
+               .WithName("SetCoast")
+               .IgnoringDisable(true); // 极其关键：允许在 Disabled 状态下运行！
+}
+
+frc2::CommandPtr CommandSwerveDrivetrain::SetBrakeCommand() {
+    return this->RunOnce([this] { SetBrake(); })
+               .WithName("SetBrake")
+               .IgnoringDisable(true); // 允许在 Disabled 状态下运行
+}

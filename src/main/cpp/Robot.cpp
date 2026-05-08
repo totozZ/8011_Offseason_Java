@@ -85,10 +85,12 @@ void Robot::AutonomousExit() {
   m_container.feederSub.Stop();
   m_container.shooterSub.DisableShooterNonCmd();
   m_container.groundIntakeSub.Stop();
-  m_container.drivetrain.SetControl(m_container.drivetrain.Idle);
+  //m_container.drivetrain.SetCoast();
 }
 
 void Robot::TeleopInit() {
+  m_container.drivetrain.SetBrake();
+  m_container.drivetrain.SetControl(m_container.drivetrain.Idle);
   nt::NetworkTableInstance::GetDefault()
       .GetTable("limelight-front")
       ->PutNumber("throttle_set", 0);

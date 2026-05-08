@@ -30,8 +30,8 @@ private:
     frc::Pose2d m_targetWaypoint;
     double angleToTarget=0;
     // 开环控制方向，固定速度
-    frc::PIDController m_MovePIDx{3.0, 0.1, 0.1};
-    frc::PIDController m_MovePIDy{3.0, 0.1, 0.1};
+    frc::PIDController m_MovePIDx{4.5, 0.1, 0.1};
+    frc::PIDController m_MovePIDy{4.5, 0.1, 0.1};
     frc::Pose2d targetPose;
     double realHead=0;
     swerve::requests::FieldCentricFacingAngle driveClosed;

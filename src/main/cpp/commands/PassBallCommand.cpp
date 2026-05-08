@@ -46,31 +46,8 @@ void PassBallCommand::Execute() {
   frc::ChassisSpeeds robotSpeeds = m_drive->GetState().Speeds;
   frc::Pose2d currentPose = m_drive->GetState().Pose;
   frc::Rotation2d robotHeading = currentPose.Rotation();
+  bool isRed = frc::DriverStation::GetAlliance().has_value() && frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed;
 
-  // 把车身速度变成场地绝对速度，并消除极小噪声
-  double vx = robotSpeeds.vx.value() * robotHeading.Cos() - robotSpeeds.vy.value() * robotHeading.Sin();
-  double vy = robotSpeeds.vx.value() * robotHeading.Sin() + robotSpeeds.vy.value() * robotHeading.Cos();
-  if (std::sqrt(vx * vx + vy * vy) < 0.05) {
-      vx = 0.0; vy = 0.0;
-  }
-
-  // 获取手柄输入
-  double nowX = frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.3;
-  double nowY = frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.3;
-
-  bool isRed = frc::DriverStation::GetAlliance().has_value() && 
-               frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed;
-
-  double realX = isRed ? -nowX : nowX;
-  double realY = isRed ? -nowY : nowY;
-
-  // 预测 0.4 秒后的未来位置
-  double latencySeconds = 0.;
-  double predictedX = currentPose.X().value() + (realX * latencySeconds);
-  double predictedY = currentPose.Y().value() + (realY * latencySeconds);
-
-  // 🌟 核心战术逻辑：根据机器人的 Y 坐标判断我们在哪一边，自动选择传球落点
-  // 假设场地 Y 轴中线是 4.1 米
   frc::Translation2d targetPoint;
   if (currentPose.Y().value() > 4) {
       targetPoint = kBlueLeftTarget;  // 左半场，面向左侧传球点
@@ -87,11 +64,50 @@ void PassBallCommand::Execute() {
   }
   m_shooter->setPassTarget(targetPoint);
   // 计算对准落点的目标角度
-  double dx = targetPoint.X().value() - predictedX;
-  double dy = targetPoint.Y().value() - predictedY;
-  double targetAngleRad = atan2(dy, dx);
+  double curX = currentPose.X().value();
+  double curY = currentPose.Y().value();
+  double dx = targetPoint.X().value() - curX;
+  double dy = targetPoint.Y().value() - curY;
+  double currentAngleToHubRad = atan2(dy, dx);
 
+  // 把车身速度变成场地绝对速度，并消除极小噪声
+  double vx = robotSpeeds.vx.value() * robotHeading.Cos() - robotSpeeds.vy.value() * robotHeading.Sin();
+  double vy = robotSpeeds.vx.value() * robotHeading.Sin() + robotSpeeds.vy.value() * robotHeading.Cos();
+  if (std::sqrt(vx * vx + vy * vy) < 0.05) {
+      vx = 0.0; vy = 0.0;
+  }
+
+  // 获取手柄输入
+  double nowX = frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.3;
+  double nowY = frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.3;
+
+  double realX = isRed ? -nowX : nowX;
+  double realY = isRed ? -nowY : nowY;
+
+  // v_radial: 径向速度 (正代表靠近 Hub，负代表远离)  
+  double v_radial = realX * cos(currentAngleToHubRad) + realY * sin(currentAngleToHubRad);
+  
+  // v_tangential: 切向/横向速度 (正代表逆时针绕 Hub 走)
+  // 相当于把场地方向旋转 -currentAngleToHubRad
+  double v_tangential = -realX * sin(currentAngleToHubRad) + realY * cos(currentAngleToHubRad);
+
+  double latencyRadialSeconds = 0.3;     // 竖向（靠近/远离）的预测时间
+  double latencyTangentialSeconds = -0.1; // 横向（绕圈）的预测时间
+
+  double d_radial = v_radial * latencyRadialSeconds;
+  double d_tangential = v_tangential * latencyTangentialSeconds;
+
+  double deltaX = d_radial * cos(currentAngleToHubRad) - d_tangential * sin(currentAngleToHubRad);
+  double deltaY = d_radial * sin(currentAngleToHubRad) + d_tangential * cos(currentAngleToHubRad);
+
+  double predictedX = curX + deltaX;
+  double predictedY = curY + deltaY;
+
+  dx = targetPoint.X().value() - predictedX;
+  dy = targetPoint.Y().value() - predictedY;
+  double targetAngleRad = atan2(dy, dx);
   // 计算底盘速度带来的抛物线横向偏移
+
   double Normvx = realX * cos(-targetAngleRad) + realY * cos(PI/2 - targetAngleRad);
   double Normvy = realX * sin(-targetAngleRad) + realY * sin(PI/2 - targetAngleRad);
   

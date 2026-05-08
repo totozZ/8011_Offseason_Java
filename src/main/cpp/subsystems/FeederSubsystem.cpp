@@ -24,7 +24,8 @@ void FeederSubsystem::Initialization()
   backward_feeder_slot0.kI = 0;          
   backward_feeder_slot0.kD = 0.;         
   backward_feeder_slot0.GravityType = 0; 
-  backward_feeder_config.CurrentLimits.SupplyCurrentLimit = 40_A;
+  backward_feeder_config.CurrentLimits.SupplyCurrentLimit = 60_A;
+  backward_feeder_config.CurrentLimits.SupplyCurrentLowerLimit = 60_A;
   backward_feeder_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode backward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
@@ -52,8 +53,8 @@ void FeederSubsystem::Initialization()
 
   upward_feeder_config.CurrentLimits.StatorCurrentLimit=120_A;
   upward_feeder_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 50_A;
-  upward_feeder_config.CurrentLimits.SupplyCurrentLowerLimit=50_A;
+  upward_feeder_config.CurrentLimits.SupplyCurrentLimit = 40_A;
+  upward_feeder_config.CurrentLimits.SupplyCurrentLowerLimit=40_A;
   upward_feeder_config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
   ctre::phoenix::StatusCode upward_feeder_status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;

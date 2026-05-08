@@ -31,8 +31,11 @@
 class RobotContainer
 {
 private:
+  double currentPlace=-1;//用于自动阶段生成路线。在左边是0，在右边是1
+  double previousPlace=-1;
+
   units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts;
-  units::radians_per_second_t MaxAngularRate = 0.75_tps;
+  units::radians_per_second_t MaxAngularRate = 0.95_tps;
   /* Setting up bindings for necessary control of the swerve drive platform */
   swerve::requests::FieldCentric drive = swerve::requests::FieldCentric{}
                                              .WithDeadband(MaxSpeed * 0.07)
@@ -106,7 +109,7 @@ public:
   std::optional<frc2::CommandPtr> m_preloadedAuto;
 
   // 3. 把你原本写在 GetAutonomousCommand 里的 switch/if 逻辑抽离出来
-  frc2::CommandPtr GenerateAutoCommand();
+  frc2::CommandPtr GenerateAutoCommand(bool invertD);
   void refreshAutoMode();
 private:
   /* Path follower */

@@ -37,7 +37,7 @@ frc2::CommandPtr ComplexCommand::MoveOnShoot(std::function<int()> supplier) {
 
 frc2::CommandPtr ComplexCommand::GroundintakeprepareCommand() {
   return frc2::cmd::Sequence(
-          m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(100.0),
+          m_groundIntakeSubsystem->SetRollerDutyCycleCommandPtr(0.8),
           m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(GroundIntakeConstants::PitchNormPosition)
           
           //StartStorageCommand()
@@ -50,11 +50,11 @@ frc2::CommandPtr ComplexCommand::GroundintakeassistCommand() {
       m_groundIntakeSubsystem->SetRollerVelocityCommandPtr(30),
       // frc2::cmd::Wait(units::second_t{0.7}),
       // m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.8),
-      frc2::cmd::Wait(units::second_t{0.8}),
+      frc2::cmd::Wait(units::second_t{0.4}),
       m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.5),
       //CloseStorageCommand(),
-      frc2::cmd::Wait(units::second_t{0.8}),
-      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.20)
+      frc2::cmd::Wait(units::second_t{0.4}),
+      m_groundIntakeSubsystem->SetPitchNormPositionCommandPtr(0.10)
   );
 }
 frc2::CommandPtr ComplexCommand::GroundintakeantiCommand(){
@@ -95,7 +95,7 @@ frc2::CommandPtr ComplexCommand::ShootWithFeederCommand() {
       frc2::cmd::Sequence(
           frc2::cmd::WaitUntil([this]{return 
             std::abs(m_shooterSubsystem->GetShootVelocity()-m_shooterSubsystem->realShootVelocity)<0.7
-            &&m_drivesubsystem->SOMangleDiff<=5;})
+            &&m_drivesubsystem->SOMangleDiff<=3;})
           .WithTimeout(units::second_t{1.5}),
           m_feederSubsystem->HoldFeederVelocityCommandPtr(1.0, FeederConstants::kUpwardVelocityTarget)
               ));
@@ -156,7 +156,7 @@ frc2::CommandPtr ComplexCommand::PassBump(bool atOppo) {
     double x = drive->GetState().Pose.X().value();
     double y = drive->GetState().Pose.Y().value(); 
 
-    double targetSpeed = 0.6*TunerConstants::kSpeedAt12Volts.value();
+    double targetSpeed = 0.7*TunerConstants::kSpeedAt12Volts.value();
     bool invertD = y <= 4;
     bool invertA = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
     if(atOppo){
@@ -207,7 +207,7 @@ frc2::CommandPtr ComplexCommand::PassTrench(bool atOppo) {
     double x = m_drivesubsystem->GetState().Pose.X().value();
     double y = m_drivesubsystem->GetState().Pose.Y().value(); 
 
-    double targetSpeed = 0.6*TunerConstants::kSpeedAt12Volts.value();
+    double targetSpeed = 0.7*TunerConstants::kSpeedAt12Volts.value();
     bool invertD = y <= 4;
     bool invertA = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
     if(atOppo){

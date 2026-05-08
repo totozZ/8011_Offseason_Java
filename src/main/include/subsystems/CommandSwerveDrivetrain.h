@@ -326,7 +326,12 @@ public:
         return _drivetrain.SamplePoseAt(utils::FPGAToCurrentTime(timestamp));
     }
     frc::Rotation2d CalculateTargetAngleToHub();
+    void SetCoast();
+    void SetBrake();
 
+    // 封装成 CommandPtr，方便直接绑给手柄按钮或 SmartDashboard
+    frc2::CommandPtr SetCoastCommand();
+    frc2::CommandPtr SetBrakeCommand();
 private:
     void ConfigureAutoBuilder();
     void StartSimThread();

@@ -30,17 +30,17 @@ RobotContainer::RobotContainer()
   m_autoChooser.SetDefaultOption("Do Nothing (Safe)", AutoMode::kDoNothing);
   // 2. 添加你手写的所有高阶路线
   m_autoChooser.AddOption("OutAndDepot", AutoMode::OutDepot);
-  m_autoChooser.AddOption("DoubleAutoLeft", AutoMode::DoubleOutLeft);
-  m_autoChooser.AddOption("DoubleAutoRight", AutoMode::DoubleOutRight);
+  m_autoChooser.AddOption("DoubleAutoBump", AutoMode::DoubleOutLeft);
+  //m_autoChooser.AddOption("DoubleAutoRight", AutoMode::DoubleOutRight);
   m_autoChooser.AddOption("OutAndHP", AutoMode::OutAndHP);
   // m_autoChooser.AddOption("OutAndDepotRed", AutoMode::RedOutDepot);
   // m_autoChooser.AddOption("DoubleOutLeftRed",AutoMode::RedDoubleOutLeft);
   // m_autoChooser.AddOption("DoubleOutRightRed",AutoMode::RedDoubleOutRight);
   // m_autoChooser.AddOption("OutAndHPRed",AutoMode::RedOutAndHP);
-  m_autoChooser.AddOption("LowLeft",AutoMode::LowLeft);
-  m_autoChooser.AddOption("LowRight", AutoMode::LowRight);
-  m_autoChooser.AddOption("LowLeftNoBounce",AutoMode::LowLeftNoBounce);
-  m_autoChooser.AddOption("LowRightNoBounce", AutoMode::LowRightNoBounce);
+  m_autoChooser.AddOption("Low",AutoMode::LowLeft);
+  //m_autoChooser.AddOption("LowRight", AutoMode::LowRight);
+  m_autoChooser.AddOption("LowNoBounce",AutoMode::LowLeftNoBounce);
+  //m_autoChooser.AddOption("LowRightNoBounce", AutoMode::LowRightNoBounce);
   // 3. 推送到 Shuffleboard / SmartDashboard
   frc::SmartDashboard::PutData("Auto Mode", &m_autoChooser);
   ConfigureBindings();
@@ -114,7 +114,7 @@ drivetrain.SetDefaultCommand(
     complexcommand.StartStorageCommand(),
     frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
     complexcommand.GroundintakeresetCommand(),
-    groundIntakeSub.SetPitchNormPositionCommandPtr(0.20),
+    groundIntakeSub.SetPitchNormPositionCommandPtr(0.07),
     frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
         .WithTimeout(units::second_t{1.0}),
     complexcommand.CloseStorageCommand(),
@@ -184,6 +184,7 @@ drivetrain.SetDefaultCommand(
     )
 ).OnFalse(
     frc2::cmd::Sequence(
+      complexcommand.GroundintakeresetCommand(),
         complexcommand.StopShootWithFeederCommand(),
         //complexcommand.GroundintakeresetCommand(),
         frc2::cmd::RunOnce([this] { shooterEnabled = false; })
@@ -340,7 +341,7 @@ joystick.LeftBumper().OnTrue(
 
 }
 
-frc2::CommandPtr RobotContainer::GenerateAutoCommand() {
+frc2::CommandPtr RobotContainer::GenerateAutoCommand(bool invertD) {
     AutoMode selectedMode = m_autoChooser.GetSelected();
     auto alliance=frc::DriverStation::GetAlliance();
     bool isRed=alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed;
@@ -350,35 +351,24 @@ frc2::CommandPtr RobotContainer::GenerateAutoCommand() {
       return autos::AutoSlowLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed, isRed);
       
     case AutoMode::DoubleOutLeft:
-      return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed, isRed);
+      return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed, invertD);
       
-    case AutoMode::DoubleOutRight:
-      return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand,isRed, !isRed);
+    // case AutoMode::DoubleOutRight:
+    //   return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand,isRed, !isRed);
       
     case AutoMode::OutAndHP:
       return autos::AutoHP(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand,isRed, isRed);
-    
-    case AutoMode::RedDoubleOutLeft:
-      return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, true,true);
-
-    case AutoMode::RedDoubleOutRight:
-      return autos::AutoDoubleLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, true,false);
-
-    case AutoMode::RedOutAndHP:
-      return autos::AutoHP(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand,true, true);
-
-    case AutoMode::RedOutDepot:
-      return autos::AutoSlowLeft(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, true, true);
-    
+      
     case AutoMode::LowLeft:
-      return autos::AutoLow(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,isRed);
+      return autos::AutoLow(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,invertD);
     
-    case AutoMode::LowRight:
-      return autos::AutoLow(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
-    case AutoMode::LowRightNoBounce:
-      return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
+    // case AutoMode::LowRight:
+    //   return autos::AutoLow(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
+    // case AutoMode::LowRightNoBounce:
+    //   return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,!isRed);
+
     case AutoMode::LowLeftNoBounce:
-      return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,isRed);
+      return autos::AutoLowOnlyOneSide(&drivetrain, &shooterSub, &feederSub, &groundIntakeSub, &complexcommand, isRed,invertD);
     
     case AutoMode::kDoNothing:
     default:
@@ -389,19 +379,23 @@ frc2::CommandPtr RobotContainer::GenerateAutoCommand() {
 void RobotContainer::refreshAutoMode(){
   // 1. 获取当前的 Enum 选择
     AutoMode currentSelection = m_autoChooser.GetSelected();
-
+    if(drivetrain.GetState().Pose.Y().value()>=8.07/2){
+      currentPlace=0;
+    }
+    else{
+      currentPlace=1;
+    }
     // 2. 如果发生了切换，或者缓存是空的
-    if (currentSelection != m_lastSelectedAuto || !m_preloadedAuto.has_value()) {
-
+    if (currentPlace!=previousPlace||currentSelection != m_lastSelectedAuto || !m_preloadedAuto.has_value()) {
         frc::SmartDashboard::PutString("Auto Status", "WAITING!");
         m_lastSelectedAuto = currentSelection;
         // 3. 重新生成并装入盒子
-        m_preloadedAuto = RobotContainer::GenerateAutoCommand();
+        m_preloadedAuto = RobotContainer::GenerateAutoCommand(currentPlace);
         // 因为 enum 不能直接打印成字符串，我们可以简单地在面板上发个 Ready 信号
         frc::SmartDashboard::PutString("Auto Status", "READY!");
+        previousPlace=currentPlace;
     }
 }
-
 frc2::CommandPtr RobotContainer::GetAutonomousCommand() {
   // 1. 检查盒子里有没有提前做好的指令
     if (m_preloadedAuto.has_value()) {

@@ -45,10 +45,10 @@ inline const std::vector<double> AutoYHP={0.70,0.70,0.90,2.10,3.30,2.50,2.50,0.8
 inline const std::vector<double> AutoRHP={45  ,135 ,46  ,90  ,90  ,-135,-135,-135,0   ,  0 ,-135 ,-135};
 inline const std::vector<double> AutoSHP={0   ,2.60,2.60,2.60,2.30,2.60,2.00,2.40,1.50,2.00,2.0 ,2.4};
 //                                             circle End              sh 去洞  CE       CE        CE    
-inline const std::vector<double> AutoXLow={4.40,6.00,8.27,8.27,5.80,2.80,2.50,3.50,5.20,6.10,6.10,7.80,7.80,7.00,6.20,3.20};
-inline const std::vector<double> AutoYLow={7.30,7.40,6.10,4.70,5.40,5.40,7.00,7.30,7.40,6.20,4.40,4.40,4.70,5.40,5.50,5.50};
-inline const std::vector<double> AutoRLow={0   ,0   ,-90 ,-90 ,132  ,132 ,0   ,  0 ,0   ,-90 ,-90 ,90  ,90  ,130 ,180,130};
-inline const std::vector<double> AutoSLow={0   ,2.80,2.80,1.40,2.60,2.50,2.60,2.60,2.60,2.60,2.60,2.60,2.60,2.60,2.60,2.60};
+inline const std::vector<double> AutoXLow={4.40,6.00,8.27,8.27,5.80,2.80,2.50,3.50,5.10,5.80,5.80,7.80,7.80,7.00,6.20,3.20};
+inline const std::vector<double> AutoYLow={7.30,7.40,6.10,4.70,5.40,5.40,7.00,7.30,7.40,6.20,4.40,4.40,4.70,5.40,5.60,5.50};
+inline const std::vector<double> AutoRLow={0   ,0   ,-90 ,-90 ,132 ,132 ,0   ,  0 ,0   ,-90 ,-90 ,90  ,90  ,130 ,180,130};
+inline const std::vector<double> AutoSLow={0   ,3.20,3.20,1.70,2.60,2.80,2.80,2.80,3.00,3.00,3.00,3.00,3.00,3.00,2.80,3.00};
 frc2::CommandPtr AutoSlowLeft(CommandSwerveDrivetrain* m_drivetrain, ShooterSubsystem* shooter, 
     FeederSubsystem* feeder, GroundIntakeSubsystem* intake, ComplexCommand* complexcommand, bool invertA, bool invertD);
 
