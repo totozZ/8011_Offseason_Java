@@ -341,13 +341,8 @@ frc2::CommandPtr autos::AutoLowOnlyOneSide(CommandSwerveDrivetrain* drivetrain, 
         // AutoMoveOpen(drivetrain, 7, AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr().Until([invertA,intaker,drivetrain]{
         //   double currentX=drivetrain->GetState().Pose.X().value();
         //   return intaker->getPitchResetFlag()&&((currentX>AutoXLow[1]&&!invertA)||(currentX<16.54-AutoXLow[1]&&invertA));}),
-       frc2::cmd::Parallel(
-          AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
-         frc2::cmd::Sequence(
-          frc2::cmd::WaitUntil([intaker]{return intaker->getPitchResetFlag();}),
-          complexcommand->GroundintakeprepareCommand().Repeatedly()
-          
-         )).Until([drivetrain,invertA]{double currentX=drivetrain->GetState().Pose.X().value(); return (currentX>AutoXLow[1]&&!invertA)||(currentX<16.54-AutoXLow[1]&&invertA);}),
+       complexcommand->GroundintakeprepareCommand(),
+        AutoMoveOpen(drivetrain, AutoXLow[1], AutoYLow[1], AutoRLow[1], AutoSLow[1], invertA, invertD).ToPtr(),
         complexcommand->StartStorageCommand(),
          complexcommand->GroundintakeprepareCommand(),
         frc2::cmd::Race(
@@ -389,7 +384,7 @@ frc2::CommandPtr autos::AutoLowOnlyOneSide(CommandSwerveDrivetrain* drivetrain, 
         
         AutoMoveCircle(drivetrain, (AutoXLow[10] + AutoXLow[11]) / 2, (AutoYLow[10] + AutoYLow[11]) / 2+1.1, 
                        std::abs(AutoXLow[10] - AutoXLow[11]) / 2, 0, true, AutoSLow[11], false, 0, true, invertA, invertD,0).ToPtr(),
-        
+
         AutoMoveOpen(drivetrain, AutoXLow[12], AutoYLow[12]+1.2, AutoRLow[12], AutoSLow[12], invertA, invertD).ToPtr(),
         AutoMoveCircle(drivetrain, AutoXLow[12] - 0.7, AutoYLow[12]+1.0, 0.7, 130, true, AutoSLow[12], false, -90, true, invertA, invertD, 0).ToPtr(),
         

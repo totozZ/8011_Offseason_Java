@@ -60,7 +60,7 @@ void GroundIntakeSubsystem::Initialization() {
   mm_pitch.MotionMagicCruiseVelocity =
       0_tps;  // 5 (mechanism) rotations per second cruise
   mm_pitch.MotionMagicExpo_kV = 0.1_V / 1_tps;           // 0.12
-  mm_pitch.MotionMagicExpo_kA = 0.3_V / 1_tr_per_s_sq;  // 0.1
+  mm_pitch.MotionMagicExpo_kA = 0.20_V / 1_tr_per_s_sq;  // 0.1
 
   intake_pitch_config.CurrentLimits.SupplyCurrentLimit = 20_A;
   intake_pitch_config.CurrentLimits.SupplyCurrentLimitEnable = true;

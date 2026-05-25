@@ -137,13 +137,13 @@ void PassBallCommand::Execute() {
   m_shooter->SetAngleOffset(shootAngleOffset);
   m_shooter->SetSpeedOffset(ShooterVelOff);
   //没被hub挡住时启动feeder
-  bool rightPos=rightPos||(currentPose.Y().value()<=3.5||currentPose.Y().value()>=4.5);
+  rightPos=rightPos||(currentPose.Y().value()<=3.5||currentPose.Y().value()>=4.5);
   //同时飞轮速度达标
-  bool rightSpeed=rightSpeed||std::abs(m_shooter->realShootVelocity-m_shooter->GetShootVelocity())<=15;
+  rightSpeed=rightSpeed||std::abs(m_shooter->realShootVelocity-m_shooter->GetShootVelocity())<=15;
   frc::SmartDashboard::PutNumber("shootOnMove/passShooterVreal",m_shooter->GetShootVelocity());
   frc::SmartDashboard::PutNumber("shootOnMove/passShooterVexpected",m_shooter->realShootVelocity);
   //同时底盘旋转ok
-  bool rightRot=rightRot||m_drive->SOMangleDiff<=20;
+  rightRot=rightRot||m_drive->SOMangleDiff<=10;
 
   frc::SmartDashboard::PutBoolean("shootOnMove/RightPos", rightPos);
 frc::SmartDashboard::PutBoolean("shootOnMove/RightSpeed", rightSpeed);

@@ -46,8 +46,9 @@ void ShooterSubsystem::Initialization() {
   shooter_right_up_config.MotorOutput.NeutralMode = 0; // Coast
   shooter_right_up_config.CurrentLimits.StatorCurrentLimit = 120_A;
   shooter_right_up_config.CurrentLimits.StatorCurrentLimitEnable = true;
-  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 45_A;
+  shooter_right_up_config.CurrentLimits.SupplyCurrentLimit = 50_A;
   shooter_right_up_config.CurrentLimits.SupplyCurrentLimitEnable = true;
+  //shooter_right_up_config.TorqueCurrent.PeakReverseTorqueCurrent=0_A;
 
   configs::Slot0Configs& shooter_right_up_slot0 = shooter_right_up_config.Slot0;
   shooter_right_up_slot0.kG = 0.;
@@ -73,7 +74,7 @@ void ShooterSubsystem::Initialization() {
   configs::TalonFXConfiguration shooter_pitch_config{};
   shooter_pitch_config.MotorOutput.Inverted = 0;
   shooter_pitch_config.MotorOutput.NeutralMode = 1; // Brake
-  shooter_pitch_config.CurrentLimits.StatorCurrentLimit = 50_A;
+  shooter_pitch_config.CurrentLimits.StatorCurrentLimit = 60_A;
   shooter_pitch_config.CurrentLimits.StatorCurrentLimitEnable = true;
   shooter_pitch_config.CurrentLimits.SupplyCurrentLimit = 20_A;
   shooter_pitch_config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -101,8 +102,7 @@ void ShooterSubsystem::Initialization() {
 
 void ShooterSubsystem::Periodic() {
   // 必须调用以维持封装好的 Wayimotor 的通讯
-  shooter_right_up_.Control();
-  shooter_pitch_.Control();
+  
   shooter_right_up_.ReceiveVelocity();
 
 
@@ -137,13 +137,17 @@ void ShooterSubsystem::Periodic() {
           shooter_right_up_.setvelocitytorquecurrent(realShootVelocity);
           SetShootPitchAngle(90-angle);
         } else {
-          Stop();
+          if(GetShootVelocity()>shooter_default_speed+2){
+            Stop();
+          }
+          else{
+            shooter_right_up_.setvelocitytorquecurrent(shooter_default_speed);
+          }
           SetShootPitchAngle(0.2);
         }
-      
-
-      
     }
+  shooter_right_up_.Control();
+  shooter_pitch_.Control();
 }
 
 // ==========================================
@@ -160,7 +164,7 @@ double ShooterSubsystem::CalculatePitchAngleAboveHub(double dis) {
     return angle;
   } else {
     
-    dis = dis * 1.5/ 8.0;
+    dis = dis * 1.0/ 8.0;
     const double height = 1.8288 + 1.8 - shooter_height_approx;
     constexpr double kRad2Deg = 180.0 / M_PI;
     

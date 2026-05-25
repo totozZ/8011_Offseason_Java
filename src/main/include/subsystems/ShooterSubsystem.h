@@ -132,6 +132,8 @@ class ShooterSubsystem : public ExampleSubsystem {
   double max_hood_angle = 18.58; 
   double min_hood_angle = 51.03;
   double thetaMiddleLine = 0; // 在 Initialization 中计算
+  const double shooter_max_composite = 2.0;
+  const double shooter_default_speed = 15.0;
 };
 
 #ifndef M_PI 
@@ -139,12 +141,12 @@ class ShooterSubsystem : public ExampleSubsystem {
 #endif
 
 #define shooter_height_approx 0.46932
-#define shooter_max_composite 7
+//#define shooter_max_composite 2
 
 #define shooter_vel_quadratic_regression_a 2.8
-#define shooter_vel_quadratic_regression_b 25.4
+#define shooter_vel_quadratic_regression_b 23.4
 #define shooter_vel_quadratic_regression_c 2.4
-#define shooter_vel_quadratic_regression_d 26.4
+#define shooter_vel_quadratic_regression_d 24.4
 // #define shooter_vel_quadratic_regression_e 6.4
 // #define shooter_vel_quadratic_regression_f 32.6
 

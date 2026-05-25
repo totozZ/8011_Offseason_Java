@@ -27,7 +27,8 @@
 #include "commands/intakeNextToSide.h"
 #include "commands/PassBallCommand.h"
 #include "commands/AutoMoveCircle.h"
-
+#include <frc/RobotController.h>
+#include <units/voltage.h>
 class RobotContainer
 {
 private:
@@ -116,7 +117,9 @@ private:
   frc::SendableChooser<frc2::Command*> autoChooser;
 
   std::optional<frc2::CommandPtr> pid_align_command;  // 当前正在执行的PID对齐Command
-
+  
+  frc::Pose2d defaultShootBluePose{units::meter_t{3},units::meter_t{4},units::degree_t{180}};
+  frc::Pose2d defaultShootRedPose{units::meter_t{16.54-3},units::meter_t{4},units::degree_t{0}};
 public:
   RobotContainer();
 

@@ -18,7 +18,7 @@ void RealTimeAimDrive::Initialize() {
   driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
                     .WithRotationalDeadband(units::radians_per_second_t{0.1})        
-            .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*1.2})
+            .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14*1.5})
             .WithDriveRequestType(swerve::DriveRequestType::Velocity)
             .WithSteerRequestType(swerve::SteerRequestType::Position);
   //m_drive->changeDriveCurrentLimit(20.0);
@@ -174,7 +174,7 @@ void RealTimeAimDrive::End(bool interrupted) {
   m_shooter->SetAngleOffset(0);
   m_shooter->SetSpeedOffset(0);
   auto currentSpeeds = m_drive->GetState().Speeds;
-
+  m_drive->SOMangleDiff=100;
     // 把这些速度赋给底盘身上那个绝对安全的滑行 Request
     m_drive->SetControl(
         m_drive->m_safeCoastRequest

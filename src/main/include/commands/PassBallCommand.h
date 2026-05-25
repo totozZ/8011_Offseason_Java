@@ -46,7 +46,9 @@ class PassBallCommand: public frc2::CommandHelper<frc2::Command, PassBallCommand
   units::radians_per_second_t MaxAngularRate = 0.75_tps;
   // 底盘控制请求
   swerve::requests::FieldCentricFacingAngle driveClosed{};
-
+  bool rightPos=false;
+  bool rightRot=false;
+  bool rightSpeed=false;
   // 🌟 蓝方的两个传球落点 (实战请根据场地测出准确坐标！)
   const frc::Translation2d kBlueLeftTarget{units::meter_t{3.0}, units::meter_t{5.5}};
   const frc::Translation2d kBlueRightTarget{units::meter_t{3.0}, units::meter_t{2.5}};

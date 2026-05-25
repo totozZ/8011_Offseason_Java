@@ -17,26 +17,26 @@ void Telemetry::Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveSta
 {
     /* Telemeterize the swerve drive state */
     drivePose.Set(state.Pose);
-    driveSpeeds.Set(state.Speeds);
-    driveModuleStates.Set(state.ModuleStates);
-    driveModuleTargets.Set(state.ModuleTargets);
-    driveModulePositions.Set(state.ModulePositions);
-    driveTimestamp.Set(state.Timestamp.value());
-    driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
-    driveSpeeds.Set(state.Speeds);
-    driveModuleStates.Set(state.ModuleStates);
-    driveModuleTargets.Set(state.ModuleTargets);
-    driveModulePositions.Set(state.ModulePositions);
-    driveTimestamp.Set(state.Timestamp.value());
-    driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
+    // driveSpeeds.Set(state.Speeds);
+    // driveModuleStates.Set(state.ModuleStates);
+    // driveModuleTargets.Set(state.ModuleTargets);
+    // driveModulePositions.Set(state.ModulePositions);
+    // driveTimestamp.Set(state.Timestamp.value());
+    // driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
+    // driveSpeeds.Set(state.Speeds);
+    // driveModuleStates.Set(state.ModuleStates);
+    // driveModuleTargets.Set(state.ModuleTargets);
+    // driveModulePositions.Set(state.ModulePositions);
+    // driveTimestamp.Set(state.Timestamp.value());
+    // driveOdometryFrequency.Set(1.0 / state.OdometryPeriod.value());
 
     /* Also write to log file */
     SignalLogger::WriteStruct("DriveState/Pose", state.Pose);
-    SignalLogger::WriteStruct("DriveState/Speeds", state.Speeds);
-    SignalLogger::WriteStructArray<frc::SwerveModuleState>("DriveState/ModuleStates", state.ModuleStates);
-    SignalLogger::WriteStructArray<frc::SwerveModuleState>("DriveState/ModuleTargets", state.ModuleTargets);
-    SignalLogger::WriteStructArray<frc::SwerveModulePosition>("DriveState/ModulePositions", state.ModulePositions);
-    SignalLogger::WriteValue("DriveState/OdometryPeriod", state.OdometryPeriod);
+    // SignalLogger::WriteStruct("DriveState/Speeds", state.Speeds);
+    // SignalLogger::WriteStructArray<frc::SwerveModuleState>("DriveState/ModuleStates", state.ModuleStates);
+    // SignalLogger::WriteStructArray<frc::SwerveModuleState>("DriveState/ModuleTargets", state.ModuleTargets);
+    // SignalLogger::WriteStructArray<frc::SwerveModulePosition>("DriveState/ModulePositions", state.ModulePositions);
+    // SignalLogger::WriteValue("DriveState/OdometryPeriod", state.OdometryPeriod);
 
     /* Telemeterize the pose to a Field2d */
     fieldTypePub.Set("Field2d");
@@ -47,9 +47,9 @@ void Telemetry::Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveSta
     });
 
     /* Telemeterize each module state to a Mechanism2d */
-    for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {
-        m_moduleDirections[i]->SetAngle(state.ModuleStates[i].angle.Degrees());
-        m_moduleSpeeds[i]->SetAngle(state.ModuleStates[i].angle.Degrees());
-        m_moduleSpeeds[i]->SetLength(state.ModuleStates[i].speed / (2 * MaxSpeed));
-    }
+    // for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {
+    //     m_moduleDirections[i]->SetAngle(state.ModuleStates[i].angle.Degrees());
+    //     m_moduleSpeeds[i]->SetAngle(state.ModuleStates[i].angle.Degrees());
+    //     m_moduleSpeeds[i]->SetLength(state.ModuleStates[i].speed / (2 * MaxSpeed));
+    // }
 }

@@ -26,7 +26,7 @@ RobotContainer::RobotContainer()
   autoChooser = pathplanner::AutoBuilder::buildAutoChooser();
   frc::SmartDashboard::PutData("Auto Mode", &autoChooser);
   rot.EnableContinuousInput(-180,180);
-
+  frc::RobotController::SetBrownoutVoltage(6.5_V);
   m_autoChooser.SetDefaultOption("Do Nothing (Safe)", AutoMode::kDoNothing);
   // 2. 添加你手写的所有高阶路线
   m_autoChooser.AddOption("OutAndDepot", AutoMode::OutDepot);
@@ -135,9 +135,10 @@ drivetrain.SetDefaultCommand(
             
             // 2. 机制负责射球
             frc2::cmd::Sequence(
-                shooterSub.EnableShooter(),
                 complexcommand.GroundintakeresetCommand(),
                 frc2::cmd::RunOnce([this] { ground_intake_prepared_ = false;}),
+                frc2::cmd::WaitUntil([this]{return drivetrain.SOMangleDiff<=20;}),
+                shooterSub.EnableShooter(),
                 frc2::cmd::RunOnce([this] {shooterEnabled = true; }),
                 frc2::cmd::Parallel(
                 complexcommand.ShootWithFeederCommand(),
@@ -160,8 +161,10 @@ drivetrain.SetDefaultCommand(
             // 2. 传球时附带的额外动作
             frc2::cmd::Sequence(
                 complexcommand.GroundintakeresetCommand(),
+                frc2::cmd::RunOnce([this] { ground_intake_prepared_ = false;}),
+                frc2::cmd::WaitUntil([this]{return drivetrain.SOMangleDiff<=20;}),
                 shooterSub.EnableShooter(),
-                frc2::cmd::RunOnce([this] {  shooterEnabled = true; }),
+                frc2::cmd::RunOnce([this] {shooterEnabled = true; }),
                 frc2::cmd::WaitUntil([this]{return 
                   std::abs(shooterSub.GetShootVelocity()-shooterSub.realShootVelocity)<0.7
                   &&drivetrain.SOMangleDiff<=8;}).WithTimeout(units::second_t{1.5}),
@@ -254,8 +257,47 @@ joystick.LeftBumper().OnTrue(
   ));
 
   //增加使用默认速度选项，以防Limelight出问题
-  joystick.POVUp().OnTrue(shooterSub.EnableDefaultShoot());
+  joystick.POVUp().WhileTrue(//shooterSub.EnableDefaultShoot()
+    frc2::cmd::Sequence(
+      frc2::cmd::Either(
+        frc2::cmd::RunOnce([this]{
+        drivetrain.ResetPose(defaultShootRedPose);}),
+        frc2::cmd::RunOnce([this]{
+        drivetrain.ResetPose(defaultShootBluePose);}),
+        [this]{return frc::DriverStation::GetAlliance().has_value() && 
+                             frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed; } 
+      ),
+      frc2::cmd::Parallel(
+            // 1. 底盘负责瞄准
+            RealTimeAimDrive(
+                &drivetrain, &shooterSub,
+                [this]() { return -joystick.GetLeftY(); }, 
+                [this]() { return -joystick.GetLeftX(); },180  
+            ).ToPtr(),
+            
+            // 2. 机制负责射球
+            frc2::cmd::Sequence(
+                complexcommand.GroundintakeresetCommand(),
+                frc2::cmd::RunOnce([this] { ground_intake_prepared_ = false;}),
+                frc2::cmd::WaitUntil([this]{return drivetrain.SOMangleDiff<=20;}),
+                shooterSub.EnableShooter(),
+                frc2::cmd::RunOnce([this] {shooterEnabled = true; }),
+                frc2::cmd::Parallel(
+                complexcommand.ShootWithFeederCommand(),
+                frc2::cmd::Sequence(
+                frc2::cmd::WaitUntil([this]{return 
+            std::abs(shooterSub.GetShootVelocity()-shooterSub.realShootVelocity)<0.7
+            &&drivetrain.SOMangleDiff<=8;})
+          .WithTimeout(units::second_t{1.5}),
+                complexcommand.GroundintakeassistCommand().Repeatedly()))
+            )
+        )
+
+    )
+  );
+
   joystick.POVDown().OnTrue(shooterSub.DisableDefaultShoot());
+
   joystick.POVRight().OnTrue(complexcommand.GroundintakeantiCommand()).OnFalse(complexcommand.GroundintakeresetCommand());
 
   joystick.A().WhileTrue(
@@ -284,9 +326,9 @@ joystick.LeftBumper().OnTrue(
 
    joystick.Y()
    .WhileTrue(
-    frc2::cmd::Sequence(
+    //frc2::cmd::Sequence(
       //complexcommand.StopShootWithFeederCommand(),
-      complexcommand.CloseStorageCommand(),
+      //complexcommand.CloseStorageCommand(),
       //complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
         complexcommand.PassTrench(false),
@@ -296,7 +338,8 @@ joystick.LeftBumper().OnTrue(
         double nowX=drivetrain.GetState().Pose.X().value();
         return (alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kBlue&&nowX<=16.54/2)||(alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed&&nowX>=16.54/2);
       })
-  ));
+    //)
+  );
   // joystick.LeftBumper().OnTrue(
   //     complexcommand.GroundintakeassistCommand()
   //         .AndThen(frc2::cmd::RunOnce(
