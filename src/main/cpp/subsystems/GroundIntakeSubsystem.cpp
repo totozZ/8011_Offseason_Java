@@ -94,14 +94,14 @@ void GroundIntakeSubsystem::Periodic() {
 
   if (pitch_reset_flag_ == 0) {
     GroundIntakeReset();
+    intake_pitch_.Control();
   }
   else if(normTargetStatus!=previousStatus){
       intake_pitch_.setNormalizedMotionPosition(normTargetStatus);
+      intake_pitch_.Control();
       previousStatus=normTargetStatus;
-    }
-
-  intake_roller_right_.Control();
-  intake_pitch_.Control();
+  }
+  // roller_.Control(); 已被移至 Set 函数中以优化 CAN 总线
   frc::SmartDashboard::PutBoolean("GI_pitch_reset", getPitchResetFlag());
   if (publish_debug) {
 
@@ -120,10 +120,12 @@ void GroundIntakeSubsystem::Periodic() {
 
 void GroundIntakeSubsystem::SetRollerVelocity(double velocity) {
   intake_roller_right_.setvelocitytorquecurrent(velocity);
+  intake_roller_right_.Control();
 }
 
 void GroundIntakeSubsystem::SetRollerDutyCycle(double dutyCycle){
   intake_roller_right_.setNormalizedDutyCircle(dutyCycle);
+  intake_roller_right_.Control();
 }
 
 frc2::CommandPtr GroundIntakeSubsystem::SetRollerDutyCycleCommandPtr(double dutyCycle){
@@ -135,7 +137,10 @@ frc2::CommandPtr GroundIntakeSubsystem::SetRollerVelocityCommandPtr(
   return this->RunOnce([this, velocity] { SetRollerVelocity(velocity); });
 }
 
-void GroundIntakeSubsystem::Stop() { intake_roller_right_.setcoast(); }
+void GroundIntakeSubsystem::Stop() { 
+  intake_roller_right_.setcoast(); 
+  intake_roller_right_.Control();
+}
 
 frc2::CommandPtr GroundIntakeSubsystem::StopCommandPtr() {
   return this->RunOnce([this] { Stop(); });
@@ -207,4 +212,3 @@ void GroundIntakeSubsystem::SetTeleopRollerCurrentLimit() {
     }
   }
 }
-                                            

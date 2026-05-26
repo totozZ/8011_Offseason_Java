@@ -69,55 +69,54 @@ void FeederSubsystem::Initialization()
   //upward_feeder_.setgearRatio(1.0); 
 
 }
-
-void FeederSubsystem::Periodic()
-{
-  backward_feeder_.Control();
-  upward_feeder_.Control();
-}
-
-// ==========================================
-// 基础控制接口 (完美融合新旧逻辑)
-// ==========================================
+void FeederSubsystem::Periodic() {}
 
 void FeederSubsystem::SetBackwardFeederCurrent(double current, double max_abs_duty_cycle) {
   backward_feeder_.setCurrent_Speed(max_abs_duty_cycle);
   backward_feeder_.setcurrent(current);
+  backward_feeder_.Control();
 }
 
 void FeederSubsystem::SetUpwardFeederVelocity(double velocity) {
   upward_feeder_.setvelocitytorquecurrent(velocity);
+  upward_feeder_.Control();
 }
 
 void FeederSubsystem::SetUpwardFeederCurrent(double current, double max_abs_duty_cycle) {
   upward_feeder_.setCurrent_Speed(max_abs_duty_cycle);
   upward_feeder_.setcurrent(current);
+  upward_feeder_.Control();
 }
 
 void FeederSubsystem::setduty(double backward_duty, double upward_duty) {
   backward_feeder_.setNormalizedDutyCircle(backward_duty);
   upward_feeder_.setNormalizedDutyCircle(upward_duty);
+  backward_feeder_.Control();
+  upward_feeder_.Control();
 }
 
 void FeederSubsystem::SetBackwardFeederVelocity(double duty) {
-  // 旧版代码里这个方法其实传的是 duty
   backward_feeder_.setNormalizedDutyCircle(duty); 
+  backward_feeder_.Control();
 }
 
 void FeederSubsystem::SetBackwardFeederDuty(double duty) {
   backward_feeder_.setNormalizedDutyCircle(duty);
+  backward_feeder_.Control();
 }
 
 void FeederSubsystem::SetUpwardDuty(double duty) {
   upward_feeder_.setNormalizedDutyCircle(duty);
+  upward_feeder_.Control();
 }
 
 void FeederSubsystem::Stop() {
-  // 使用新版安全的 coast 停止方式
   backward_feeder_.setcoast();
   upward_feeder_.setcoast();
-  //setduty(0,0);
-  // 重置 Combo 状态机
+  
+  backward_feeder_.Control();
+  upward_feeder_.Control();
+
   upper_velocity_reached_once_ = false;
 }
 
