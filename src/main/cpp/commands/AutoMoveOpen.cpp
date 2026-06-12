@@ -135,7 +135,13 @@ void AutoMoveOpen::Execute() {
         suppX = -suppX;
         suppY = -suppY;
     }
-    
+
+    if(m_drivetrain->autoShooting){
+        targetRot=m_drivetrain->autoRot;
+    }
+    else{
+        targetRot=m_targetWaypoint.Rotation().Degrees().value();
+    }
     // 接下来你就可以直接把 suppX 和 suppY 喂给底盘的 driveClosed / driveOpen 了！
    
     // 5. 应用到底盘
@@ -143,7 +149,7 @@ void AutoMoveOpen::Execute() {
     m_drivetrain->SetControl(driveClosed
         .WithVelocityX(units::meters_per_second_t{suppX})
         .WithVelocityY(units::meters_per_second_t{suppY})
-        .WithTargetDirection(m_targetWaypoint.Rotation()) // 闭环锁定目标点的期望朝向
+        .WithTargetDirection(frc::Rotation2d{units::degree_t{targetRot}}) // 闭环锁定目标点的期望朝向
     );
 }
 

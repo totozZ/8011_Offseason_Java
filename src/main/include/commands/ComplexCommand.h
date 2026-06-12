@@ -22,7 +22,7 @@ class ComplexCommand
                           subsystems::VisionSubsystem* visionSubsystem,
                           subsystems::ShooterSubsystem* shooterSubsystem,
                           subsystems::FeederSubsystem* feederSubsystem,
-                          subsystems::WeidaiSub* weidaiSub,
+                          //subsystems::WeidaiSub* weidaiSub,
                           subsystems::GroundIntakeSubsystem* groundIntakeSubsystem);                                                       
 
   frc2::CommandPtr FollowPathCommand(frc::Pose2d targetPos);
@@ -50,15 +50,15 @@ class ComplexCommand
   frc2::CommandPtr assistPassing();
   frc2::CommandPtr StartFeederCommand();
 
-  frc2::CommandPtr StartStorageCommand();
-  frc2::CommandPtr CloseStorageCommand();
+  // frc2::CommandPtr StartStorageCommand();
+  // frc2::CommandPtr CloseStorageCommand();
 
  private:
   subsystems::CommandSwerveDrivetrain* m_drivesubsystem;
   subsystems::VisionSubsystem* m_visionSubsystem;
   subsystems::ShooterSubsystem* m_shooterSubsystem;
   subsystems::FeederSubsystem* m_feederSubsystem;
-  subsystems::WeidaiSub* m_weidaiSub;
+  //subsystems::WeidaiSub* m_weidaiSub;
   subsystems::GroundIntakeSubsystem* m_groundIntakeSubsystem;
 
 };

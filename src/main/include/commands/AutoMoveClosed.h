@@ -37,6 +37,7 @@ private:
     swerve::requests::FieldCentricFacingAngle driveClosed;
     double targetVelocity=0;
     // 容差常量
+    double targetRot=0;
     const double kTranslationTolerance = 0.10; // 允许 10 厘米的误差
     units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts;
 };

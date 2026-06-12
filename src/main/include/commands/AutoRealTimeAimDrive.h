@@ -12,7 +12,7 @@
 using namespace subsystems;
 class AutoRealTimeAimDrive : public frc2::CommandHelper<frc2::Command, AutoRealTimeAimDrive> {
  public:
-  AutoRealTimeAimDrive(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, FeederSubsystem* fed, double x, double y, bool invert1, bool invert2, double AOSDeg);
+  AutoRealTimeAimDrive(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, FeederSubsystem* fed, double AOSDeg);
 
   void Initialize() override;
   void Execute() override;

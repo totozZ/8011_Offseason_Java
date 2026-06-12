@@ -78,7 +78,7 @@ public:
   subsystems::VisionSubsystem visionSub;
   subsystems::ShooterSubsystem shooterSub;
   subsystems::FeederSubsystem feederSub;
-  subsystems::WeidaiSub weidaiSub;
+  //subsystems::WeidaiSub weidaiSub;
   //subsystems::ClientSubsystem clientSub;
   subsystems::GroundIntakeSubsystem groundIntakeSub;
   frc2::CommandXboxController joystick{ 0 };

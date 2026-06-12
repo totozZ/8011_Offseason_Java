@@ -138,7 +138,7 @@ void AutoMoveCircle::Execute() {
         suppX = 0.0;
         suppY = 0.0;
     }
-
+    
     // 7. 联盟视角反转 (Alliance Flip)
     auto alliance = frc::DriverStation::GetAlliance();
     bool isRed = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
@@ -147,7 +147,9 @@ void AutoMoveCircle::Execute() {
         suppY = -suppY;
         currentHeading = currentHeading + frc::Rotation2d{units::degree_t{180.0}};
     }
-
+    if(m_drivetrain->autoShooting){
+        currentHeading=frc::Rotation2d{units::degree_t{m_drivetrain->autoRot}};
+    }
     // 8. 发送给底盘
     m_drivetrain->SetControl(driveClosed
         .WithVelocityX(units::meters_per_second_t{suppX})

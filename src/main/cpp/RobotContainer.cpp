@@ -13,9 +13,9 @@ RobotContainer::RobotContainer()
     : visionSub(&drivetrain, nullptr),
       shooterSub(joystick),
       feederSub(joystick),
-      weidaiSub(joystick),
+      //weidaiSub(joystick),
       groundIntakeSub(joystick),
-      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub, &weidaiSub,
+      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub, //&weidaiSub,
                      &groundIntakeSub)
 {
   shooterSub.SetFeederSubsystem(&feederSub);
@@ -111,14 +111,14 @@ drivetrain.SetDefaultCommand(
   
   joystick.Start().OnTrue(
     frc2::cmd::Sequence(
-    complexcommand.StartStorageCommand(),
-    frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
+    // complexcommand.StartStorageCommand(),
+    // frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
     complexcommand.GroundintakeresetCommand(),
-    groundIntakeSub.SetPitchNormPositionCommandPtr(0.07),
-    frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
-        .WithTimeout(units::second_t{1.0}),
-    complexcommand.CloseStorageCommand(),
-    frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
+    groundIntakeSub.SetPitchNormPositionCommandPtr(0.07)
+    // frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
+    //     .WithTimeout(units::second_t{1.0}),
+    // complexcommand.CloseStorageCommand(),
+    // frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
   ));
 
   joystick.RightTrigger()
@@ -203,13 +203,13 @@ drivetrain.SetDefaultCommand(
   );
 
 // 根据storage位置切换
-joystick.LeftBumper().OnTrue(
-    frc2::cmd::Either(
-        complexcommand.StartStorageCommand(),
-        complexcommand.CloseStorageCommand(),
-        [this] { return weidaiSub.GetStorageNormPosition() < 0.5; }
-    )
-);
+// joystick.LeftBumper().OnTrue(
+//     frc2::cmd::Either(
+//         complexcommand.StartStorageCommand(),
+//         complexcommand.CloseStorageCommand(),
+//         [this] { return weidaiSub.GetStorageNormPosition() < 0.5; }
+//     )
+// );
  
   // joystick.B().WhileTrue(
   //     frc2::cmd::StartEnd(銆併€戙€愩€戙€愩€?
@@ -301,14 +301,15 @@ joystick.LeftBumper().OnTrue(
   joystick.POVRight().OnTrue(complexcommand.GroundintakeantiCommand()).OnFalse(complexcommand.GroundintakeresetCommand());
 
   joystick.A().WhileTrue(
-    frc2::cmd::Parallel(
-      complexcommand.StartStorageCommand(),
+    // frc2::cmd::Parallel(
+    //   complexcommand.StartStorageCommand(),
     intakeNextToSide(          
             &drivetrain,  
             &shooterSub, 
             &groundIntakeSub,
             &joystick,
-            true ).ToPtr())).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
+            true ).ToPtr()//)
+          ).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
   joystick.LeftTrigger().OnFalse(
 
@@ -318,16 +319,16 @@ joystick.LeftBumper().OnTrue(
           .WhileTrue(
             frc2::cmd::Sequence(
               frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = true;}),
-            frc2::cmd::Parallel(
-              complexcommand.GroundintakeprepareCommand(),
-              complexcommand.StartStorageCommand().Repeatedly())
+            // frc2::cmd::Parallel(
+              complexcommand.GroundintakeprepareCommand()
+              // complexcommand.StartStorageCommand().Repeatedly())
             ));
 
 
    joystick.Y()
    .WhileTrue(
-    //frc2::cmd::Sequence(
-      //complexcommand.StopShootWithFeederCommand(),
+    frc2::cmd::Sequence(
+      complexcommand.StopShootWithFeederCommand(),
       //complexcommand.CloseStorageCommand(),
       //complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
@@ -339,7 +340,7 @@ joystick.LeftBumper().OnTrue(
         return (alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kBlue&&nowX<=16.54/2)||(alliance.has_value()&&alliance.value()==frc::DriverStation::Alliance::kRed&&nowX>=16.54/2);
       })
     //)
-  );
+  ));
   // joystick.LeftBumper().OnTrue(
   //     complexcommand.GroundintakeassistCommand()
   //         .AndThen(frc2::cmd::RunOnce(
@@ -348,8 +349,8 @@ joystick.LeftBumper().OnTrue(
 
   
   joystick.B().WhileTrue(
-    frc2::cmd::Parallel(
-      complexcommand.StartStorageCommand(),
+    // frc2::cmd::Parallel(
+    //   complexcommand.StartStorageCommand(),
    frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
@@ -362,12 +363,13 @@ joystick.LeftBumper().OnTrue(
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
-              ))).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));    // 转换为 WPILib 最新架构的 CommandPtr
+              )//)
+            ).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));    // 转换为 WPILib 最新架构的 CommandPtr
   
   
   joystick.X().WhileTrue(
-    frc2::cmd::Parallel(
-      complexcommand.StartStorageCommand(),
+    // frc2::cmd::Parallel(
+    //   complexcommand.StartStorageCommand(),
     frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
@@ -380,7 +382,8 @@ joystick.LeftBumper().OnTrue(
         [this]{
           double nowX=drivetrain.GetState().Pose.X().value();
           return nowX>5&&nowX<11.54;}
-              ))).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
+              )//)
+            ).OnFalse(frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = false;}));
 
 }
 

@@ -21,7 +21,7 @@ public:
     void End(bool interrupted) override;
 
 private:
-
+    double targetRot=0;
     double initialDis=0;
     bool ChangeEnd=false;
     double endSpeed=0;

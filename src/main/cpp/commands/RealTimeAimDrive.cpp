@@ -65,11 +65,11 @@ void RealTimeAimDrive::Execute() {
   }
 
   // v_radial: 径向速度 (正代表靠近 Hub，负代表远离)  
-  double v_radial = realX * cos(currentAngleToHubRad) + realY * sin(currentAngleToHubRad);
+  double v_radial = vx * cos(currentAngleToHubRad) + vy * sin(currentAngleToHubRad);
   
   // v_tangential: 切向/横向速度 (正代表逆时针绕 Hub 走)
   // 相当于把场地方向旋转 -currentAngleToHubRad
-  double v_tangential = -realX * sin(currentAngleToHubRad) + realY * cos(currentAngleToHubRad);
+  double v_tangential = -vx * sin(currentAngleToHubRad) + vy * cos(currentAngleToHubRad);
 
   double latencyRadialSeconds = 0.3;     // 竖向（靠近/远离）的预测时间
   double latencyTangentialSeconds = -0.1; // 横向（绕圈）的预测时间
@@ -94,9 +94,9 @@ void RealTimeAimDrive::Execute() {
 
   //把底盘即时转换到以机器人与hub的连线为0度的速度向量
   //向前（hub）的速读,依旧使用手柄数据
-  double Normvx=realX*cos(-targetAngleRad)+realY*cos(PI/2-targetAngleRad);
+  double Normvx=vx*cos(-targetAngleRad)+vy*cos(PI/2-targetAngleRad);
   //向旁边的速度
-  double Normvy=realX*sin(-targetAngleRad)+realY*sin(PI/2-targetAngleRad);
+  double Normvy=vx*sin(-targetAngleRad)+vy*sin(PI/2-targetAngleRad);
   // frc::SmartDashboard::PutNumber("shootOnMove/vxToHub",vx );
   // frc::SmartDashboard::PutNumber("shootOnMove/vyToHub",vy );
   

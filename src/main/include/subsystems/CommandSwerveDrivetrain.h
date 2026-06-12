@@ -283,6 +283,10 @@ public:
     swerve::requests::Idle Idle;
     swerve::requests::RobotCentric m_safeCoastRequest;
     swerve::requests::FieldCentricFacingAngle abcdef;
+    double autoSpeedX=0;
+    double autoSpeedY=0;
+    double autoRot=0;
+    double autoShooting=false;
     /**
      * \brief Adds a vision measurement to the Kalman Filter. This will correct the
      * odometry pose estimate while still accounting for measurement noise.

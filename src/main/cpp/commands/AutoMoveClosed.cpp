@@ -68,13 +68,18 @@ void AutoMoveClosed::Execute() {
         speedX=-speedX;
         speedY=-speedY;
     }
-    
     // 5. 应用到底盘
     // FieldCentricFacingAngle 会自动帮你把机器人车头（Rotation）闭环转到 TargetDirection
+    if(m_drivetrain->autoShooting){
+        targetRot=m_drivetrain->autoRot;
+    }
+    else{
+        targetRot=realHead;
+    }
     m_drivetrain->SetControl(driveClosed
         .WithVelocityX(units::meters_per_second_t{speedX})
         .WithVelocityY(units::meters_per_second_t{speedY})
-        .WithTargetDirection(frc::Rotation2d{units::degree_t{realHead}}) // 闭环锁定目标点的期望朝向
+        .WithTargetDirection(frc::Rotation2d{units::degree_t{targetRot}}) // 闭环锁定目标点的期望朝向
     );
 }
 
@@ -82,7 +87,7 @@ bool AutoMoveClosed::IsFinished() {
     // 获取当前位置并计算到目标点的直线距离
     frc::Pose2d currentPose = m_drivetrain->GetState().Pose;
     double distance = currentPose.Translation().Distance(m_targetWaypoint.Translation()).value();
-    frc::Rotation2d realT(units::degree_t{realHead});
+    frc::Rotation2d realT(units::degree_t{targetRot});
     double Adiff=(currentPose.Rotation()-realT).Degrees().value();
     Adiff=std::abs(Adiff);
     auto alliance=frc::DriverStation::GetAlliance();
