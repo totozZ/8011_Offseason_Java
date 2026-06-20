@@ -78,34 +78,16 @@ void ShooterSubsystem::Periodic()
   shoot_pitch_angle_ = frc::SmartDashboard::GetNumber("Shooter/Shoot Angle:", 50);
   speed_conversion_efficiency_ = frc::SmartDashboard::GetNumber("Shooter/Speed_conversion_eff:", 0.3);
 
-  Eigen::Vector3d pos = { 0.3, 0., ShooterConstants::TargetHeight - ShooterConstants::ShooterHeight };
-  Eigen::Vector3d vel = { 0., 0., 0. };
-  pos[0] = frc::SmartDashboard::GetNumber("Shooter/Target X Distance:", 0.3);
-  frc::SmartDashboard::PutNumber("Shooter/Target Height:", pos[2]);
-  ball_solver_.setTarget(pos, vel);
-
-  // if (ball_solver_.solveForGimBalAngle(shoot_vel_))
-  // {
-  //   frc::SmartDashboard::PutString("Shooter/Solve Status:", "Success");
-  //   shoot_pitch_angle_ = ball_solver_.getSolvedPitch() * 180.0 / M_PI;
-  // }
-  // else
-  // {
-  //   // shoot_pitch_angle_ = Shooter::PitchMaxAngle;
-  //   frc::SmartDashboard::PutString("Shooter/Solve Status:", "Failed");
-  // }
-
-  if (ball_solver_.solveForSpeed((61.818 - 3.636 * pos[0]) * M_PI / 180.0, true))
-  {
-    shoot_vel_ = ball_solver_.getBallSpeed();
-    frc::SmartDashboard::PutString("Shooter/Solve Status:", "Success");
-  }
-  else
-    frc::SmartDashboard::PutString("Shooter/Solve Status:", "Failed");
+  const double target_x =
+      frc::SmartDashboard::GetNumber("Shooter/Target X Distance:", 0.3);
+  frc::SmartDashboard::PutNumber(
+      "Shooter/Target Height:",
+      ShooterConstants::TargetHeight - ShooterConstants::ShooterHeight);
 
   frc::SmartDashboard::PutNumber("Shooter/Shoot Velocity:", shoot_vel_);
   // frc::SmartDashboard::PutNumber("Shooter/Shoot Angle:", shoot_pitch_angle_);
-  frc::SmartDashboard::PutNumber("Shooter/Shoot Angle:", 61.818 - 3.636 * pos[0]);
+  frc::SmartDashboard::PutNumber("Shooter/Shoot Angle:",
+                                 61.818 - 3.636 * target_x);
   frc::SmartDashboard::PutNumber("Shooter/Pitch position:", (ShooterConstants::PitchMaxAngle - shoot_pitch_angle_) *
                                                                 ShooterConstants::PitchDisplacementPerDegree);
   frc::SmartDashboard::PutNumber("Shooter/Motor target Velocity:",

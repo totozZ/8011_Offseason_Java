@@ -5,9 +5,7 @@ This file records controller input ownership to avoid duplicate bindings.
 When adding new bindings in `RobotContainer`, check this file first.
 
 ## Subsystem Periodic Ownership
-- `ShooterSubsystem::Periodic` (`src/main/cpp/subsystems/ShooterSubsystem.cpp`)
-  - `A` button: shoot/follow feeder logic
-  - `LeftTrigger` / `RightTrigger`: linear servo incremental control
+- No subsystem `Periodic()` currently owns controller input.
 
 ## RobotContainer Ownership
 - `LeftBumper`: toggle drivetrain open/closed loop

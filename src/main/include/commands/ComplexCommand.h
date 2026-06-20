@@ -43,7 +43,6 @@ class ComplexCommand
   frc2::CommandPtr autoFollow(frc::Pose2d targetPos);
   frc2::CommandPtr PassBump(bool atOppo);
   frc2::CommandPtr PassTrench(bool atOppo);
-  frc2::CommandPtr GoToClimb();
 
   frc2::CommandPtr assistPassing();
   frc2::CommandPtr StartFeederCommand();

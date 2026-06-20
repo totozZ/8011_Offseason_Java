@@ -12,7 +12,6 @@
 #include <ctre/phoenix6/CANBus.hpp>
 
 #include "frc8011/Wayimotor.h"
-#include "frc8011/BallSolver.h"
 #include "Constants.h"
 
 namespace subsystems
@@ -39,7 +38,6 @@ private:
   ctre::phoenix6::CANBus kCANBus{ "rio" };
   frc2::CommandXboxController& joystick_;
 
-  BallSolver ball_solver_;
   Wayimotor shooter_left_{ ShooterConstants::ShooterLeftMotorID, kCANBus };    // 发射左电机
   Wayimotor shooter_right_{ ShooterConstants::ShooterRightMotorID, kCANBus };  // 发射右电机
   Wayimotor pitch_{ ShooterConstants::PitchMotorID, kCANBus };                 // 发射机构俯仰电机

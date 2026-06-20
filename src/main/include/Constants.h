@@ -57,20 +57,6 @@ static constexpr auto pos_20_targety = 5.132231;
 
 }  // namespace posConstants
 
-namespace SolverConstants {
-inline constexpr double ResistanceCoefficient = 0.01;
-inline constexpr double G = 9.81;
-inline constexpr double DT = 0.1;
-inline constexpr double Timeout = 5.0;
-inline constexpr double Delay = 0.2;
-inline constexpr double MaxIterations = 30;
-inline constexpr double ErrorTolerance = 0.001;
-inline constexpr double ShooterMinSpeed = 3.0;
-inline constexpr double ShooterMaxSpeed = 10.0;
-inline constexpr double MaxFlightTime = 2.0;
-inline constexpr double AdjustSpeed = 0.4;
-}  // namespace SolverConstants
-
 namespace FeederConstants {
 inline constexpr int BackwardFeederMotorID = 17;
 inline constexpr int UpwardFeederMotorID = 18;
@@ -87,7 +73,6 @@ inline constexpr int ShooterLeftUpMotorID = 13;
 inline constexpr int ShooterRightUpMotorID = 14;
 inline constexpr int ShooterRightDownMotorID = 15;
 inline constexpr int ShooterPitchMotorID = 16;
-inline constexpr double LinearServoInitialPositionMm = 0.0;
 
 inline constexpr double SpeedConversionEfficiency = 0.3;
 inline constexpr double ShootWheelRadius = 0.1;
@@ -129,12 +114,6 @@ inline constexpr double kIntakePitchMotorMaxposition = 8.4;
 inline constexpr double PitchNormPosition = 0.923;
 }  // namespace GroundIntakeConstants
 
-namespace LinearServoConstants {
-// 0-12.5 125-60
-//  70mm  100mm
-inline constexpr double MaxPositionMm = 58.0;
-}  // namespace LinearServoConstants
-
 namespace DriveAimingConstants {
 // 蓝方Hub坐标
 //  static constexpr frc::Translation2d BlueHubPosition{4.625467_m, 4.034536_m};
@@ -156,11 +135,3 @@ namespace VisionConstants {
 inline const std::array<std::string, 2> limelightNames = {"limelight-left",
                                                           "limelight-back"};
 }  // namespace VisionConstants
-
-namespace ClimbConstants {
-inline constexpr int ClimbUpMotorID = 30;
-inline constexpr int ClimbUpMinPos = 0.;
-inline constexpr int ClimbUpMaxPos = 150.;
-inline constexpr double ClimbUpMaxCurrent = 40.0;
-
-}  // namespace ClimbConstants

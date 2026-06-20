@@ -122,11 +122,13 @@ drivetrain.SetDefaultCommand(
   .WhileTrue(
     frc2::cmd::Either(
         frc2::cmd::Parallel(
-            // 1. 底盘负责瞄准
+            // 1. 底盘只原地瞄准，边走边射已禁用
             RealTimeAimDrive(
                 &drivetrain, &shooterSub,
-                [this]() { return -joystick.GetLeftY(); }, 
-                [this]() { return -joystick.GetLeftX(); },180  
+                // [this]() { return -joystick.GetLeftY(); },
+                // [this]() { return -joystick.GetLeftX(); },
+                []() { return 0.0; },
+                []() { return 0.0; }, 180
             ).ToPtr(),
             
             // 2. 机制负责射球
@@ -151,8 +153,10 @@ drivetrain.SetDefaultCommand(
             // 1. 底盘和 Feeder 已经被 PassBallCommand 包办了
             PassBallCommand(
                 &drivetrain, &shooterSub, &feederSub,
-                [this]() { return -joystick.GetLeftY(); }, 
-                [this]() { return -joystick.GetLeftX(); },180
+                // [this]() { return -joystick.GetLeftY(); },
+                // [this]() { return -joystick.GetLeftX(); },
+                []() { return 0.0; },
+                []() { return 0.0; }, 180
             ).ToPtr(),
             // 2. 传球时附带的额外动作
             frc2::cmd::Sequence(
@@ -255,11 +259,13 @@ drivetrain.SetDefaultCommand(
                              frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed; } 
       ),
       frc2::cmd::Parallel(
-            // 1. 底盘负责瞄准
+            // 1. 底盘只原地瞄准，边走边射已禁用
             RealTimeAimDrive(
                 &drivetrain, &shooterSub,
-                [this]() { return -joystick.GetLeftY(); }, 
-                [this]() { return -joystick.GetLeftX(); },180  
+                // [this]() { return -joystick.GetLeftY(); },
+                // [this]() { return -joystick.GetLeftX(); },
+                []() { return 0.0; },
+                []() { return 0.0; }, 180
             ).ToPtr(),
             
             // 2. 机制负责射球
