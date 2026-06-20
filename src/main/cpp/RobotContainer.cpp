@@ -13,9 +13,8 @@ RobotContainer::RobotContainer()
     : visionSub(&drivetrain, nullptr),
       shooterSub(joystick),
       feederSub(joystick),
-      //weidaiSub(joystick),
       groundIntakeSub(joystick),
-      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub, //&weidaiSub,
+      complexcommand(&drivetrain, &visionSub, &shooterSub, &feederSub,
                      &groundIntakeSub)
 {
   shooterSub.SetFeederSubsystem(&feederSub);
@@ -111,13 +110,10 @@ drivetrain.SetDefaultCommand(
   
   joystick.Start().OnTrue(
     frc2::cmd::Sequence(
-    // complexcommand.StartStorageCommand(),
-    // frc2::cmd::WaitUntil([this] { return weidaiSub.GetStorageNormPosition() > 0.7; }),
     complexcommand.GroundintakeresetCommand(),
     groundIntakeSub.SetPitchNormPositionCommandPtr(0.07)
     // frc2::cmd::WaitUntil([this] { return groundIntakeSub.GetPitchNormPosition() <= 0.08; })
     //     .WithTimeout(units::second_t{1.0}),
-    // complexcommand.CloseStorageCommand(),
     // frc2::cmd::RunOnce([this]{ground_intake_prepared_=false;})
   ));
 
@@ -202,15 +198,6 @@ drivetrain.SetDefaultCommand(
               [this] { shooterEnabled = !shooterEnabled; }))
   );
 
-// 根据storage位置切换
-// joystick.LeftBumper().OnTrue(
-//     frc2::cmd::Either(
-//         complexcommand.StartStorageCommand(),
-//         complexcommand.CloseStorageCommand(),
-//         [this] { return weidaiSub.GetStorageNormPosition() < 0.5; }
-//     )
-// );
- 
   // joystick.B().WhileTrue(
   //     frc2::cmd::StartEnd(銆併€戙€愩€戙€愩€?
   //         [this]
@@ -302,7 +289,6 @@ drivetrain.SetDefaultCommand(
 
   joystick.A().WhileTrue(
     // frc2::cmd::Parallel(
-    //   complexcommand.StartStorageCommand(),
     intakeNextToSide(          
             &drivetrain,  
             &shooterSub, 
@@ -321,7 +307,6 @@ drivetrain.SetDefaultCommand(
               frc2::cmd::RunOnce( [this] { ground_intake_prepared_ = true;}),
             // frc2::cmd::Parallel(
               complexcommand.GroundintakeprepareCommand()
-              // complexcommand.StartStorageCommand().Repeatedly())
             ));
 
 
@@ -329,7 +314,6 @@ drivetrain.SetDefaultCommand(
    .WhileTrue(
     frc2::cmd::Sequence(
       complexcommand.StopShootWithFeederCommand(),
-      //complexcommand.CloseStorageCommand(),
       //complexcommand.GroundintakeresetCommand(),
       frc2::cmd::Either(
         complexcommand.PassTrench(false),
@@ -350,7 +334,6 @@ drivetrain.SetDefaultCommand(
   
   joystick.B().WhileTrue(
     // frc2::cmd::Parallel(
-    //   complexcommand.StartStorageCommand(),
    frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针
@@ -369,7 +352,6 @@ drivetrain.SetDefaultCommand(
   
   joystick.X().WhileTrue(
     // frc2::cmd::Parallel(
-    //   complexcommand.StartStorageCommand(),
     frc2::cmd::Either(
         intakeNextToHub(
             &drivetrain,     // 你的 CommandSwerveDrivetrain 实例指针

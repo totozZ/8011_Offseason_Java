@@ -81,10 +81,6 @@ inline constexpr double kBackwardShootCurrentSpeed = 0.6;
 inline constexpr double kUpwardVelocityTarget = 85.0;
 }  // namespace FeederConstants
 
-namespace WeidaiConstants {
-inline constexpr int StorageMotorID = 22;
-}  // namespace WeidaiConstants
-
 namespace ShooterConstants {
 inline constexpr int ShooterLeftDownMotorID = 12;
 inline constexpr int ShooterLeftUpMotorID = 13;
