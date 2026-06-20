@@ -110,7 +110,7 @@ inline constexpr double kMaxFeederVelocityDifference = 10.0;
 inline constexpr double kUpwardFeederVelocity = 40.0;
 inline constexpr double kDistanceSplitThresholdM = 3.333;
 
-//pitch constants
+// pitch constants
 inline constexpr double kMaxPitchAngle = 34.65;
 inline constexpr double kMinPitchAngle = 0.0;
 inline constexpr double kPitchMotorMaxposition = 12.005;
@@ -125,7 +125,8 @@ inline constexpr int IntakePivotMotorID = 21;
 inline constexpr double kAssistPitchCurrentThreshold = 17.0;
 // assist 触发后的冷却时间(秒)
 inline constexpr double kAssistCooldownS = 1.2;
-inline constexpr double PitchNormPosition =0.923;
+inline constexpr double kIntakePitchMotorMaxposition = 8.4;
+inline constexpr double PitchNormPosition = 0.923;
 }  // namespace GroundIntakeConstants
 
 namespace LinearServoConstants {
@@ -146,12 +147,14 @@ constexpr double kIDriveAiming = 0.0;
 constexpr double kDDriveAiming = 0.0;
 
 // 旋转限制
-static constexpr units::radians_per_second_t MaxDriveAimingOmega = 3.5_rad_per_s;
+static constexpr units::radians_per_second_t MaxDriveAimingOmega =
+    3.5_rad_per_s;
 constexpr double DriveAimingAngleTolerance = 0.5;  // 度
 }  // namespace DriveAimingConstants
 
 namespace VisionConstants {
-inline const std::array<std::string, 2> limelightNames = {"limelight-left", "limelight-back"};
+inline const std::array<std::string, 2> limelightNames = {"limelight-left",
+                                                          "limelight-back"};
 }  // namespace VisionConstants
 
 namespace ClimbConstants {

@@ -76,8 +76,11 @@ void GroundIntakeSubsystem::Initialization() {
   }
   intake_pitch_.setgearRatio(18.67);
   intake_pitch_.setinvert(1);
-  intake_pitch_.setPhysicalLimits(0, 7 / intake_pitch_.Getdata().gearRatio,
-                                  120 / intake_pitch_.Getdata().gearRatio, 40);
+  intake_pitch_.setPhysicalLimits(
+      0,
+      GroundIntakeConstants::kIntakePitchMotorMaxposition /
+          intake_pitch_.Getdata().gearRatio,
+      120 / intake_pitch_.Getdata().gearRatio, 40);
   intake_pitch_.setCurrent_Speed(0.07);
 }
 
