@@ -4,14 +4,14 @@
 #include <frc2/command/CommandHelper.h>
 #include <frc/controller/PIDController.h>
 #include "subsystems/CommandSwerveDrivetrain.h"
-#include "subsystems/ShooterSubsystem.h"
 #include "subsystems/GroundIntakeSubsystem.h"
 #include <frc2/command/button/CommandXboxController.h>
 using namespace subsystems;
 
 class intakeNextToSide : public frc2::CommandHelper<frc2::Command, intakeNextToSide> {
 public:
-  intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* joy, bool oppo);
+  intakeNextToSide(CommandSwerveDrivetrain* drive, GroundIntakeSubsystem* g,
+                   frc2::CommandXboxController* joy, bool oppo);
 
   void Initialize() override;
   void Execute() override;
@@ -20,7 +20,6 @@ public:
 
 private:
   CommandSwerveDrivetrain* m_drive;
-  ShooterSubsystem* m_shooter;
   GroundIntakeSubsystem* m_ground;
   frc2::CommandXboxController* joystick;
   bool opposite;

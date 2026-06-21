@@ -7,7 +7,6 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include "ctre/phoenix6/TalonFX.hpp"
-#include <frc/XboxController.h>
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "units/math.h"
@@ -16,7 +15,6 @@
 #include <frc2/command/Commands.h>
 #include <frc2/command/WaitUntilCommand.h>
 #include <frc2/command/WaitCommand.h>
-#include <frc2/command/button/CommandXboxController.h>
 #include <frc8011/Wayimotor.h>
 #include "frc/Servo.h"
 #include <frc/DigitalInput.h>
@@ -25,10 +23,7 @@
 class ExampleSubsystem : public frc2::SubsystemBase
 {
 public:
-  ExampleSubsystem(frc2::CommandXboxController& joystick_) : joystick_(joystick_)
-  {
-    Init();  // 构造时自动初始化
-  }
+  ExampleSubsystem() = default;
   virtual ~ExampleSubsystem() = default;
 
   /**
@@ -39,8 +34,6 @@ public:
 protected:  // 子类可以访问
   // 一些常用的Subsystem会用到的变量
   ctre::phoenix6::CANBus kCANBus{ "rio" };  // CAN总线名称,除了底盘基本都是rio
-
-  frc2::CommandXboxController& joystick_;  // 子系统遥控器
 
   // 猎鹰/海妖电机配置config
   configs::TalonFXConfiguration config1{};

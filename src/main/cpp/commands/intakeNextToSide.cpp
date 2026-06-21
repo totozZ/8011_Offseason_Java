@@ -3,8 +3,9 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cmath>
 
-intakeNextToSide::intakeNextToSide(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g, frc2::CommandXboxController* joy, bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g), joystick(joy),opposite(oppo) {
+intakeNextToSide::intakeNextToSide(CommandSwerveDrivetrain* drive,
+    GroundIntakeSubsystem* g, frc2::CommandXboxController* joy, bool oppo)
+  : m_drive(drive), m_ground(g), joystick(joy), opposite(oppo) {
   
   AddRequirements({drive}); 
   AddRequirements({g});
@@ -40,10 +41,10 @@ void intakeNextToSide::Initialize() {
         targetR_1=180;
         targetR_2=180;
         if(currentX<8.27){
-        targetX_1=16.54-targetX_1;
-        targetY_1=8.07-targetY_1;
-        targetX_2=16.54-targetX_2;
-        targetY_2=8.07-targetY_2;
+        targetX_1=FieldConstants::kFieldLength.value()-targetX_1;
+        targetY_1=FieldConstants::kFieldWidth.value()-targetY_1;
+        targetX_2=FieldConstants::kFieldLength.value()-targetX_2;
+        targetY_2=FieldConstants::kFieldWidth.value()-targetY_2;
         targetR_1=00;
         targetR_2=00;
         }
@@ -62,8 +63,8 @@ void intakeNextToSide::Initialize() {
         }
     }
     else{
-        targetX_1=16.54-3.5;
-        targetX_2=16.54-0.55;
+        targetX_1=FieldConstants::kFieldLength.value()-3.5;
+        targetX_2=FieldConstants::kFieldLength.value()-0.55;
         targetR_1=00;
         targetR_2=00;
         if(currentX>14.56){
@@ -81,8 +82,8 @@ void intakeNextToSide::Initialize() {
         targetR_2=-targetR_2;
     }
     else{
-        targetY_1=8.07-0.60;
-        targetY_2=8.07-0.60;
+        targetY_1=FieldConstants::kFieldWidth.value()-0.60;
+        targetY_2=FieldConstants::kFieldWidth.value()-0.60;
     }
     double diffX=m_drive->GetState().Pose.X().value()-targetX_1;
     double diffY=m_drive->GetState().Pose.Y().value()-targetY_1;
@@ -152,7 +153,6 @@ void intakeNextToSide::Execute() {
     } 
     // === 第二阶段：开往最终墙边点并吸球 ===
     else {
-        double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
         targetSpeed=2.0;
         speedX = m_movePIDX.Calculate(currentX, targetX_2);
         speedX=std::clamp(speedX,-targetSpeed,targetSpeed);

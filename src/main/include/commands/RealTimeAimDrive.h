@@ -2,16 +2,17 @@
 
 #include <frc2/command/Command.h>
 #include <frc2/command/CommandHelper.h>
-#include <frc/controller/PIDController.h>
-#include <frc/smartdashboard/SmartDashboard.h>
-#include <frc/filter/LinearFilter.h>
-#include "subsystems/CommandSwerveDrivetrain.h" 
-#include "subsystems/ShooterSubsystem.h" 
+
 #include <ctre/phoenix6/swerve/SwerveRequest.hpp>
-using namespace subsystems;
-class RealTimeAimDrive : public frc2::CommandHelper<frc2::Command, RealTimeAimDrive> {
+
+#include "subsystems/CommandSwerveDrivetrain.h"
+
+class RealTimeAimDrive
+    : public frc2::CommandHelper<frc2::Command, RealTimeAimDrive> {
  public:
-  RealTimeAimDrive(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, std::function<double()> vx, std::function<double()> vy, double AOSDeg);
+  explicit RealTimeAimDrive(
+      subsystems::CommandSwerveDrivetrain* drive,
+      units::degree_t shooterFacingOffset = 180_deg);
 
   void Initialize() override;
   void Execute() override;
@@ -19,19 +20,9 @@ class RealTimeAimDrive : public frc2::CommandHelper<frc2::Command, RealTimeAimDr
   bool IsFinished() override;
 
  private:
-  CommandSwerveDrivetrain* m_drive;
-  ShooterSubsystem*  m_shooter;
-  // frc::PIDController m_aimPID{8, 0.2, 0.3}; 
-  //frc::PIDController m_aimPID{2, 0.2, 0.3}; 
-  units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts;
-  units::radians_per_second_t MaxAngularRate = 0.75_tps;
-
-  std::function<double()> m_vXSupplier;//传入手柄数值函数控制移动
-  std::function<double()> m_vYSupplier;
-
-  swerve::requests::FieldCentricFacingAngle driveClosed;
-  swerve::requests::SwerveDriveBrake driveBrake;
-                    
-  double angleOfShooter;
-  bool useClosedLoop = true;
+  subsystems::CommandSwerveDrivetrain* drive_;
+  units::degree_t shooter_facing_offset_;
+  units::meters_per_second_t max_speed_ = TunerConstants::kSpeedAt12Volts;
+  swerve::requests::FieldCentricFacingAngle facing_request_{};
+  swerve::requests::SwerveDriveBrake brake_request_{};
 };

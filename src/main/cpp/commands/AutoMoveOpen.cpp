@@ -7,14 +7,14 @@
 using namespace subsystems;
 
 AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, double targetY, double targetHeading, double targetVel,bool invert1, bool invert2)
-    : m_drivetrain(drivetrain),  
-      targetVelocity(targetVel),
+    : endSpeed(targetVel),
+      invertA(invert1),
+      invertD(invert2),
       x(targetX),
       y(targetY),
       d(targetHeading),
-      invertA(invert1),
-      invertD(invert2),
-      endSpeed(targetVel) {
+      m_drivetrain(drivetrain),
+      targetVelocity(targetVel) {
     
         driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
@@ -28,14 +28,14 @@ AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, 
     
 }
 AutoMoveOpen::AutoMoveOpen(CommandSwerveDrivetrain* drivetrain, double targetX, double targetY, double targetHeading, double targetVel,bool invert1, bool invert2, double speedEnd)
-    : m_drivetrain(drivetrain),  
-      targetVelocity(targetVel),
+    : endSpeed(speedEnd),
+      invertA(invert1),
+      invertD(invert2),
       x(targetX),
       y(targetY),
       d(targetHeading),
-      invertA(invert1),
-      invertD(invert2),
-      endSpeed(speedEnd) {
+      m_drivetrain(drivetrain),
+      targetVelocity(targetVel) {
     
         driveClosed.WithHeadingPID(8, 0, 0.1)
                     .WithDeadband(MaxSpeed * 0.05)
@@ -54,7 +54,7 @@ void AutoMoveOpen::Initialize() {
         y=8.07-y;
     }
     if(invertA){
-        x=16.54-x;
+        x=FieldConstants::kFieldLength.value()-x;
         d=180.0-d;
         while(d>180)d-=360;
         while(d<-180)d+=360;

@@ -79,15 +79,12 @@ void ClientSubsystem::UpdateMatchPhaseCountdown() {
     return;
   }
 
-  ClientSubsystem::MatchPhase current_phase =
-      ClientSubsystem::MatchPhase::kUnknown;
   double countdown = 0.0;
   std::string phase_string = "Unknown";
   bool can_i_shoot = false;
 
   // 1. 自动阶段 (AUTO): 倒计时 20 -> 0
   if (is_auto) {
-    current_phase = ClientSubsystem::MatchPhase::kAuto;
     countdown = match_time;
     phase_string = "AUTO (Both Active)";
     can_i_shoot = true;
@@ -95,36 +92,30 @@ void ClientSubsystem::UpdateMatchPhaseCountdown() {
   // 2. 手动阶段 (TELEOP): 倒计时 140 (2:20) -> 0
   else if (is_teleop) {
     if (match_time > 130.0) {  // 2:20 - 2:10
-      current_phase = ClientSubsystem::MatchPhase::kTransition;
       countdown = match_time - 130.0;
       phase_string = "Transition (Both)";
       can_i_shoot = true;
     } else if (match_time >= 105.0 && match_time <= 130.0) {
-      current_phase = ClientSubsystem::MatchPhase::kSwitch1;
       countdown = match_time - 105.0;
       can_i_shoot = is_our_turn_first;
       phase_string =
           can_i_shoot ? "Switch 1 (OUR Turn)" : "Switch 1 (OPPONENT)";
     } else if (match_time >= 80.0 && match_time < 105.0) {
-      current_phase = ClientSubsystem::MatchPhase::kSwitch2;
       countdown = match_time - 80.0;
       can_i_shoot = !is_our_turn_first;  // 交换逻辑
       phase_string =
           can_i_shoot ? "Switch 2 (OUR Turn)" : "Switch 2 (OPPONENT)";
     } else if (match_time >= 55.0 && match_time < 80.0) {
-      current_phase = ClientSubsystem::MatchPhase::kSwitch3;
       countdown = match_time - 55.0;
       can_i_shoot = is_our_turn_first;
       phase_string =
           can_i_shoot ? "Switch 3 (OUR Turn)" : "Switch 3 (OPPONENT)";
     } else if (match_time >= 30.0 && match_time < 55.0) {
-      current_phase = ClientSubsystem::MatchPhase::kSwitch4;
       countdown = match_time - 30.0;
       can_i_shoot = !is_our_turn_first;
       phase_string =
           can_i_shoot ? "Switch 4 (OUR Turn)" : "Switch 4 (OPPONENT)";
     } else if (match_time < 30.0) {
-      current_phase = ClientSubsystem::MatchPhase::kEndgame;
       countdown = match_time;
       phase_string = "ENDGAME (Both)";
       can_i_shoot = true;

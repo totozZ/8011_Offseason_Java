@@ -57,9 +57,7 @@ void Robot::DisabledInit() {
   m_container.visionSub.disable_mix = 1;
 }
 
-void Robot::DisabledPeriodic() {
-    m_container.refreshAutoMode();
-}
+void Robot::DisabledPeriodic() {}
 
 void Robot::DisabledExit() {}
 
@@ -70,7 +68,7 @@ void Robot::AutonomousInit() {
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
   if (m_autonomousCommand) {
-    m_autonomousCommand->Schedule();
+    frc2::CommandScheduler::GetInstance().Schedule(m_autonomousCommand);
   }
 }
 
@@ -83,7 +81,7 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::AutonomousExit() {
   m_container.feederSub.Stop();
-  m_container.shooterSub.DisableShooterNonCmd();
+  m_container.shooterSub.SetIdle();
   m_container.groundIntakeSub.Stop();
   //m_container.drivetrain.SetCoast();
 }
@@ -97,7 +95,7 @@ void Robot::TeleopInit() {
   // m_container.clientSub.PubRobotInit(1);
   m_container.groundIntakeSub.SetTeleopRollerCurrentLimit();
   if (m_autonomousCommand) {
-    frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand.value().get());
+    frc2::CommandScheduler::GetInstance().Cancel(m_autonomousCommand);
   }
   m_container.visionSub.disable_mix = 0;
 }
@@ -118,7 +116,7 @@ void Robot::TestPeriodic() {}
 void Robot::TestExit() {}
 
 void Robot::SimulationInit() {
-  frc::SmartDashboard::PutData("Field", &m_simField);
+  frc::SmartDashboard::PutData("Simulation Field", &m_simField);
 }
 
 void Robot::SimulationPeriodic() {

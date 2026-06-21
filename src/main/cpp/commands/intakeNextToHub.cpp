@@ -1,8 +1,9 @@
 #include "commands/intakeNextToHub.h"
 #include <numbers>
 
-intakeNextToHub::intakeNextToHub(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* j, bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g), joy(j),opposite(oppo){
+intakeNextToHub::intakeNextToHub(CommandSwerveDrivetrain* drive,
+    GroundIntakeSubsystem* g, frc2::CommandXboxController* j, bool oppo)
+  : opposite(oppo), joy(j), m_drive(drive), m_ground(g) {
   
   AddRequirements({drive}); // 声明占用底盘
   AddRequirements({g});//占用地吸
@@ -30,7 +31,7 @@ void intakeNextToHub::Initialize(){
         targetX=5.6; 
     }
     if(opposite){
-      targetX=16.54-targetX;
+      targetX=FieldConstants::kFieldLength.value()-targetX;
     }
 
     if(startY<=4.035){//离右边近，从右边吸

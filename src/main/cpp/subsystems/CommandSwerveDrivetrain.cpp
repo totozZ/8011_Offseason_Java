@@ -195,8 +195,6 @@ std::shared_ptr<PathPlannerPath> CommandSwerveDrivetrain::GeneratePath(
   frc::Rotation2d waypoint_heading =
       (targetPose.Translation() - currentPose.Translation())
           .Angle();  // 涓ょ偣涔嬮棿鐩稿浜巟杞寸殑瑙掑害
-  frc::Rotation2d targetpoint_heading =
-      target_angle;  // 鏈€鍚庣偣鐨勮杩涙湞鍚戝簲涓虹洰鏍囪锟?
 
   // frc::Rotation2d waypoint_heading = temp_heading.Degrees() > 0_deg ?
   // (-180_deg + temp_heading.Degrees()) : (180_deg + temp_heading.Degrees());
@@ -741,7 +739,7 @@ std::shared_ptr<PathPlannerPath> CommandSwerveDrivetrain::GenerateShootOnMovePat
   );
 
   //加入waypoint的机器人面朝方向
-  for(int i=0; i<targetPoses.size()-1; i++){
+  for(size_t i = 0; i + 1 < targetPoses.size(); ++i){
     double waypointIndex = static_cast<double>(i + 1);
     pathplanner::RotationTarget rotTarget(waypointIndex, targetPoses[i].Rotation());
     path->getRotationTargets().push_back(rotTarget);

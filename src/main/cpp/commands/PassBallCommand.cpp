@@ -1,203 +1,129 @@
-#include <frc/smartdashboard/SmartDashboard.h>
-#include <frc/DriverStation.h>
-#include <cmath>
 #include "commands/PassBallCommand.h"
-PassBallCommand::PassBallCommand(CommandSwerveDrivetrain* drive, 
-                                 ShooterSubsystem* shooter,
-                                 FeederSubsystem* feeder,
-                                
-                                 std::function<double()> vx, 
-                                 std::function<double()> vy, double AOS)
-    : m_drive(drive), 
-      m_feeder(feeder),
-      m_shooter(shooter),
-      m_vXSupplier(vx), 
-      m_vYSupplier(vy),
-      angleOfShooter(AOS) {
-  
-  // 🌟 核心：向调度器声明这个命令占用了这 4 个子系统
-  // 这样在传球时，任何其他试图使用它们的命令都会被自动阻挡或打断
-  AddRequirements({drive,feeder}); 
+
+#include <cmath>
+
+#include <frc/DriverStation.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+
+#include "Constants.h"
+#include "shooting/ShotTable.h"
+
+using namespace units::literals;
+
+PassBallCommand::PassBallCommand(
+    subsystems::CommandSwerveDrivetrain* drive,
+    subsystems::ShooterSubsystem* shooter,
+    subsystems::FeederSubsystem* feeder,
+    units::degree_t shooterFacingOffset)
+    : drive_(drive),
+      shooter_(shooter),
+      feeder_(feeder),
+      shooter_facing_offset_(shooterFacingOffset) {
+  AddRequirements({drive, shooter, feeder});
 }
+
 void PassBallCommand::Initialize() {
-  // 1. 激活 Shooter 的传球模式，加载固定的长传速度和仰角
-  m_shooter->startPassing(); 
+  timer_started_ = false;
+  feeding_ = false;
+  shot_timer_.Stop();
+  shot_timer_.Reset();
+  feeder_->Stop();
 
-  // 2. 物理安全锁：既然独占了地吸和输送带，启动瞬间强行让它们停止
-  // （请确保你的 Subsystem 里有类似 Stop() 的方法，名字根据你的实际代码修改）
-  // m_groundIntake->Stop(); 
-  // m_feeder->Stop(); 
-    //m_timer.Start();
-  // 3. 初始化底盘的 PID 和死区配置，保证瞄准丝滑
-  driveClosed.WithHeadingPID(9, 0, 0.1)
-             .WithDeadband(MaxSpeed * 0.05)
-             .WithRotationalDeadband(units::radians_per_second_t{0.1})
-             .WithMaxAbsRotationalRate(units::radians_per_second_t{3.14})
-             .WithDriveRequestType(swerve::DriveRequestType::Velocity)
-             .WithSteerRequestType(swerve::SteerRequestType::Position);
+  if (shooter_->GetPitchHomeState() ==
+          subsystems::ShooterSubsystem::PitchHomeState::kUnhomed ||
+      shooter_->GetPitchHomeState() ==
+          subsystems::ShooterSubsystem::PitchHomeState::kFault) {
+    shooter_->BeginPitchHoming();
+  }
 
-
+  drive_->SOMangleDiff = 180.0;
+  facing_request_.WithHeadingPID(9, 0, 0.1)
+      .WithDeadband(max_speed_ * 0.05)
+      .WithRotationalDeadband(0.1_rad_per_s)
+      .WithMaxAbsRotationalRate(3.14_rad_per_s)
+      .WithDriveRequestType(swerve::DriveRequestType::Velocity)
+      .WithSteerRequestType(swerve::SteerRequestType::Position);
 }
 
-// ==========================================
-// 2. Execute：按住按钮期间，每 20ms 循环执行
-// ==========================================
 void PassBallCommand::Execute() {
-  frc::ChassisSpeeds robotSpeeds = m_drive->GetState().Speeds;
-  frc::Pose2d currentPose = m_drive->GetState().Pose;
-  frc::Rotation2d robotHeading = currentPose.Rotation();
-  bool isRed = frc::DriverStation::GetAlliance().has_value() && frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed;
+  const auto alliance = frc::DriverStation::GetAlliance();
+  if (!alliance.has_value()) {
+    feeder_->Stop();
+    shooter_->SetIdle();
+    return;
+  }
 
-  frc::Translation2d targetPoint;
-  if (currentPose.Y().value() > 4) {
-      targetPoint = kBlueLeftTarget;  // 左半场，面向左侧传球点
+  const bool is_red = alliance.value() == frc::DriverStation::Alliance::kRed;
+  const frc::Pose2d pose = drive_->GetState().Pose;
+  frc::Translation2d target =
+      pose.Y() > 4_m ? blue_left_target_ : blue_right_target_;
+  if (is_red) {
+    target = frc::Translation2d{FieldConstants::kFieldLength - target.X(),
+                                target.Y()};
+  }
+
+  const auto target_direction =
+      frc::Rotation2d{units::math::atan2(target.Y() - pose.Y(),
+                                         target.X() - pose.X())} -
+      frc::Rotation2d{shooter_facing_offset_};
+  const double angle_error =
+      std::abs((target_direction - pose.Rotation()).Degrees().value());
+  drive_->SOMangleDiff = angle_error;
+
+  if (angle_error < 2.0) {
+    drive_->SetControl(brake_request_);
   } else {
-      targetPoint = kBlueRightTarget; // 右半场，面向右侧传球点
+    drive_->SetControl(facing_request_.WithVelocityX(0_mps)
+                           .WithVelocityY(0_mps)
+                           .WithTargetDirection(target_direction));
   }
 
-  // 如果是红方，镜像落点的 X 坐标 (假设场地全长约 16.54 米)
-  if (isRed) {
-      targetPoint = frc::Translation2d{
-          units::meter_t{16.54 - targetPoint.X().value()},
-          targetPoint.Y()
-      };
-  }
-  m_shooter->setPassTarget(targetPoint);
-  // 计算对准落点的目标角度
-  double curX = currentPose.X().value();
-  double curY = currentPose.Y().value();
-  double dx = targetPoint.X().value() - curX;
-  double dy = targetPoint.Y().value() - curY;
-  double currentAngleToHubRad = atan2(dy, dx);
-
-  // 把车身速度变成场地绝对速度，并消除极小噪声
-  double vx = robotSpeeds.vx.value() * robotHeading.Cos() - robotSpeeds.vy.value() * robotHeading.Sin();
-  double vy = robotSpeeds.vx.value() * robotHeading.Sin() + robotSpeeds.vy.value() * robotHeading.Cos();
-  if (std::sqrt(vx * vx + vy * vy) < 0.05) {
-      vx = 0.0; vy = 0.0;
+  if (!shooter_->IsPitchHomed()) {
+    feeder_->SetBackwardFeederDuty(0.0);
+    feeder_->SetUpwardDuty(0.0);
+    return;
   }
 
-  // 获取手柄输入
-  double nowX = frc::ApplyDeadband(m_vXSupplier(), 0.05) * MaxSpeed.value() * 0.3;
-  double nowY = frc::ApplyDeadband(m_vYSupplier(), 0.05) * MaxSpeed.value() * 0.3;
+  const auto distance = pose.Translation().Distance(target);
+  const auto setpoint = shooting::ShotTable::Pass(distance);
+  shooter_->ApplyShotSetpoint(setpoint);
+  feeder_->SetUpwardFeederVelocity(setpoint.upperFeeder.value());
 
-  double realX = isRed ? -nowX : nowX;
-  double realY = isRed ? -nowY : nowY;
-
-  // v_radial: 径向速度 (正代表靠近 Hub，负代表远离)  
-  double v_radial = realX * cos(currentAngleToHubRad) + realY * sin(currentAngleToHubRad);
-  
-  // v_tangential: 切向/横向速度 (正代表逆时针绕 Hub 走)
-  // 相当于把场地方向旋转 -currentAngleToHubRad
-  double v_tangential = -realX * sin(currentAngleToHubRad) + realY * cos(currentAngleToHubRad);
-
-  double latencyRadialSeconds = 0.3;     // 竖向（靠近/远离）的预测时间
-  double latencyTangentialSeconds = -0.1; // 横向（绕圈）的预测时间
-
-  double d_radial = v_radial * latencyRadialSeconds;
-  double d_tangential = v_tangential * latencyTangentialSeconds;
-
-  double deltaX = d_radial * cos(currentAngleToHubRad) - d_tangential * sin(currentAngleToHubRad);
-  double deltaY = d_radial * sin(currentAngleToHubRad) + d_tangential * cos(currentAngleToHubRad);
-
-  double predictedX = curX + deltaX;
-  double predictedY = curY + deltaY;
-
-  dx = targetPoint.X().value() - predictedX;
-  dy = targetPoint.Y().value() - predictedY;
-  double targetAngleRad = atan2(dy, dx);
-  // 计算底盘速度带来的抛物线横向偏移
-
-  double Normvx = realX * cos(-targetAngleRad) + realY * cos(PI/2 - targetAngleRad);
-  double Normvy = realX * sin(-targetAngleRad) + realY * sin(PI/2 - targetAngleRad);
-  
-  double shootCoeff = 0.45; 
-  
-  // 这时候 m_shooter->vel 已经是我们在 Init 里触发的传球专用速度了
-  double Shootvx = m_shooter->vel * cos(m_shooter->Tangle / 180.0 * PI) * shootCoeff;
-  double Shootvz = m_shooter->vel * sin(m_shooter->Tangle / 180.0 * PI) * shootCoeff;
-
-  Shootvx = Shootvx - Normvx;
-  Normvy = -Normvy;
-  
-  // 算出需要给飞轮补偿的速度和角度
-  double ShooterVelOff = sqrt(Shootvx*Shootvx + Normvy*Normvy + Shootvz*Shootvz) / shootCoeff - m_shooter->vel;
-  double chassisAngleOffset = 0;
-  if (m_shooter->vel >= 10) {
-      chassisAngleOffset = atan2(Normvy, Shootvx);
+  if (!timer_started_) {
+    shot_timer_.Restart();
+    timer_started_ = true;
   }
-  
-  targetAngleRad += chassisAngleOffset;
-  if (isRed) {
-      targetAngleRad -= PI;
-  }
-  targetAngleRad-=angleOfShooter/180*PI;
 
-  double shootAngleOffset = atan2(Shootvz, Shootvx) / PI * 180 - m_shooter->Tangle;
-  m_shooter->SetAngleOffset(shootAngleOffset);
-  m_shooter->SetSpeedOffset(ShooterVelOff);
-  //没被hub挡住时启动feeder
-  rightPos=rightPos||(currentPose.Y().value()<=3.5||currentPose.Y().value()>=4.5);
-  //同时飞轮速度达标
-  rightSpeed=rightSpeed||std::abs(m_shooter->realShootVelocity-m_shooter->GetShootVelocity())<=15;
-  frc::SmartDashboard::PutNumber("shootOnMove/passShooterVreal",m_shooter->GetShootVelocity());
-  frc::SmartDashboard::PutNumber("shootOnMove/passShooterVexpected",m_shooter->realShootVelocity);
-  //同时底盘旋转ok
-  rightRot=rightRot||m_drive->SOMangleDiff<=10;
+  const bool clear_of_hub = pose.Y() <= 3.5_m || pose.Y() >= 4.5_m;
+  const bool ready = clear_of_hub && angle_error <= 3.0 &&
+                     shooter_->IsFlywheelReady(0.7_tps) &&
+                     shooter_->IsPitchReady(0.75_deg) &&
+                     std::abs(feeder_->GetUpwardFeederVelocity() -
+                              setpoint.upperFeeder.value()) <= 2.0;
 
-  frc::SmartDashboard::PutBoolean("shootOnMove/RightPos", rightPos);
-frc::SmartDashboard::PutBoolean("shootOnMove/RightSpeed", rightSpeed);
-frc::SmartDashboard::PutBoolean("shootOnMove/RightRot", rightRot);
-  if(rightPos&&rightSpeed&&rightRot){
-    m_feeder->SetBackwardFeederVelocity(1);
-    m_feeder->SetUpwardFeederVelocity(FeederConstants::kUpwardVelocityTarget
-    );
+  if (shooting::ShotTable::FeedAllowed(
+          shooter_->IsPitchHomed(), ready,
+          shot_timer_.HasElapsed(1.5_s))) {
+    feeding_ = true;
   }
-  else{
-     m_feeder->setduty(0,0);
-  }
-  // 下发控制指令到底盘
-  frc::Rotation2d rott{units::radian_t(targetAngleRad)};
-  m_drive->SetControl(
-      driveClosed.WithVelocityX(units::meters_per_second_t{nowX})
-                 .WithVelocityY(units::meters_per_second_t{nowY})
-                 .WithTargetDirection(rott)
-  );
-  
-  frc::Rotation2d tlow{units::radian_t(currentPose.Rotation().Radians().value())};
-  double angledi=std::abs((rott-tlow).Degrees().value());
-  if(isRed){
-    angledi=180-angledi;
-  }
-  frc::SmartDashboard::PutNumber("shootOnMove/AngleDiff",angledi );
-  m_drive->SOMangleDiff = angledi;
+  feeder_->SetBackwardFeederDuty(feeding_ ? 1.0 : 0.0);
+
+  frc::SmartDashboard::PutNumber("Shooting/PassDistanceM", distance.value());
+  frc::SmartDashboard::PutBoolean("Shooting/PassReady", ready);
+  frc::SmartDashboard::PutBoolean("Shooting/PassForcedFeed",
+                                  feeding_ && !ready);
 }
 
-// ==========================================
-// 3. End：松开按钮瞬间触发
-// ==========================================
 void PassBallCommand::End(bool interrupted) {
-  // 1. 退出传球模式，恢复自动打 Speaker 的状态
-  m_shooter->stopPassing(); 
-   m_feeder->SetBackwardFeederVelocity(0);
-    m_feeder->SetUpwardFeederVelocity(0);
-  // 2. 清空所有的射击补偿偏移
-  m_shooter->SetAngleOffset(0);
-  m_shooter->SetSpeedOffset(0);
-  
-  // 3. 让底盘安全滑行停下
-  auto currentSpeeds = m_drive->GetState().Speeds;
-  m_drive->SetControl(
-      m_drive->m_safeCoastRequest
-          .WithVelocityX(currentSpeeds.vx)
-          .WithVelocityY(currentSpeeds.vy)
-          .WithRotationalRate(currentSpeeds.omega)
-  );
+  shot_timer_.Stop();
+  feeder_->Stop();
+  shooter_->SetIdle();
+  drive_->SOMangleDiff = 180.0;
+
+  const auto speeds = drive_->GetState().Speeds;
+  drive_->SetControl(drive_->m_safeCoastRequest.WithVelocityX(speeds.vx)
+                         .WithVelocityY(speeds.vy)
+                         .WithRotationalRate(speeds.omega));
 }
 
-// ==========================================
-// 4. IsFinished：永远返回 false，配合 WhileTrue
-// ==========================================
-bool PassBallCommand::IsFinished() {
-  return false; 
-}
+bool PassBallCommand::IsFinished() { return false; }

@@ -3,8 +3,9 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cmath>
 
-intakeNextToWall::intakeNextToWall(CommandSwerveDrivetrain* drive, ShooterSubsystem* sh, GroundIntakeSubsystem* g,frc2::CommandXboxController* j ,bool oppo)
-  : m_drive(drive), m_shooter(sh), m_ground(g),joy(j), opposite(oppo) {
+intakeNextToWall::intakeNextToWall(CommandSwerveDrivetrain* drive,
+    GroundIntakeSubsystem* g, frc2::CommandXboxController* j, bool oppo)
+  : joy(j), m_drive(drive), m_ground(g), opposite(oppo) {
   
   AddRequirements({drive}); 
   AddRequirements({g});
@@ -37,9 +38,8 @@ void intakeNextToWall::Initialize() {
         sym=!isRed;
     }
     double currentY=m_drive->GetState().Pose.Y().value();
-    double currentX=m_drive->GetState().Pose.X().value();
     if(sym){
-        currentY=8.07-currentY;
+        currentY=FieldConstants::kFieldWidth.value()-currentY;
     }
     if(currentY<3.7){
         targetX_0=0.6;
@@ -66,14 +66,14 @@ void intakeNextToWall::Initialize() {
     }
 
     if(sym){
-        targetX_0=16.54-targetX_0;
-        targetY_0=8.07-targetY_0;
+        targetX_0=FieldConstants::kFieldLength.value()-targetX_0;
+        targetY_0=FieldConstants::kFieldWidth.value()-targetY_0;
         if(!isRed) targetR_0-=180;
-        targetX_1=16.54-targetX_1;
-        targetY_1=8.07-targetY_1;
+        targetX_1=FieldConstants::kFieldLength.value()-targetX_1;
+        targetY_1=FieldConstants::kFieldWidth.value()-targetY_1;
         if(!isRed) targetR_1-=180;
-        targetX_2=16.54-targetX_2;
-        targetY_2=8.07-targetY_2;;
+        targetX_2=FieldConstants::kFieldLength.value()-targetX_2;
+        targetY_2=FieldConstants::kFieldWidth.value()-targetY_2;
         if(!isRed)targetR_2-=180;
     }
     if(opposite&&isRed){
@@ -143,7 +143,6 @@ void intakeNextToWall::Execute() {
         }
     } 
     else {
-        double disToSecond = std::sqrt(std::pow(currentX - targetX_2, 2) + std::pow(currentY - targetY_2, 2));
         targetSpeed=1.5;
         speedX =  -joy->GetLeftY()*TunerConstants::kSpeedAt12Volts.value()*0.2;
         

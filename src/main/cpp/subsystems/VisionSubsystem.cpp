@@ -57,8 +57,7 @@ void VisionSubsystem::Periodic() {
       }
     }
 
-  } catch (const std::exception& e) {
-    //Sstd::cout << "VisionSubsystem Periodic Failed: " << e.what() << std::endl;
+  } catch (const std::exception&) {
   }
 
   const double periodic_ms =

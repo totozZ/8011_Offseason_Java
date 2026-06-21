@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <frc2/command/button/CommandXboxController.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 
 #include "Constants.h"
@@ -17,10 +16,7 @@ namespace subsystems
 class GroundIntakeSubsystem : public ExampleSubsystem
 {
 public:
-  explicit GroundIntakeSubsystem(frc2::CommandXboxController& joystick_) : ExampleSubsystem(joystick_)
-  {
-    Initialization();
-  }
+  GroundIntakeSubsystem() { Initialization(); }
 
   void Periodic() override;
   

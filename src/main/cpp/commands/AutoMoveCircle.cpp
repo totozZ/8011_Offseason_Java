@@ -9,11 +9,12 @@ AutoMoveCircle::AutoMoveCircle(CommandSwerveDrivetrain* drivetrain,
                                double targetHeadingDeg, bool faceTravelDir,
                                bool invertA, bool invertD, double angleOffset)
     : m_drivetrain(drivetrain),
+      angleOff(angleOffset),
       m_Cx(centerX), m_Cy(centerY), m_radius(radius),
-      m_targetAngleDeg(targetAngleDeg), m_isCCW(isCCW),
-      m_targetVel(targetVel), m_stopAtEnd(stopAtEnd), 
-      m_targetHeadingDeg(targetHeadingDeg), m_faceTravelDir(faceTravelDir),
-      m_invertA(invertA), m_invertD(invertD), angleOff(angleOffset)
+      m_targetAngleDeg(targetAngleDeg),
+      m_targetVel(targetVel), m_targetHeadingDeg(targetHeadingDeg),
+      m_isCCW(isCCW), m_stopAtEnd(stopAtEnd),
+      m_faceTravelDir(faceTravelDir), m_invertA(invertA), m_invertD(invertD)
 {
     driveClosed.WithHeadingPID(8, 0, 0.1)
                .WithDeadband(units::meters_per_second_t{0.05})
@@ -34,7 +35,7 @@ void AutoMoveCircle::Initialize() {
         m_isCCW = !m_isCCW; 
     }
     if(m_invertA) {
-        m_Cx = 16.54 - m_Cx;
+        m_Cx = FieldConstants::kFieldLength.value() - m_Cx;
         m_targetAngleDeg = 180.0 - m_targetAngleDeg;
         m_targetHeadingDeg = 180.0 - m_targetHeadingDeg;
         m_isCCW = !m_isCCW; 

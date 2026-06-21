@@ -194,3 +194,6 @@ agent/
 
 # Local scripts
 scripts/
+
+# Local AI-readable implementation plan
+/plan.md

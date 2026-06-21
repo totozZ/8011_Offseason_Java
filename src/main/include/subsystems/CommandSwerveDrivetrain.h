@@ -15,7 +15,6 @@
 #include <cmath>
 #include <functional>
 
-#include "subsystems/ShooterSubsystem.h"
 #include "Constants.h"
 #include "ctre/phoenix6/SignalLogger.hpp"
 #include "generated/TunerConstants.h"
@@ -339,7 +338,6 @@ public:
 private:
     void ConfigureAutoBuilder();
     void StartSimThread();
-    subsystems::ShooterSubsystem* shooterSub;
     // DriveAiming 成员
     swerve::requests::FieldCentricFacingAngle m_driveAimingRequest{};
 
@@ -379,9 +377,6 @@ private:
 
   std::shared_ptr<PathPlannerPath> GenerateShootOnMovePath(std::vector<frc::Pose2d> const& targetPoses);
   frc2::CommandPtr followShootOnMovePathCommand(int direction);
-  void setShooterSubSystem(subsystems::ShooterSubsystem* sub){
-    shooterSub=sub;
-  }
   frc::Translation2d GetHubPosition();
   // 标志位
   void ResetEventFlag() { eventflag = 0; }
