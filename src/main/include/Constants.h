@@ -69,7 +69,7 @@ inline constexpr int IntakePivotMotorID = 21;
 inline constexpr double kAssistPitchCurrentThreshold = 17.0;
 // assist 触发后的冷却时间(秒)
 inline constexpr double kAssistCooldownS = 1.2;
-inline constexpr double kIntakePitchMotorMaxposition = 8.4;
+inline constexpr double kIntakePitchMotorMaxposition = 8.2;
 inline constexpr double PitchNormPosition = 0.923;
 }  // namespace GroundIntakeConstants
 

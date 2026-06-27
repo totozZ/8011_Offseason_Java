@@ -48,25 +48,32 @@ class ShooterSubsystem : public ExampleSubsystem {
   frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction) {
     return m_sysIdRoutine.Dynamic(direction);
   }
+
  private:
   void Initialization();
   void RunPitchHoming();
   void SetShootPitchAngle(units::degree_t target_angle);
 
-  Wayimotor shooter_left_down_{ShooterConstants::ShooterLeftDownMotorID, kCANBus};
+  Wayimotor shooter_left_down_{ShooterConstants::ShooterLeftDownMotorID,
+                               kCANBus};
   Wayimotor shooter_left_up_{ShooterConstants::ShooterLeftUpMotorID, kCANBus};
   Wayimotor shooter_right_up_{ShooterConstants::ShooterRightUpMotorID, kCANBus};
-  Wayimotor shooter_right_down_{ShooterConstants::ShooterRightDownMotorID, kCANBus};
+  Wayimotor shooter_right_down_{ShooterConstants::ShooterRightDownMotorID,
+                                kCANBus};
   Wayimotor shooter_pitch_{ShooterConstants::ShooterPitchMotorID, kCANBus};
 
   frc2::sysid::SysIdRoutine m_sysIdRoutine{
       frc2::sysid::Config{std::nullopt, 4_V, std::nullopt, nullptr},
       frc2::sysid::Mechanism{
-          [this](units::volt_t output) { shooter_right_up_.setVoltage(output); },
+          [this](units::volt_t output) {
+            shooter_right_up_.setVoltage(output);
+          },
           [this](frc::sysid::SysIdRoutineLog* log) {
             log->Motor("shooter")
-                .voltage(shooter_right_up_.Getmotor().GetMotorVoltage().GetValue())
-                .position(shooter_right_down_.Getmotor().GetPosition().GetValue())
+                .voltage(
+                    shooter_right_up_.Getmotor().GetMotorVoltage().GetValue())
+                .position(
+                    shooter_right_down_.Getmotor().GetPosition().GetValue())
                 .velocity(shooter_left_up_.Getmotor().GetVelocity().GetValue());
           },
           this}};
@@ -77,7 +84,7 @@ class ShooterSubsystem : public ExampleSubsystem {
   int pitch_home_current_counter_ = 0;
   frc::Timer pitch_home_timer_;
 
-  static constexpr units::turns_per_second_t kIdleSpeed = 15_tps;
+  static constexpr units::turns_per_second_t kIdleSpeed = 0_tps;  // 飞轮怠速
   static constexpr units::second_t kPitchHomeTimeout = 2_s;
 };
 
