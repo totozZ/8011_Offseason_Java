@@ -143,11 +143,11 @@ bool VisionSubsystem::ShouldRejectMetatagPose(
     reason += reason.empty() ? "DistToCamera" : " & DistToCamera";
   }
   // 如果拒绝，记录原因到 SmartDashboard
-  // if (reject) {
-  //   frc::SmartDashboard::PutString("Vision_Reject_Reason", reason);
-  // } else {
-  //   frc::SmartDashboard::PutString("Vision_Reject_Reason", "None");
-  // }
+  if (reject) {
+    frc::SmartDashboard::PutString("Vision_Reject_Reason", reason);
+  } else {
+    frc::SmartDashboard::PutString("Vision_Reject_Reason", "None");
+  }
   return reject;
 }
 

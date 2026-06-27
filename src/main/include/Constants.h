@@ -91,6 +91,7 @@ constexpr double DriveAimingAngleTolerance = 0.5;  // 度
 }  // namespace DriveAimingConstants
 
 namespace VisionConstants {
-inline const std::array<std::string, 2> limelightNames = {"limelight-left",
-                                                          "limelight-back"};
+inline const std::array<std::string, 3> limelightNames = {"limelight-left",
+                                                          "limelight-back",
+                                                          "limelight-right"};
 }  // namespace VisionConstants

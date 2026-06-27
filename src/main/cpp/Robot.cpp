@@ -7,10 +7,7 @@
 #include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandScheduler.h>
-#include <networktables/NetworkTableInstance.h>
 #include <units/math.h>
-
-#include "LimelightHelpers.h"
 
 Robot::Robot() {}
 
@@ -62,9 +59,6 @@ void Robot::DisabledPeriodic() {}
 void Robot::DisabledExit() {}
 
 void Robot::AutonomousInit() {
-  nt::NetworkTableInstance::GetDefault()
-      .GetTable("limelight-front")
-      ->PutNumber("throttle_set", 0);
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
   if (m_autonomousCommand) {
@@ -89,9 +83,6 @@ void Robot::AutonomousExit() {
 void Robot::TeleopInit() {
   m_container.drivetrain.SetBrake();
   m_container.drivetrain.SetControl(m_container.drivetrain.Idle);
-  nt::NetworkTableInstance::GetDefault()
-      .GetTable("limelight-front")
-      ->PutNumber("throttle_set", 0);
   // m_container.clientSub.PubRobotInit(1);
   m_container.groundIntakeSub.SetTeleopRollerCurrentLimit();
   if (m_autonomousCommand) {
