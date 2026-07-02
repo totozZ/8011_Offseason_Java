@@ -8,12 +8,14 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -308,6 +310,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         setControl(m_idleRequest);
     }
 
+    public void setDriveCoastNeutralMode() {
+        setDriveNeutralMode(NeutralModeValue.Coast);
+    }
+
+    public void setDriveBrakeNeutralMode() {
+        setDriveNeutralMode(NeutralModeValue.Brake);
+    }
+
+    public Command setDriveCoastNeutralModeCommand() {
+        return runOnce(this::setDriveCoastNeutralMode)
+                .withName("SetDriveCoastNeutralMode")
+                .ignoringDisable(true);
+    }
+
+    public Command setDriveBrakeNeutralModeCommand() {
+        return runOnce(this::setDriveBrakeNeutralMode)
+                .withName("SetDriveBrakeNeutralMode")
+                .ignoringDisable(true);
+    }
+
     public Translation2d getHubPosition() {
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         if (alliance == Alliance.Red) {
@@ -452,6 +474,32 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         DriverStation.reportWarning(
                 "Dynamic path fallback (" + pathType + "): " + reason,
                 false);
+    }
+
+    private void setDriveNeutralMode(NeutralModeValue neutralMode) {
+        Thread configThread = new Thread(() -> {
+            StatusCode status = StatusCode.StatusCodeNotInitialized;
+            for (int attempt = 0; attempt < 3; attempt++) {
+                status = configNeutralMode(neutralMode);
+                if (status.isOK()) {
+                    SmartDashboard.putString(
+                            "Drive/NeutralMode",
+                            neutralMode.toString());
+                    return;
+                }
+            }
+            SmartDashboard.putString(
+                    "Drive/NeutralModeFailure",
+                    neutralMode + ": " + status);
+            DriverStation.reportWarning(
+                    "Failed to set swerve drive neutral mode to "
+                            + neutralMode
+                            + ": "
+                            + status,
+                    false);
+        }, "SwerveNeutralModeConfig");
+        configThread.setDaemon(true);
+        configThread.start();
     }
 
     private void configureAutoBuilder() {

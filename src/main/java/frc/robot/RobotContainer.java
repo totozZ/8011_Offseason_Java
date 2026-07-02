@@ -15,6 +15,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -68,6 +69,7 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
+        RobotController.setBrownoutVoltage(6.5);
         configureNamedCommands();
         autoChooser = buildAutoChooser();
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -322,6 +324,7 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
+        drivetrain.setDriveBrakeNeutralMode();
         groundIntake.setTeleopRollerCurrentLimit();
         drivetrain.setControl(idleRequest);
     }
