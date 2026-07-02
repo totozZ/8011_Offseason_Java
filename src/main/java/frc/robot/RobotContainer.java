@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.FeederSubsystem;
+import frc.robot.subsystems.GroundIntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 public class RobotContainer {
@@ -41,6 +43,8 @@ public class RobotContainer {
     private final CommandXboxController joystick =
             new CommandXboxController(Constants.OperatorConstants.kDriverControllerPort);
     private final ShooterSubsystem shooter = new ShooterSubsystem();
+    private final FeederSubsystem feeder = new FeederSubsystem();
+    private final GroundIntakeSubsystem groundIntake = new GroundIntakeSubsystem();
     private final Command doNothingCommand = Commands.none().withName("Do Nothing");
     private final SendableChooser<Command> autoChooser;
 
@@ -60,7 +64,7 @@ public class RobotContainer {
                 Commands.none().withName("ShootTower placeholder").withTimeout(3.0));
         NamedCommands.registerCommand(
                 "StopAll",
-                Commands.runOnce(this::safeStopMechanisms, shooter, drivetrain));
+                Commands.runOnce(this::safeStopMechanisms, shooter, feeder, groundIntake, drivetrain));
     }
 
     private SendableChooser<Command> buildAutoChooser() {
@@ -111,11 +115,14 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
+        groundIntake.setTeleopRollerCurrentLimit();
         drivetrain.setControl(idleRequest);
     }
 
     public void safeStopMechanisms() {
-        shooter.stop();
+        feeder.stop();
+        shooter.setIdle();
+        groundIntake.stop();
         drivetrain.setControl(idleRequest);
     }
 }
