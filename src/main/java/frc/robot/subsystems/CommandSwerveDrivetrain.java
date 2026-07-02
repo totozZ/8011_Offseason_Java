@@ -68,7 +68,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         new SwerveRequest.SwerveDriveBrake()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.Position);
+    private final SwerveRequest.Idle m_idleRequest = new SwerveRequest.Idle();
     private double m_somAngleDiff = 0.0;
+    private boolean m_autoShooting = false;
+    private double m_autoRotDeg = 0.0;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -294,6 +297,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         setControl(m_brakeRequest);
     }
 
+    public void setIdleRequest() {
+        setControl(m_idleRequest);
+    }
+
     public Translation2d getHubPosition() {
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         if (alliance == Alliance.Red) {
@@ -319,6 +326,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getSomAngleDiff() {
         return m_somAngleDiff;
+    }
+
+    public void setAutoShooting(boolean autoShooting) {
+        m_autoShooting = autoShooting;
+    }
+
+    public boolean isAutoShooting() {
+        return m_autoShooting;
+    }
+
+    public void setAutoRotDeg(double autoRotDeg) {
+        m_autoRotDeg = autoRotDeg;
+    }
+
+    public double getAutoRotDeg() {
+        return m_autoRotDeg;
     }
 
     private void configureAutoBuilder() {

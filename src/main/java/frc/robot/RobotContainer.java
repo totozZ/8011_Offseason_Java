@@ -139,6 +139,17 @@ public class RobotContainer {
             .whileTrue(mainShot)
             .onFalse(complexCommand.groundIntakeResetCommand());
 
+        joystick.rightBumper().whileTrue(
+            Commands.sequence(
+                complexCommand.groundIntakeResetCommand(),
+                Commands.either(
+                    complexCommand.passBump(false),
+                    complexCommand.passBump(true),
+                    this::useOpponentRoute
+                )
+            )
+        );
+
         joystick.leftTrigger()
             .whileTrue(complexCommand.groundIntakePrepareCommand())
             .onFalse(complexCommand.groundIntakeResetCommand());
@@ -154,6 +165,24 @@ public class RobotContainer {
         joystick.povRight()
             .onTrue(complexCommand.groundIntakeAntiCommand())
             .onFalse(complexCommand.groundIntakeResetCommand());
+
+        joystick.y().whileTrue(
+            Commands.sequence(
+                Commands.runOnce(
+                    () -> {
+                        shooter.setIdle();
+                        feeder.stop();
+                    },
+                    shooter,
+                    feeder
+                ),
+                Commands.either(
+                    complexCommand.passTrench(false),
+                    complexCommand.passTrench(true),
+                    this::useOpponentRoute
+                )
+            )
+        );
     }
 
     private Command makeHubShootCommand() {
@@ -203,6 +232,18 @@ public class RobotContainer {
             .map(alliance -> {
                 AllianceSide side = alliance == Alliance.Red ? AllianceSide.RED : AllianceSide.BLUE;
                 return ShotTable.isHubRegion(side, drivetrain.getState().Pose.getX());
+            })
+            .orElse(false);
+    }
+
+    private boolean useOpponentRoute() {
+        return DriverStation.getAlliance()
+            .map(alliance -> {
+                double xMeters = drivetrain.getState().Pose.getX();
+                double midfieldMeters = Constants.FieldConstants.fieldLengthMeters / 2.0;
+                return alliance == Alliance.Red
+                    ? xMeters >= midfieldMeters
+                    : xMeters <= midfieldMeters;
             })
             .orElse(false);
     }

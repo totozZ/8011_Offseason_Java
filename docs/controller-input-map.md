@@ -15,7 +15,9 @@ Java port status: Phase 5 shooting command slice.
 | POV Up | Zero-pitch fallback shot while held; cleanup on release |
 | POV Down | Tower fallback shot while held; cleanup on release |
 | POV Right | Ground intake anti command on press; cleanup on release |
-| Right Bumper / A / B / X / Y | Still unbound until C++ AutoMove/intake route commands are migrated |
+| Right Bumper | C++ PassBump route, chosen by opponent-route heuristic |
+| Y | Stop shooter/feeder, then C++ PassTrench route chosen by opponent-route heuristic |
+| A / B / X | Still unbound until C++ intake route commands are migrated |
 
 ## Notes
 
