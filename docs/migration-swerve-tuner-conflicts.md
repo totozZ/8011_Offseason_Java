@@ -11,7 +11,8 @@ Java output against the C++ facts before robot testing.
 
 ## Current Status
 
-- C++ source of truth: `cpp/src/main/include/generated/TunerConstants.h`
+- C++ source of truth:
+  `origin/cpp:cpp/src/main/include/generated/TunerConstants.h`
 - Java generated file currently present:
   `src/main/java/frc/robot/generated/TunerConstants.java`
 - The active Java Tuner constants have been manually aligned to the C++ robot

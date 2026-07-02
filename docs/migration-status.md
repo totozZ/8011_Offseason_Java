@@ -1,8 +1,9 @@
 # Java Migration Status
 
-The active migration branch is `java-port`. The C++ snapshot remains the robot
-source of truth and has not been modified. The untracked `java/` directory is
-still only a temporary API reference.
+The active migration branch is `java-port`. The C++ robot source remains
+preserved on local and remote branch `cpp` at commit `e2ba4ca`. The temporary
+root `cpp/` and `java/` reference directories have been removed from
+`java-port`.
 
 ## Completed
 
@@ -18,6 +19,8 @@ still only a temporary API reference.
   CANdle LED implementation.
 - Follow-up safety audit: restored the 6.5 V brownout threshold, teleop swerve
   drive-motor Brake neutral mode, and C++-equivalent telemetry load.
+- Cleanup checkpoint: removed the temporary root reference directories after
+  the Java build and 30 automated tests passed.
 
 ## Intentionally Dormant
 
@@ -42,5 +45,5 @@ still only a temporary API reference.
 - Validate all three Limelight names, MegaTag timestamps, pose frames,
   rejection thresholds, and odometry fusion.
 
-Do not remove `cpp/` or `java/`, or merge back to `main`, until the bench
-validation checkpoint is explicitly accepted.
+Do not merge back to `main` until the bench validation checkpoint is explicitly
+accepted.

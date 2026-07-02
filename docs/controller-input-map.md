@@ -24,7 +24,8 @@ Java port status: controller bindings and Phase 5 command migration complete.
 ## Notes
 
 - The random Java template bindings for brake, point wheels, SysId, and shooter
-  spin-up were removed because `cpp/` is the real robot source of truth.
+  spin-up were removed because the preserved `cpp` branch is the real robot
+  source of truth.
 - Shooter, feeder, ground-intake cleanup, pass routes, intake routes, dynamic
   PathPlanner generation, and shoot-on-move helpers are migrated from C++.
 - Compile-time and pure-logic tests do not replace real controller and
