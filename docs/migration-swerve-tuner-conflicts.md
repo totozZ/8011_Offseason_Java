@@ -1,23 +1,27 @@
 # Swerve Tuner Conflict Gate
 
-This file records the Phase 2 migration gate for the Java port. The C++ project
-is the robot-parameter source of truth. Do not hand-edit
-`src/main/java/frc/robot/generated/TunerConstants.java` to copy C++ generated
-values. Replace it with a Tuner X generated Java output that matches the C++
-facts, or get explicit confirmation before any manual generated-file edit.
+This file records the Phase 2 migration rule for the Java port. The C++
+project is the robot-parameter source of truth. The Java template is only a
+random reference project and must not be trusted for robot parameters.
 
-## Current Blocker
+User authorization update: manual migration from C++ generated swerve constants
+into Java is allowed for this project because the C++ code is the real robot
+code. Regenerate with Tuner X later when available, and compare the regenerated
+Java output against the C++ facts before robot testing.
+
+## Current Status
 
 - C++ source of truth: `cpp/src/main/include/generated/TunerConstants.h`
 - Java generated file currently present:
   `src/main/java/frc/robot/generated/TunerConstants.java`
-- Blocker: the active Java Tuner constants do not match the C++ robot
-  constants, and the replacement Java Tuner X output is not available in this
-  workspace.
+- The active Java Tuner constants have been manually aligned to the C++ robot
+  constants after explicit user authorization.
+- Remaining risk: this is not an official Tuner X Java regeneration. It must be
+  validated on blocks / real robot before drivetrain motion.
 
-## Conflicts To Resolve
+## Conflicts Resolved By Manual Migration
 
-| Area | C++ source of truth | Current Java template |
+| Area | C++ source of truth | Original Java template |
 | --- | --- | --- |
 | CAN bus | `CANivore` | empty bus name / default bus |
 | Pigeon2 ID | `33` | `13` |
@@ -32,9 +36,9 @@ facts, or get explicit confirmation before any manual generated-file edit.
 | Steer gains | `kV=2.66`, `kP=100`, `kD=0.5`, `kS=0.1` | `kV=1.91`, `kP=100`, `kD=0.5`, `kS=0.1` |
 | Module positions | `+/-10.875 in` | `+/-10 in` |
 
-## Module-Level Conflicts
+## Module-Level Conflicts Resolved By Manual Migration
 
-| Module | C++ drive / steer / encoder / offset | Current Java active values |
+| Module | C++ drive / steer / encoder / offset | Original Java template values |
 | --- | --- | --- |
 | Front Left | `2 / 1 / 3 / -0.376952 rot` | `21 / 22 / 23 / 0.16015625 rot` |
 | Front Right | `5 / 4 / 6 / 0.197021484375 rot` | `24 / 25 / 26 / 0.209228515625 rot` |
@@ -47,16 +51,18 @@ facts, or get explicit confirmation before any manual generated-file edit.
   conflicts with the active Java constants and with the C++ generated
   drive/steer ordering. Treat the C++ generated values as the current source of
   truth until hardware re-verification says otherwise.
-- The Java template has comments about front-left drive inversion. That must be
-  checked against Tuner X output and real hardware before any Java drivetrain
-  migration proceeds.
+- The Java template had comments about front-left drive inversion. The manual
+  migration follows the active C++ generated constants, where front-left drive
+  uses `kInvertLeftSide=false`. This remains a real-robot validation item.
 - Phoenix version is also different: C++ uses vendordep `26.1.1`, Java template
   uses `26.3.0`. The current migration default is to keep Java `26.3.0` unless
   the regenerated Tuner X Java project requires a different Phoenix vendordep.
 
-## Required Next Input
+## Required Next Validation
 
-Provide the Tuner X generated Java swerve files for the 8011 robot, or
-explicitly authorize a manual generated-file edit. Until then, do not migrate
-RobotContainer drivetrain behavior, PathPlanner AutoBuilder wiring, or commands
-that depend on drivetrain semantics.
+- Build must pass after the manual migration.
+- Before robot motion, verify CANivore presence, Pigeon ID `33`, module IDs,
+  module angle offsets, drive/steer inversion, and neutral/current behavior.
+- When a real Tuner X Java project becomes available, replace this manual
+  migration with generated Java output and compare all constants before merging
+  back to `main`.
