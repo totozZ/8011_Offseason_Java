@@ -23,6 +23,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import frc.robot.commands.ComplexCommands;
+import frc.robot.commands.IntakeNextToHubCommand;
+import frc.robot.commands.IntakeNextToSideCommand;
+import frc.robot.commands.IntakeNextToWallCommand;
 import frc.robot.commands.PassBallCommand;
 import frc.robot.commands.RealTimeAimDrive;
 import frc.robot.commands.ShootWithTableCommand;
@@ -165,6 +168,59 @@ public class RobotContainer {
         joystick.povRight()
             .onTrue(complexCommand.groundIntakeAntiCommand())
             .onFalse(complexCommand.groundIntakeResetCommand());
+
+        joystick.a().whileTrue(
+            new IntakeNextToSideCommand(
+                drivetrain,
+                groundIntake,
+                joystick::getLeftX,
+                true
+            )
+        );
+
+        joystick.b().whileTrue(
+            Commands.either(
+                new IntakeNextToHubCommand(
+                    drivetrain,
+                    groundIntake,
+                    joystick::getLeftY,
+                    true
+                ),
+                new IntakeNextToWallCommand(
+                    drivetrain,
+                    groundIntake,
+                    joystick::getLeftY,
+                    true
+                ),
+                () -> {
+                    double x = drivetrain.getState().Pose.getX();
+                    return x > Constants.FieldConstants.hubPassBlueBoundaryXMeters
+                        && x < Constants.FieldConstants.hubPassRedBoundaryXMeters;
+                }
+            )
+        );
+
+        joystick.x().whileTrue(
+            Commands.either(
+                new IntakeNextToHubCommand(
+                    drivetrain,
+                    groundIntake,
+                    joystick::getLeftY,
+                    false
+                ),
+                new IntakeNextToWallCommand(
+                    drivetrain,
+                    groundIntake,
+                    joystick::getLeftY,
+                    false
+                ),
+                () -> {
+                    double x = drivetrain.getState().Pose.getX();
+                    return x > Constants.FieldConstants.hubPassBlueBoundaryXMeters
+                        && x < Constants.FieldConstants.hubPassRedBoundaryXMeters;
+                }
+            )
+        );
 
         joystick.y().whileTrue(
             Commands.sequence(

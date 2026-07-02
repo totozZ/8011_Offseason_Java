@@ -17,12 +17,15 @@ Java port status: Phase 5 shooting command slice.
 | POV Right | Ground intake anti command on press; cleanup on release |
 | Right Bumper | C++ PassBump route, chosen by opponent-route heuristic |
 | Y | Stop shooter/feeder, then C++ PassTrench route chosen by opponent-route heuristic |
-| A / B / X | Still unbound until C++ intake route commands are migrated |
+| A | C++ intake-next-to-side route while held |
+| B | C++ intake-next-to-hub/wall route on opponent side while held |
+| X | C++ intake-next-to-hub/wall route on own side while held |
 
 ## Notes
 
 - The random Java template bindings for brake, point wheels, SysId, and shooter
   spin-up were removed because `cpp/` is the real robot source of truth.
-- Shooter, feeder, and ground-intake cleanup now follows the first migrated C++
-  command slice. Remaining driver tactical movement and route commands still
-  need their C++ AutoMove dependencies migrated before binding.
+- Shooter, feeder, ground-intake cleanup, pass routes, and intake route
+  bindings are migrated from the C++ command slice. Remaining command work is
+  focused on dynamic PathPlanner generation / shoot-on-move helpers and deeper
+  behavior tests.
