@@ -33,6 +33,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.shooting.AllianceSide;
 import frc.robot.shooting.ShotSetpoint;
 import frc.robot.shooting.ShotTable;
+import frc.robot.subsystems.ClientSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.GroundIntakeSubsystem;
@@ -60,6 +61,7 @@ public class RobotContainer {
     private final GroundIntakeSubsystem groundIntake = new GroundIntakeSubsystem();
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+    private final ClientSubsystem client = new ClientSubsystem(drivetrain);
     private final ComplexCommands complexCommand =
             new ComplexCommands(drivetrain, feeder, groundIntake);
     private final Command doNothingCommand = Commands.none().withName("Do Nothing");
