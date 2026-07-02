@@ -4,30 +4,48 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.HootAutoReplay;
-
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class Robot extends TimedRobot {
-    private Command m_autonomousCommand;
+    private static final double kSchedulerOverrunMs = 20.0;
 
-    private final RobotContainer m_robotContainer;
-
-    /* log and replay timestamp and joystick data */
-    private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
-        .withTimestampReplay()
-        .withJoystickReplay();
-
-    public Robot() {
-        m_robotContainer = new RobotContainer();
-    }
+    private Command autonomousCommand;
+    private final RobotContainer robotContainer = new RobotContainer();
+    private final Field2d simField = new Field2d();
+    private int schedulerOverrunCount = 0;
+    private double schedulerLoopMsMax = 0.0;
+    private double lastEpochPrintSeconds = -1.0;
 
     @Override
     public void robotPeriodic() {
-        m_timeAndJoystickReplay.update();
-        CommandScheduler.getInstance().run(); 
+        CommandScheduler scheduler = CommandScheduler.getInstance();
+        double loopStartSeconds = Timer.getFPGATimestamp();
+
+        robotContainer.updateDriverPerspective();
+        scheduler.run();
+
+        double loopEndSeconds = Timer.getFPGATimestamp();
+        double schedulerLoopMs = (loopEndSeconds - loopStartSeconds) * 1000.0;
+        schedulerLoopMsMax = Math.max(schedulerLoopMsMax, schedulerLoopMs);
+
+        SmartDashboard.putNumber("SchedulerLoopMs", schedulerLoopMs);
+        SmartDashboard.putNumber("SchedulerLoopMsMax", schedulerLoopMsMax);
+        SmartDashboard.putNumber("SchedulerLoopOverrunThresholdMs", kSchedulerOverrunMs);
+        SmartDashboard.putBoolean("SchedulerLoopOverrun", schedulerLoopMs > kSchedulerOverrunMs);
+
+        if (schedulerLoopMs > kSchedulerOverrunMs) {
+            schedulerOverrunCount++;
+            if (lastEpochPrintSeconds < 0.0 || (loopEndSeconds - lastEpochPrintSeconds) > 0.5) {
+                scheduler.printWatchdogEpochs();
+                lastEpochPrintSeconds = loopEndSeconds;
+            }
+        }
+        SmartDashboard.putNumber("SchedulerLoopOverrunCount", schedulerOverrunCount);
     }
 
     @Override
@@ -41,10 +59,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        autonomousCommand = robotContainer.getAutonomousCommand();
 
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(m_autonomousCommand);
+        if (autonomousCommand != null) {
+            CommandScheduler.getInstance().schedule(autonomousCommand);
         }
     }
 
@@ -52,12 +70,15 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {}
 
     @Override
-    public void autonomousExit() {}
+    public void autonomousExit() {
+        robotContainer.onAutonomousExit();
+    }
 
     @Override
     public void teleopInit() {
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().cancel(m_autonomousCommand);
+        robotContainer.onTeleopInit();
+        if (autonomousCommand != null) {
+            CommandScheduler.getInstance().cancel(autonomousCommand);
         }
     }
 
@@ -79,5 +100,12 @@ public class Robot extends TimedRobot {
     public void testExit() {}
 
     @Override
-    public void simulationPeriodic() {}
+    public void simulationInit() {
+        SmartDashboard.putData("Simulation Field", simField);
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        simField.setRobotPose(robotContainer.drivetrain.getState().Pose);
+    }
 }
