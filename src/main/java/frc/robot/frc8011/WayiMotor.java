@@ -265,8 +265,10 @@ public class WayiMotor {
     public void setNormalizedMotionPosition(double normalizedPosition) {
         data.normalizedPosition = clamp(normalizedPosition, -1.0, 1.0);
         data.mode = MODE_MOTION_MAGIC_POSITION;
-        data.targetPosition = data.normalizedPosition * (data.maxPosition - data.minPosition)
-                + data.minPosition;
+        data.targetPosition = normalizedToMechanismPosition(
+                data.normalizedPosition,
+                data.minPosition,
+                data.maxPosition);
     }
 
     public void setCurrent(double currentAmps) {
@@ -316,19 +318,71 @@ public class WayiMotor {
     }
 
     private double toMotorVelocity(double mechanismVelocity) {
-        return mechanismVelocity * data.gearRatio * data.invert;
+        return mechanismToMotorVelocity(
+                mechanismVelocity,
+                data.gearRatio,
+                data.invert);
     }
 
     private double toMotorPosition(double mechanismPosition) {
-        return mechanismPosition * data.gearRatio * data.invert + data.offset;
+        return mechanismToMotorPosition(
+                mechanismPosition,
+                data.gearRatio,
+                data.invert,
+                data.offset);
     }
 
     private double fromMotorVelocity(double motorVelocity) {
-        return motorVelocity / data.gearRatio * data.invert;
+        return motorToMechanismVelocity(
+                motorVelocity,
+                data.gearRatio,
+                data.invert);
     }
 
     private double fromMotorPosition(double motorPosition) {
-        return (motorPosition - data.offset) / data.gearRatio * data.invert;
+        return motorToMechanismPosition(
+                motorPosition,
+                data.gearRatio,
+                data.invert,
+                data.offset);
+    }
+
+    static double mechanismToMotorVelocity(
+            double mechanismVelocity,
+            double gearRatio,
+            double invert) {
+        return mechanismVelocity * gearRatio * invert;
+    }
+
+    static double mechanismToMotorPosition(
+            double mechanismPosition,
+            double gearRatio,
+            double invert,
+            double offset) {
+        return mechanismPosition * gearRatio * invert + offset;
+    }
+
+    static double motorToMechanismVelocity(
+            double motorVelocity,
+            double gearRatio,
+            double invert) {
+        return motorVelocity / gearRatio * invert;
+    }
+
+    static double motorToMechanismPosition(
+            double motorPosition,
+            double gearRatio,
+            double invert,
+            double offset) {
+        return (motorPosition - offset) / gearRatio * invert;
+    }
+
+    static double normalizedToMechanismPosition(
+            double normalizedPosition,
+            double minPosition,
+            double maxPosition) {
+        double clamped = clamp(normalizedPosition, -1.0, 1.0);
+        return clamped * (maxPosition - minPosition) + minPosition;
     }
 
     private static double clamp(double value, double min, double max) {
