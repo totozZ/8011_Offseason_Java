@@ -43,6 +43,16 @@ public final class Constants {
         private DriveAimingConstants() {}
     }
 
+    public static final class VisionConstants {
+        public static final String[] limelightNames = {
+            "limelight-left",
+            "limelight-back",
+            "limelight-right"
+        };
+
+        private VisionConstants() {}
+    }
+
     public static final class FeederConstants {
         public static final int backwardFeederMotorId = 17;
         public static final int upwardFeederMotorId = 18;

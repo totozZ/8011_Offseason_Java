@@ -37,6 +37,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.GroundIntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
     private final double maxSpeedMetersPerSecond =
@@ -58,6 +59,7 @@ public class RobotContainer {
     private final FeederSubsystem feeder = new FeederSubsystem();
     private final GroundIntakeSubsystem groundIntake = new GroundIntakeSubsystem();
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     private final ComplexCommands complexCommand =
             new ComplexCommands(drivetrain, feeder, groundIntake);
     private final Command doNothingCommand = Commands.none().withName("Do Nothing");
