@@ -83,9 +83,6 @@ public class VisionSubsystem extends SubsystemBase {
                     mt2.orElse(null),
                     angularVelocityDegPerSecond);
             visionModes[index] = mode;
-            SmartDashboard.putNumber(
-                    "Vision/Mode/" + Constants.VisionConstants.limelightNames[index],
-                    mode);
 
             if (mode == MODE_REJECTED) {
                 continue;

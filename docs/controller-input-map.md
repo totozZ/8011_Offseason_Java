@@ -1,6 +1,6 @@
 # Controller Input Map
 
-Java port status: Phase 5 shooting command slice.
+Java port status: controller bindings and Phase 5 command migration complete.
 
 ## Driver Controller Port 0
 
@@ -25,7 +25,7 @@ Java port status: Phase 5 shooting command slice.
 
 - The random Java template bindings for brake, point wheels, SysId, and shooter
   spin-up were removed because `cpp/` is the real robot source of truth.
-- Shooter, feeder, ground-intake cleanup, pass routes, and intake route
-  bindings are migrated from the C++ command slice. Remaining command work is
-  focused on dynamic PathPlanner generation / shoot-on-move helpers and deeper
-  behavior tests.
+- Shooter, feeder, ground-intake cleanup, pass routes, intake routes, dynamic
+  PathPlanner generation, and shoot-on-move helpers are migrated from C++.
+- Compile-time and pure-logic tests do not replace real controller and
+  interruption testing on the robot.
