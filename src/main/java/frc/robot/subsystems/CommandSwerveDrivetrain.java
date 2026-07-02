@@ -2,7 +2,9 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -17,6 +19,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,12 +32,15 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.path.DynamicPathFactory;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -72,6 +78,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private double m_somAngleDiff = 0.0;
     private boolean m_autoShooting = false;
     private double m_autoRotDeg = 0.0;
+    private int m_dynamicPathFailureCount = 0;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -342,6 +349,109 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getAutoRotDeg() {
         return m_autoRotDeg;
+    }
+
+    public Optional<PathPlannerPath> generatePath(Pose2d targetPose) {
+        return DynamicPathFactory.createStraightPath(getState().Pose, targetPose);
+    }
+
+    public Optional<PathPlannerPath> generateAutoPath(
+            Pose2d targetPose,
+            double maxSpeedMetersPerSecond,
+            double maxAccelerationMetersPerSecondSquared) {
+        return DynamicPathFactory.createAutoStraightPath(
+                getState().Pose,
+                targetPose,
+                maxSpeedMetersPerSecond,
+                maxAccelerationMetersPerSecondSquared);
+    }
+
+    public Optional<PathPlannerPath> generatePath(List<Pose2d> targetPoses) {
+        return DynamicPathFactory.createMultiPointPath(getState().Pose, targetPoses);
+    }
+
+    public Optional<PathPlannerPath> generateShootOnMovePath(List<Pose2d> targetPoses) {
+        return DynamicPathFactory.createShootOnMovePath(
+                getState().Pose,
+                getState().Speeds,
+                targetPoses);
+    }
+
+    public Command followPathCommand(Pose2d targetPose) {
+        return followGeneratedPath(
+                () -> generatePath(targetPose),
+                "single-target");
+    }
+
+    public Command autoFollowPathCommand(
+            Pose2d targetPose,
+            double maxSpeedMetersPerSecond,
+            double maxAccelerationMetersPerSecondSquared) {
+        return followGeneratedPath(
+                () -> generateAutoPath(
+                        targetPose,
+                        maxSpeedMetersPerSecond,
+                        maxAccelerationMetersPerSecondSquared),
+                "auto-single-target");
+    }
+
+    public Command followPathCommand(List<Pose2d> targetPoses) {
+        List<Pose2d> targets = targetPoses == null ? null : List.copyOf(targetPoses);
+        return followGeneratedPath(
+                () -> generatePath(targets),
+                "multi-target");
+    }
+
+    public Command followShootOnMovePathCommand(double directionDegrees) {
+        return followGeneratedPath(
+                () -> generateShootOnMovePath(
+                        DynamicPathFactory.createShootOnMoveTargets(
+                                getState().Pose,
+                                getHubPosition(),
+                                directionDegrees)),
+                "shoot-on-move");
+    }
+
+    private Command followGeneratedPath(
+            Supplier<Optional<PathPlannerPath>> pathSupplier,
+            String pathType) {
+        return Commands.defer(
+                () -> {
+                    Optional<PathPlannerPath> path;
+                    try {
+                        path = pathSupplier.get();
+                    } catch (RuntimeException ex) {
+                        reportDynamicPathFailure(pathType, ex.getMessage());
+                        return Commands.runOnce(this::setIdleRequest, this);
+                    }
+
+                    if (path.isEmpty()) {
+                        reportDynamicPathFailure(pathType, "invalid or too-close target");
+                        return Commands.runOnce(this::setIdleRequest, this);
+                    }
+                    if (!AutoBuilder.isConfigured()) {
+                        reportDynamicPathFailure(pathType, "AutoBuilder is not configured");
+                        return Commands.runOnce(this::setIdleRequest, this);
+                    }
+
+                    try {
+                        return AutoBuilder.followPath(path.get())
+                                .finallyDo(interrupted -> setIdleRequest());
+                    } catch (RuntimeException ex) {
+                        reportDynamicPathFailure(pathType, ex.getMessage());
+                        return Commands.runOnce(this::setIdleRequest, this);
+                    }
+                },
+                Set.of(this));
+    }
+
+    private void reportDynamicPathFailure(String pathType, String reason) {
+        m_dynamicPathFailureCount++;
+        SmartDashboard.putNumber("Path/DynamicFailureCount", m_dynamicPathFailureCount);
+        SmartDashboard.putString("Path/DynamicLastFailure", pathType + ": " + reason);
+        DriverStation.reportWarning(
+                "Dynamic path fallback (" + pathType + "): " + reason,
+                false);
     }
 
     private void configureAutoBuilder() {
