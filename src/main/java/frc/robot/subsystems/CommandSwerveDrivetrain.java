@@ -21,6 +21,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -32,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import frc.robot.Constants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -58,6 +60,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         new SwerveRequest.ApplyRobotSpeeds()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.Position);
+    private final SwerveRequest.RobotCentric m_safeCoastRequest =
+        new SwerveRequest.RobotCentric()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.Position);
+    private final SwerveRequest.SwerveDriveBrake m_brakeRequest =
+        new SwerveRequest.SwerveDriveBrake()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.Position);
+    private double m_somAngleDiff = 0.0;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -267,6 +278,47 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             );
             m_hasAppliedOperatorPerspective = true;
         });
+    }
+
+    public void setSafeCoastWithCurrentSpeeds() {
+        ChassisSpeeds speeds = getState().Speeds;
+        setControl(
+            m_safeCoastRequest
+                .withVelocityX(speeds.vxMetersPerSecond)
+                .withVelocityY(speeds.vyMetersPerSecond)
+                .withRotationalRate(speeds.omegaRadiansPerSecond)
+        );
+    }
+
+    public void setBrakeRequest() {
+        setControl(m_brakeRequest);
+    }
+
+    public Translation2d getHubPosition() {
+        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        if (alliance == Alliance.Red) {
+            return new Translation2d(
+                Constants.DriveAimingConstants.redHubXMeters,
+                Constants.DriveAimingConstants.redHubYMeters
+            );
+        }
+        return new Translation2d(
+            Constants.DriveAimingConstants.blueHubXMeters,
+            Constants.DriveAimingConstants.blueHubYMeters
+        );
+    }
+
+    public double getDistanceToHub() {
+        Pose2d robotPose = getState().Pose;
+        return robotPose.getTranslation().getDistance(getHubPosition());
+    }
+
+    public void setSomAngleDiff(double angleDiffDeg) {
+        m_somAngleDiff = angleDiffDeg;
+    }
+
+    public double getSomAngleDiff() {
+        return m_somAngleDiff;
     }
 
     private void configureAutoBuilder() {

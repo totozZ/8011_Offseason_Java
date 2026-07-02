@@ -31,6 +31,18 @@ public final class Constants {
         private FieldConstants() {}
     }
 
+    public static final class DriveAimingConstants {
+        public static final double blueHubXMeters = 4.625594;
+        public static final double blueHubYMeters = 4.034536;
+        public static final double redHubXMeters = 11.915394;
+        public static final double redHubYMeters = 4.034536;
+
+        public static final double maxDriveAimingOmegaRadPerSec = 3.5;
+        public static final double driveAimingAngleToleranceDeg = 0.5;
+
+        private DriveAimingConstants() {}
+    }
+
     public static final class FeederConstants {
         public static final int backwardFeederMotorId = 17;
         public static final int upwardFeederMotorId = 18;
