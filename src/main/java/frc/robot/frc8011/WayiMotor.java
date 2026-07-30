@@ -33,6 +33,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public class WayiMotor {
+    private static final double CACHED_SIGNAL_TIMEOUT_SECONDS = 0.5;
     public static final class ConfigData {
         public final int deviceId;
         public final CANBus canBus;
@@ -304,6 +305,16 @@ public class WayiMotor {
         return fromMotorVelocity(motor.getVelocity().getValueAsDouble());
     }
 
+    /** Returns the cached velocity without a Phoenix refresh, or NaN when stale/unavailable. */
+    public double getCachedVelocity() {
+        if (RobotBase.isSimulation()) {
+            return data.currentVelocity;
+        }
+        return isCachedSignalUsable(velocitySignal)
+                ? fromMotorVelocity(velocitySignal.getValueAsDouble())
+                : Double.NaN;
+    }
+
     public double getCurrent() {
         return motor.getTorqueCurrent().getValueAsDouble() * data.invert;
     }
@@ -311,6 +322,26 @@ public class WayiMotor {
     public double getNormalizedPosition() {
         double positionRange = data.maxPosition - data.minPosition;
         return Math.abs(positionRange) > 1e-9 ? (getPosition() - data.minPosition) / positionRange : 0.0;
+    }
+
+    /** Returns the last cached position signal without issuing another Phoenix refresh. */
+    public double getCachedNormalizedPosition() {
+        if (!RobotBase.isSimulation() && !isCachedSignalUsable(positionSignal)) {
+            return Double.NaN;
+        }
+        double positionRange = data.maxPosition - data.minPosition;
+        double mechanismPosition = fromMotorPosition(positionSignal.getValueAsDouble());
+        return Math.abs(positionRange) > 1e-9
+                ? (mechanismPosition - data.minPosition) / positionRange
+                : 0.0;
+    }
+
+    private static boolean isCachedSignalUsable(BaseStatusSignal signal) {
+        return signal != null
+                && signal.getStatus().isOK()
+                && signal.getTimestamp().isValid()
+                && signal.getTimestamp().getLatency()
+                        <= CACHED_SIGNAL_TIMEOUT_SECONDS;
     }
 
     public double getAbsPosition() {

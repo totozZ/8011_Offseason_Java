@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 import frc.robot.frc8011.WayiMotor;
+import frc.robot.logging.MotorHealthConfig;
+import frc.robot.logging.RobotHealthLogger;
 import frc.robot.shooting.ShotSetpoint;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -57,9 +59,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private ShotSetpoint targetSetpoint = new ShotSetpoint(15.0, 0.0, 0.2);
     private boolean shotActive = false;
+    private boolean flywheelFollowersArmed = false;
     private PitchHomeState pitchHomeState = PitchHomeState.UNHOMED;
     private int pitchHomeCurrentCounter = 0;
     private final Timer pitchHomeTimer = new Timer();
+    private double healthFlywheelVelocity;
+    private double healthPitchAngle;
 
     public ShooterSubsystem() {
         initialize();
@@ -68,8 +73,10 @@ public class ShooterSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         shooterRightUp.receiveVelocity();
+        healthFlywheelVelocity = shooterRightUp.getCachedVelocity();
 
         if (!DriverStation.isEnabled()) {
+            flywheelFollowersArmed = false;
             shooterRightUp.setCoast();
             shooterRightUp.control();
             shooterPitch.setBrake();
@@ -97,13 +104,18 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterRightUp.setVelocityTorqueCurrent(
                 shotActive ? targetSetpoint.flywheelRps() : IDLE_SPEED_RPS);
         shooterRightUp.control();
+        if (!flywheelFollowersArmed) {
+            commandFlywheelFollowers();
+            flywheelFollowersArmed = true;
+        }
+        healthPitchAngle = getPitchAngle();
 
         SmartDashboard.putNumber(
                 "Shooting/FlywheelTargetRps",
                 shotActive ? targetSetpoint.flywheelRps() : IDLE_SPEED_RPS);
-        SmartDashboard.putNumber("Shooting/FlywheelActualRps", getShootVelocity());
+        SmartDashboard.putNumber("Shooting/FlywheelActualRps", healthFlywheelVelocity);
         SmartDashboard.putNumber("Shooting/PitchTargetDeg", targetSetpoint.pitchDeg());
-        SmartDashboard.putNumber("Shooting/PitchActualDeg", getPitchAngle());
+        SmartDashboard.putNumber("Shooting/PitchActualDeg", healthPitchAngle);
         SmartDashboard.putNumber("Shooting/PitchHomeState", pitchHomeState.ordinal());
     }
 
@@ -120,15 +132,16 @@ public class ShooterSubsystem extends SubsystemBase {
                 .withSlot0(new Slot0Configs()
                         .withKS(4.875)
                         .withKP(9));
+        applyWithRetry(shooterLeftDown, flywheelConfig);
+        applyWithRetry(shooterLeftUp, flywheelConfig);
         applyWithRetry(shooterRightUp, flywheelConfig);
+        applyWithRetry(shooterRightDown, flywheelConfig);
         shooterRightUp.setInvert(-1);
 
         shooterLeftDown.setFollower(shooterRightUp.getData().deviceId, true);
         shooterLeftUp.setFollower(shooterRightUp.getData().deviceId, true);
         shooterRightDown.setFollower(shooterRightUp.getData().deviceId, false);
-        shooterLeftDown.control();
-        shooterLeftUp.control();
-        shooterRightDown.control();
+        commandFlywheelFollowers();
 
         TalonFXConfiguration pitchConfig = new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
@@ -228,6 +241,76 @@ public class ShooterSubsystem extends SubsystemBase {
         return targetSetpoint;
     }
 
+    /** Registers the shooter hardware and control context with the central logger. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        int flywheelLeaderId = shooterRightUp.getData().deviceId;
+        logger.registerTalonFX(
+                "Shooter",
+                "LeftDown",
+                shooterLeftDown.getMotor(),
+                MotorHealthConfig.follower(flywheelLeaderId, true));
+        logger.registerTalonFX(
+                "Shooter",
+                "LeftUp",
+                shooterLeftUp.getMotor(),
+                MotorHealthConfig.follower(flywheelLeaderId, true));
+        logger.registerTalonFX(
+                "Shooter",
+                "RightUpLeader",
+                shooterRightUp.getMotor(),
+                MotorHealthConfig.leader());
+        logger.registerTalonFX(
+                "Shooter",
+                "RightDown",
+                shooterRightDown.getMotor(),
+                MotorHealthConfig.follower(flywheelLeaderId, false));
+        logger.registerTalonFX("Shooter", "Pitch", shooterPitch.getMotor());
+        logger.registerSubsystem(
+                "Shooter",
+                this,
+                this::isHealthActive,
+                this::getHealthState,
+                () -> shotActive ? targetSetpoint.flywheelRps() : IDLE_SPEED_RPS,
+                () -> healthFlywheelVelocity);
+    }
+
+    private boolean isHealthActive() {
+        return shotActive || pitchHomeState == PitchHomeState.HOMING;
+    }
+
+    private String getHealthState() {
+        if (!DriverStation.isEnabled()) {
+            return "Disabled";
+        }
+        return switch (pitchHomeState) {
+            case UNHOMED -> "Unhomed";
+            case HOMING -> "Homing";
+            case FAULT -> "Fault";
+            case HOMED -> {
+                if (!shotActive) {
+                    yield "Idle";
+                }
+                yield isHealthFlywheelReady(1.0) && isHealthPitchReady(1.0)
+                        ? "Ready"
+                        : "SpinningUp";
+            }
+        };
+    }
+
+    private boolean isHealthFlywheelReady(double toleranceRps) {
+        return shotActive
+                && Math.abs(healthFlywheelVelocity - targetSetpoint.flywheelRps())
+                        <= toleranceRps;
+    }
+
+    private boolean isHealthPitchReady(double toleranceDeg) {
+        return isPitchHomed()
+                && Math.abs(healthPitchAngle - targetSetpoint.pitchDeg()) <= toleranceDeg;
+    }
+
     private void runPitchHoming() {
         shooterPitch.setCurrent(PITCH_HOME_CURRENT_AMPS);
         shooterPitch.control();
@@ -264,6 +347,12 @@ public class ShooterSubsystem extends SubsystemBase {
                 / (Constants.ShooterConstants.maxPitchAngleDeg
                         - Constants.ShooterConstants.minPitchAngleDeg);
         shooterPitch.setNormalizedMotionPosition(normalized);
+    }
+
+    private void commandFlywheelFollowers() {
+        shooterLeftDown.control();
+        shooterLeftUp.control();
+        shooterRightDown.control();
     }
 
     private static void applyWithRetry(WayiMotor motor, TalonFXConfiguration config) {

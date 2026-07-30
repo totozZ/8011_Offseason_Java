@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import frc.robot.logging.RobotHealthLogger;
+
 public class ClientSubsystem extends SubsystemBase {
     public record MatchPhaseState(
             String phase,
@@ -104,6 +106,18 @@ public class ClientSubsystem extends SubsystemBase {
                 "ENDGAME (Both)",
                 matchTimeSeconds,
                 true);
+    }
+
+    /** Registers the dashboard/client connection context. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        logger.registerSubsystem(
+                "Client",
+                this,
+                DriverStation::isDSAttached,
+                () -> DriverStation.isDSAttached() ? "DriverStationConnected" : "Disconnected");
     }
 
     private static MatchPhaseState switchState(

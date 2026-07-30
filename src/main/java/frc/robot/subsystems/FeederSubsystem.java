@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 import frc.robot.frc8011.WayiMotor;
+import frc.robot.logging.RobotHealthLogger;
 
 public class FeederSubsystem extends SubsystemBase {
     private final WayiMotor backwardFeeder = new WayiMotor(
@@ -24,6 +25,11 @@ public class FeederSubsystem extends SubsystemBase {
     private final WayiMotor upwardFeeder = new WayiMotor(
             Constants.FeederConstants.upwardFeederMotorId,
             Constants.CanConstants.rioCanBus);
+    private boolean healthActive = false;
+    private String healthState = "Idle";
+    private double backwardHealthDemand;
+    private double upwardHealthDemand;
+    private double healthUpwardVelocity;
 
     public FeederSubsystem() {
         initialize();
@@ -32,6 +38,7 @@ public class FeederSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         upwardFeeder.receiveVelocity();
+        healthUpwardVelocity = upwardFeeder.getCachedVelocity();
     }
 
     private void initialize() {
@@ -69,11 +76,15 @@ public class FeederSubsystem extends SubsystemBase {
     }
 
     public void setUpwardFeederVelocity(double velocityRps) {
+        upwardHealthDemand = velocityRps;
+        updateHealthState();
         upwardFeeder.setVelocityTorqueCurrent(velocityRps);
         upwardFeeder.control();
     }
 
     public void setBackwardFeederDuty(double duty) {
+        backwardHealthDemand = duty;
+        updateHealthState();
         backwardFeeder.setNormalizedDutyCycle(duty);
         backwardFeeder.control();
     }
@@ -83,11 +94,17 @@ public class FeederSubsystem extends SubsystemBase {
     }
 
     public void setUpwardDuty(double duty) {
+        upwardHealthDemand = duty;
+        updateHealthState();
         upwardFeeder.setNormalizedDutyCycle(duty);
         upwardFeeder.control();
     }
 
     public void stop() {
+        backwardHealthDemand = 0.0;
+        upwardHealthDemand = 0.0;
+        healthActive = false;
+        healthState = "Idle";
         backwardFeeder.setCoast();
         upwardFeeder.setCoast();
         backwardFeeder.control();
@@ -108,6 +125,28 @@ public class FeederSubsystem extends SubsystemBase {
 
     public double getUpwardFeederCurrent() {
         return upwardFeeder.getCurrent();
+    }
+
+    /** Registers feeder motors and their sustained run state with the central logger. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        logger.registerTalonFX("Feeder", "Backward", backwardFeeder.getMotor());
+        logger.registerTalonFX("Feeder", "Upward", upwardFeeder.getMotor());
+        logger.registerSubsystem(
+                "Feeder",
+                this,
+                () -> healthActive,
+                () -> healthState,
+                () -> upwardFeeder.getData().targetVelocity,
+                () -> healthUpwardVelocity);
+    }
+
+    private void updateHealthState() {
+        healthActive = Math.abs(backwardHealthDemand) > 1e-6
+                || Math.abs(upwardHealthDemand) > 1e-6;
+        healthState = healthActive ? "Feeding" : "Idle";
     }
 
     private static void applyWithRetry(WayiMotor motor, TalonFXConfiguration config) {

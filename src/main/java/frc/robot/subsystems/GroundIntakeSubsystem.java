@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 import frc.robot.frc8011.WayiMotor;
+import frc.robot.logging.MotorHealthConfig;
+import frc.robot.logging.RobotHealthLogger;
 
 public class GroundIntakeSubsystem extends SubsystemBase {
     private final WayiMotor intakeRollerLeft = new WayiMotor(
@@ -36,6 +38,8 @@ public class GroundIntakeSubsystem extends SubsystemBase {
     private double normTargetStatus = 0.0;
     private boolean pitchResetFlag = false;
     private int pitchResetCounter = 0;
+    private boolean rollerActive = false;
+    private double healthPitchNormPosition;
 
     public GroundIntakeSubsystem() {
         initialize();
@@ -51,6 +55,7 @@ public class GroundIntakeSubsystem extends SubsystemBase {
             intakePitch.control();
             previousStatus = normTargetStatus;
         }
+        healthPitchNormPosition = intakePitch.getCachedNormalizedPosition();
 
         SmartDashboard.putBoolean("GI_pitch_reset", getPitchResetFlag());
     }
@@ -71,6 +76,7 @@ public class GroundIntakeSubsystem extends SubsystemBase {
                         .withSupplyCurrentLimit(40)
                         .withSupplyCurrentLimitEnable(true)
                         .withSupplyCurrentLowerLimit(40));
+        applyWithRetry(intakeRollerLeft, rollerRightConfig);
         applyWithRetry(intakeRollerRight, rollerRightConfig);
         intakeRollerRight.setInvert(-1);
 
@@ -108,8 +114,10 @@ public class GroundIntakeSubsystem extends SubsystemBase {
     }
 
     public void setRollerVelocity(double velocityRps) {
+        rollerActive = Math.abs(velocityRps) > 1e-6;
         intakeRollerRight.setVelocityTorqueCurrent(velocityRps);
         intakeRollerRight.control();
+        intakeRollerLeft.control();
     }
 
     public Command setRollerVelocityCommand(double velocityRps) {
@@ -117,8 +125,10 @@ public class GroundIntakeSubsystem extends SubsystemBase {
     }
 
     public void setRollerDutyCycle(double dutyCycle) {
+        rollerActive = Math.abs(dutyCycle) > 1e-6;
         intakeRollerRight.setNormalizedDutyCycle(dutyCycle);
         intakeRollerRight.control();
+        intakeRollerLeft.control();
     }
 
     public Command setRollerDutyCycleCommand(double dutyCycle) {
@@ -126,8 +136,10 @@ public class GroundIntakeSubsystem extends SubsystemBase {
     }
 
     public void stop() {
+        rollerActive = false;
         intakeRollerRight.setCoast();
         intakeRollerRight.control();
+        intakeRollerLeft.control();
     }
 
     public Command stopCommand() {
@@ -165,6 +177,57 @@ public class GroundIntakeSubsystem extends SubsystemBase {
 
     public boolean getPitchResetFlag() {
         return pitchResetFlag;
+    }
+
+    /** Registers intake motors, follower metadata, and mechanism state. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        int rollerLeaderId = intakeRollerRight.getData().deviceId;
+        logger.registerTalonFX(
+                "GroundIntake",
+                "RollerLeft",
+                intakeRollerLeft.getMotor(),
+                MotorHealthConfig.follower(rollerLeaderId, true));
+        logger.registerTalonFX(
+                "GroundIntake",
+                "RollerRightLeader",
+                intakeRollerRight.getMotor(),
+                MotorHealthConfig.leader());
+        logger.registerTalonFX("GroundIntake", "Pitch", intakePitch.getMotor());
+        logger.registerSubsystem(
+                "GroundIntake",
+                this,
+                this::isHealthActive,
+                this::getHealthState,
+                () -> normTargetStatus,
+                () -> healthPitchNormPosition);
+    }
+
+    private boolean isHealthActive() {
+        return rollerActive
+                || (DriverStation.isEnabled() && !pitchResetFlag)
+                || Math.abs(normTargetStatus - healthPitchNormPosition) > 0.01;
+    }
+
+    private String getHealthState() {
+        if (!DriverStation.isEnabled()) {
+            return "Disabled";
+        }
+        if (!pitchResetFlag) {
+            return "Homing";
+        }
+        if (rollerActive) {
+            return "Intaking";
+        }
+        if (!Double.isFinite(healthPitchNormPosition)) {
+            return "FeedbackUnavailable";
+        }
+        if (Math.abs(normTargetStatus - healthPitchNormPosition) > 0.01) {
+            return "Positioning";
+        }
+        return "Idle";
     }
 
     private void groundIntakeReset() {

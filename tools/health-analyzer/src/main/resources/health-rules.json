@@ -1,0 +1,87 @@
+{
+  "defaults": {
+    "LOW_VOLTAGE": {
+      "enabled": true,
+      "severity": "ERROR",
+      "durationSeconds": 0.25,
+      "thresholds": { "voltage": 7.0 }
+    },
+    "BROWNOUT": {
+      "enabled": true,
+      "severity": "CRITICAL",
+      "durationSeconds": 0.0,
+      "thresholds": {}
+    },
+    "HIGH_TOTAL_CURRENT": {
+      "enabled": true,
+      "severity": "WARNING",
+      "durationSeconds": 0.1,
+      "thresholds": { "rawCurrent": 250.0, "rollingCurrent": 200.0, "rollingWindowMs": 100.0 }
+    },
+    "STALL": {
+      "enabled": true,
+      "severity": "ERROR",
+      "durationSeconds": 0.35,
+      "thresholds": { "minOutputVolts": 2.0, "minStatorCurrent": 60.0, "maxAbsVelocity": 1.0 }
+    },
+    "MOTOR_IMBALANCE": {
+      "enabled": true,
+      "severity": "WARNING",
+      "durationSeconds": 0.5,
+      "thresholds": { "ratio": 0.45, "minCurrent": 10.0 }
+    },
+    "FOLLOWER_FAULT": {
+      "enabled": true,
+      "severity": "ERROR",
+      "durationSeconds": 0.4,
+      "thresholds": {
+        "leaderMinCurrent": 10.0,
+        "leaderMinOutputVolts": 1.0,
+        "followerMaxCurrent": 2.0,
+        "followerMaxAbsVelocity": 0.5,
+        "maxSampleAgeSeconds": 0.75
+      }
+    },
+    "TRACKING_ERROR": {
+      "enabled": true,
+      "severity": "WARNING",
+      "durationSeconds": 0.5,
+      "thresholds": { "error": 5.0 }
+    },
+    "TEMPERATURE": {
+      "enabled": true,
+      "severity": "WARNING",
+      "durationSeconds": 0.5,
+      "thresholds": { "temperature": 80.0, "riseCPerSecond": 5.0 }
+    },
+    "CAN_FAULT": {
+      "enabled": true,
+      "severity": "ERROR",
+      "durationSeconds": 0.25,
+      "thresholds": { "utilization": 0.85 }
+    },
+    "IDLE_DRAW": {
+      "enabled": true,
+      "severity": "WARNING",
+      "durationSeconds": 1.0,
+      "thresholds": { "supplyCurrent": 8.0, "statorCurrent": 10.0, "motorVoltage": 1.0 }
+    }
+  },
+  "subsystems": {
+    "Shooter": {
+      "TRACKING_ERROR": {
+        "durationSeconds": 1.5
+      }
+    }
+  },
+  "followers": [
+    { "subsystem": "Shooter", "leader": "RightUpLeader", "follower": "LeftDown" },
+    { "subsystem": "Shooter", "leader": "RightUpLeader", "follower": "LeftUp" },
+    { "subsystem": "Shooter", "leader": "RightUpLeader", "follower": "RightDown" },
+    {
+      "subsystem": "GroundIntake",
+      "leader": "RollerRightLeader",
+      "follower": "RollerLeft"
+    }
+  ]
+}

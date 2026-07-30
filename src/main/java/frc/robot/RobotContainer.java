@@ -31,6 +31,7 @@ import frc.robot.commands.PassBallCommand;
 import frc.robot.commands.RealTimeAimDrive;
 import frc.robot.commands.ShootWithTableCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.logging.RobotHealthLogger;
 import frc.robot.shooting.AllianceSide;
 import frc.robot.shooting.ShotSetpoint;
 import frc.robot.shooting.ShotTable;
@@ -334,5 +335,39 @@ public class RobotContainer {
         shooter.setIdle();
         groundIntake.stop();
         drivetrain.setControl(idleRequest);
+    }
+
+    /** Registers every active subsystem and exposes manual disabled-test controls. */
+    public void registerHealthLogging(RobotHealthLogger healthLogger) {
+        if (healthLogger == null) {
+            return;
+        }
+        drivetrain.registerHealthLogging(healthLogger);
+        shooter.registerHealthLogging(healthLogger);
+        feeder.registerHealthLogging(healthLogger);
+        groundIntake.registerHealthLogging(healthLogger);
+        vision.registerHealthLogging(healthLogger);
+        client.registerHealthLogging(healthLogger);
+
+        SmartDashboard.putString("Health/ManualSessionName", "Manual");
+        SmartDashboard.putData(
+                "Health/Start Manual Session",
+                Commands.runOnce(
+                                () -> healthLogger.startTestSession(
+                                        SmartDashboard.getString(
+                                                "Health/ManualSessionName",
+                                                "Manual")))
+                        .ignoringDisable(true));
+        SmartDashboard.putData(
+                "Health/Stop Manual Session",
+                Commands.runOnce(healthLogger::stopTestSession)
+                        .ignoringDisable(true));
+        SmartDashboard.putData(
+                "Health/Mark Event",
+                Commands.runOnce(
+                                () -> healthLogger.markEvent(
+                                        "Operator",
+                                        "Manual dashboard marker"))
+                        .ignoringDisable(true));
     }
 }

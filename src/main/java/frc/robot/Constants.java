@@ -81,7 +81,7 @@ public final class Constants {
 
         public static final double assistPitchCurrentThresholdAmps = 17.0;
         public static final double assistCooldownSeconds = 1.2;
-        public static final double intakePitchMotorMaxPositionRot = 8.2;
+        public static final double intakePitchMotorMaxPositionRot = 7;//8.2
         public static final double pitchNormPosition = 0.923;
 
         private GroundIntakeConstants() {}

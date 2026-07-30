@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.logging.RobotHealthLogger;
 import frc.robot.path.DynamicPathFactory;
 
 /**
@@ -529,6 +530,68 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 ex.getStackTrace()
             );
         }
+    }
+
+    /** Registers all eight swerve TalonFX devices and shared drive context. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        String[] moduleNames = {"FrontLeft", "FrontRight", "BackLeft", "BackRight"};
+        var modules = getModules();
+        for (int index = 0; index < Math.min(moduleNames.length, modules.length); index++) {
+            logger.registerTalonFX(
+                    "Drive",
+                    moduleNames[index] + "Drive",
+                    modules[index].getDriveMotor());
+            logger.registerTalonFX(
+                    "Drive",
+                    moduleNames[index] + "Steer",
+                    modules[index].getSteerMotor());
+        }
+        logger.registerSubsystem(
+                "Drive",
+                this,
+                this::isHealthActive,
+                this::getHealthState,
+                this::getMaximumTargetModuleSpeed,
+                this::getMaximumMeasuredModuleSpeed);
+    }
+
+    private boolean isHealthActive() {
+        ChassisSpeeds speeds = getState().Speeds;
+        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) > 0.05
+                || Math.abs(speeds.omegaRadiansPerSecond) > 0.05
+                || getMaximumTargetModuleSpeed() > 0.05;
+    }
+
+    private String getHealthState() {
+        if (!DriverStation.isEnabled()) {
+            return "Disabled";
+        }
+        if (m_autoShooting) {
+            return "Aiming";
+        }
+        if (DriverStation.isAutonomous()) {
+            return "Autonomous";
+        }
+        return isHealthActive() ? "Driving" : "Idle";
+    }
+
+    private double getMaximumTargetModuleSpeed() {
+        double maximum = 0.0;
+        for (var target : getState().ModuleTargets) {
+            maximum = Math.max(maximum, Math.abs(target.speedMetersPerSecond));
+        }
+        return maximum;
+    }
+
+    private double getMaximumMeasuredModuleSpeed() {
+        double maximum = 0.0;
+        for (var state : getState().ModuleStates) {
+            maximum = Math.max(maximum, Math.abs(state.speedMetersPerSecond));
+        }
+        return maximum;
     }
 
     private void startSimThread() {

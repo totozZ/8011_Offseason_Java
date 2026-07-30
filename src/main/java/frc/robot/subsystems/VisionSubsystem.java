@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
+import frc.robot.logging.RobotHealthLogger;
 import frc.robot.vision.LimelightIO;
 import frc.robot.vision.LimelightIO.PoseEstimate;
 import frc.robot.vision.LimelightIO.RawFiducial;
@@ -164,6 +165,45 @@ public class VisionSubsystem extends SubsystemBase {
                 ? 10_000_000.0
                 : 0.03 * distanceFactor;
         return new double[] {xyDeviation, xyDeviation, thetaDeviation};
+    }
+
+    /** Registers vision acceptance state; cameras remain NetworkTables inputs. */
+    public void registerHealthLogging(RobotHealthLogger logger) {
+        if (logger == null) {
+            return;
+        }
+        logger.registerSubsystem(
+                "Vision",
+                this,
+                this::hasAcceptedMeasurement,
+                this::getHealthState);
+    }
+
+    private boolean hasAcceptedMeasurement() {
+        for (int mode : visionModes) {
+            if (mode != MODE_REJECTED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getHealthState() {
+        int rejected = 0;
+        int megaTag2 = 0;
+        int mixed = 0;
+        for (int mode : visionModes) {
+            switch (mode) {
+                case MODE_MEGATAG2 -> megaTag2++;
+                case MODE_MIXED -> mixed++;
+                default -> rejected++;
+            }
+        }
+        return "Accepted=" + (megaTag2 + mixed)
+                + ",MegaTag2=" + megaTag2
+                + ",Mixed=" + mixed
+                + ",Rejected=" + rejected
+                + ",Errors=" + periodicFailureCount;
     }
 
     private static void appendReason(StringBuilder reason, String addition) {

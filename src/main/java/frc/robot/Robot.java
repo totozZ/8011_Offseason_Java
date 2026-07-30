@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -11,15 +12,36 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+import frc.robot.logging.HealthConfig;
+import frc.robot.logging.PdhChannelMap;
+import frc.robot.logging.RobotHealthLogger;
+
 public class Robot extends TimedRobot {
     private static final double kSchedulerOverrunMs = 20.0;
+    private static final int kPowerDistributionCanId = 1;
 
     private Command autonomousCommand;
+    private final RobotHealthLogger healthLogger =
+            new RobotHealthLogger(
+                    HealthConfig.builder()
+                            .powerDistribution(
+                                    kPowerDistributionCanId,
+                                    PowerDistribution.ModuleType.kRev,
+                                    PdhChannelMap.unknown(24))
+                            .build());
     private final RobotContainer robotContainer = new RobotContainer();
     private final Field2d simField = new Field2d();
     private int schedulerOverrunCount = 0;
     private double schedulerLoopMsMax = 0.0;
     private double lastEpochPrintSeconds = -1.0;
+    private double previousRobotPeriodicMs = Double.NaN;
+
+    @Override
+    public void robotInit() {
+        robotContainer.registerHealthLogging(healthLogger);
+        healthLogger.startTestSession("RobotBoot");
+        healthLogger.markEvent("Robot", "Robot initialization complete");
+    }
 
     @Override
     public void robotPeriodic() {
@@ -46,10 +68,16 @@ public class Robot extends TimedRobot {
             }
         }
         SmartDashboard.putNumber("SchedulerLoopOverrunCount", schedulerOverrunCount);
+
+        healthLogger.periodic(previousRobotPeriodicMs);
+        previousRobotPeriodicMs = (Timer.getFPGATimestamp() - loopStartSeconds) * 1000.0;
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        healthLogger.markEvent("RobotMode", "DisabledInit");
+        healthLogger.stopTestSession();
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -59,6 +87,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        beginHealthSession("Autonomous");
         autonomousCommand = robotContainer.getAutonomousCommand();
 
         if (autonomousCommand != null) {
@@ -76,6 +105,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
+        beginHealthSession("Teleop");
         robotContainer.onTeleopInit();
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(autonomousCommand);
@@ -90,6 +120,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testInit() {
+        beginHealthSession("Test");
         CommandScheduler.getInstance().cancelAll();
     }
 
@@ -107,5 +138,19 @@ public class Robot extends TimedRobot {
     @Override
     public void simulationPeriodic() {
         simField.setRobotPose(robotContainer.drivetrain.getState().Pose);
+    }
+
+    @Override
+    public void close() {
+        healthLogger.close();
+        super.close();
+    }
+
+    private void beginHealthSession(String mode) {
+        if (healthLogger.isSessionActive()) {
+            healthLogger.markEvent("RobotMode", mode + "Init");
+        } else {
+            healthLogger.startTestSession(mode);
+        }
     }
 }
