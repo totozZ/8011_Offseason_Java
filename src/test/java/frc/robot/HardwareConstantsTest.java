@@ -86,22 +86,11 @@ class HardwareConstantsTest {
     }
 
     @Test
-    void rioMechanismIdsRemainUniqueAndMatchCpp() {
-        Set<Integer> ids = Set.of(
-                Constants.ShooterConstants.shooterLeftDownMotorId,
-                Constants.ShooterConstants.shooterLeftUpMotorId,
-                Constants.ShooterConstants.shooterRightUpMotorId,
-                Constants.ShooterConstants.shooterRightDownMotorId,
-                Constants.ShooterConstants.shooterPitchMotorId,
-                Constants.FeederConstants.backwardFeederMotorId,
-                Constants.FeederConstants.upwardFeederMotorId,
-                Constants.GroundIntakeConstants.intakeRollerLeftMotorId,
-                Constants.GroundIntakeConstants.intakeRollerRightMotorId,
-                Constants.GroundIntakeConstants.intakePivotMotorId);
-
-        assertEquals(10, ids.size());
-        assertEquals(Set.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21), ids);
-        assertEquals("rio", Constants.CanConstants.rioCanBus.getName());
+    void foundationRioDevicesAndExampleSafetyDefaultsAreLocked() {
+        assertEquals("rio", Constants.CanConstants.RIO_CAN_BUS.getName());
+        assertEquals(1, Constants.CanConstants.REV_PDH_ID);
+        assertEquals(26, Constants.CanConstants.CANDLE_ID);
+        assertFalse(Constants.ExampleConstants.ENABLE_EXAMPLE_SUBSYSTEM);
     }
 
     private static void assertModule(

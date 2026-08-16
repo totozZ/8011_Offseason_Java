@@ -78,7 +78,23 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    exclude '**/FoundationSimulationSmokeTest.class'
 }
+
+// Run the full robot-construction smoke test in a separate JVM. CTRE initializes and mutates
+// generated module configuration objects while constructing the drivetrain, so it must not share
+// a process with the immutable TunerConstants unit tests.
+def simulationSmokeTest = tasks.register('simulationSmokeTest', Test) {
+    description = 'Constructs the foundation robot under HAL simulation and verifies NT topics.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    include '**/FoundationSimulationSmokeTest.class'
+    mustRunAfter test
+}
+
+check.dependsOn simulationSmokeTest
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
@@ -100,6 +116,7 @@ jar {
 deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
+wpi.java.configureTestTasks(simulationSmokeTest.get())
 
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {

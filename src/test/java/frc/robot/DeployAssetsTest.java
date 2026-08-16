@@ -22,7 +22,7 @@ class DeployAssetsTest {
             Path.of("src", "main", "deploy", "pathplanner");
 
     @Test
-    void cppPathPlannerAssetsArePresent() {
+    void foundationPathPlannerAssetsArePresent() {
         assertTrue(Files.isRegularFile(PATHPLANNER.resolve("settings.json")));
         assertTrue(Files.isRegularFile(PATHPLANNER.resolve("navgrid.json")));
         assertTrue(Files.isRegularFile(
@@ -50,7 +50,7 @@ class DeployAssetsTest {
     }
 
     @Test
-    void pathPlannerRobotSettingsMatchCppDeployBaseline()
+    void pathPlannerRobotSettingsMatchRuntimeDrivetrainModel()
             throws IOException, ParseException {
         JSONObject settings = parse(PATHPLANNER.resolve("settings.json"));
 
@@ -58,10 +58,22 @@ class DeployAssetsTest {
         assertEquals(0.86, number(settings, "robotLength"), 1e-9);
         assertEquals(55.0, number(settings, "robotMass"), 1e-9);
         assertEquals(6.883, number(settings, "robotMOI"), 1e-9);
-        assertEquals(0.546, number(settings, "robotTrackwidth"), 1e-9);
-        assertEquals(0.048, number(settings, "driveWheelRadius"), 1e-9);
-        assertEquals(6.7403, number(settings, "driveGearing"), 1e-9);
-        assertEquals(60.0, number(settings, "driveCurrentLimit"), 1e-9);
+        assertEquals(0.55245, number(settings, "robotTrackwidth"), 1e-9);
+        assertEquals(0.0510032, number(settings, "driveWheelRadius"), 1e-9);
+        assertEquals(6.746031746031747, number(settings, "driveGearing"), 1e-9);
+        assertEquals(4.1, number(settings, "maxDriveSpeed"), 1e-9);
+        assertEquals("krakenX60", settings.get("driveMotorType"));
+        assertEquals(40.0, number(settings, "driveCurrentLimit"), 1e-9);
+        assertEquals(1.2, number(settings, "wheelCOF"), 1e-9);
+
+        assertEquals(0.276225, number(settings, "flModuleX"), 1e-9);
+        assertEquals(0.276225, number(settings, "flModuleY"), 1e-9);
+        assertEquals(0.276225, number(settings, "frModuleX"), 1e-9);
+        assertEquals(-0.276225, number(settings, "frModuleY"), 1e-9);
+        assertEquals(-0.276225, number(settings, "blModuleX"), 1e-9);
+        assertEquals(0.276225, number(settings, "blModuleY"), 1e-9);
+        assertEquals(-0.276225, number(settings, "brModuleX"), 1e-9);
+        assertEquals(-0.276225, number(settings, "brModuleY"), 1e-9);
     }
 
     private static JSONObject parse(Path path)

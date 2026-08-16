@@ -23,7 +23,7 @@ import frc.robot.vision.LimelightIO;
 import frc.robot.vision.LimelightIO.PoseEstimate;
 
 /** Fuses translation-only MegaTag2 measurements from the three robot Limelights. */
-public class VisionSubsystem extends SubsystemBase {
+public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
     private final CommandSwerveDrivetrain drivetrain;
     private final CameraState[] cameras;
 
@@ -125,6 +125,13 @@ public class VisionSubsystem extends SubsystemBase {
         };
     }
 
+    @Override
+    public void close() {
+        for (CameraState camera : cameras) {
+            camera.close();
+        }
+    }
+
     private static void appendReason(StringBuilder reason, String addition) {
         if (!reason.isEmpty()) {
             reason.append('|');
@@ -191,6 +198,16 @@ public class VisionSubsystem extends SubsystemBase {
                         "Vision camera " + cameraName + " failed: " + message,
                         false);
             }
+        }
+
+        void close() {
+            acceptedPublisher.close();
+            rejectReasonPublisher.close();
+            tagCountPublisher.close();
+            averageDistancePublisher.close();
+            latencyPublisher.close();
+            posePublisher.close();
+            failureCountPublisher.close();
         }
     }
 }

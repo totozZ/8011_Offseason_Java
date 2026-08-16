@@ -49,4 +49,19 @@ class LimelightIOTest {
         assertTrue(missing.isEmpty());
         assertTrue(shortPose.isEmpty());
     }
+
+    @Test
+    void rejectsNonFiniteValuesAndNegativeTagCounts() {
+        double[] nonFinite = {
+            0.0, 0.0, 0.0, 0.0, 0.0, Double.NaN,
+            0.0, 0.0, 0.0, 0.0, 0.0
+        };
+        double[] negativeTags = {
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0, 0.0
+        };
+
+        assertTrue(LimelightIO.parsePoseEstimate(nonFinite, 0L).isEmpty());
+        assertTrue(LimelightIO.parsePoseEstimate(negativeTags, 0L).isEmpty());
+    }
 }

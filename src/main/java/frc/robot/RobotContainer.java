@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import java.util.Optional;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -22,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -50,11 +53,19 @@ public class RobotContainer implements AutoCloseable {
     private final Command doNothingCommand = Commands.none().withName("Do Nothing");
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private final Telemetry telemetry = new Telemetry();
     private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     private final LEDSubsystem led = new LEDSubsystem();
+    private final Optional<ExampleSubsystem> exampleSubsystem =
+            Constants.ExampleConstants.ENABLE_EXAMPLE_SUBSYSTEM
+                    ? Optional.of(new ExampleSubsystem(
+                            Constants.ExampleConstants.MOTOR_CAN_ID,
+                            Constants.ExampleConstants.MOTOR_CAN_BUS))
+                    : Optional.empty();
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
+        drivetrain.registerTelemetry(telemetry::publish);
         configureBindings();
         autoChooser = buildAutoChooser();
 
@@ -135,8 +146,16 @@ public class RobotContainer implements AutoCloseable {
         led.setFault(active);
     }
 
+    public Optional<ExampleSubsystem> getExampleSubsystem() {
+        return exampleSubsystem;
+    }
+
     @Override
     public void close() {
+        exampleSubsystem.ifPresent(ExampleSubsystem::close);
+        telemetry.close();
+        vision.close();
         led.close();
+        drivetrain.close();
     }
 }
