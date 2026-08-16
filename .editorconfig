@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{java,gradle}]
+indent_style = space
+indent_size = 4
+continuation_indent_size = 4
+max_line_length = 120
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.md]
+max_line_length = 120
+trim_trailing_whitespace = false
+
+# Tuner X owns this file. Replace it as a whole instead of locally reformatting it.
+[src/main/java/frc/robot/generated/TunerConstants.java]
+indent_size = unset
+max_line_length = off
