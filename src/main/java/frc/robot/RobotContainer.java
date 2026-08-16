@@ -4,370 +4,139 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
-import frc.robot.commands.ComplexCommands;
-import frc.robot.commands.IntakeNextToHubCommand;
-import frc.robot.commands.IntakeNextToSideCommand;
-import frc.robot.commands.IntakeNextToWallCommand;
-import frc.robot.commands.PassBallCommand;
-import frc.robot.commands.RealTimeAimDrive;
-import frc.robot.commands.ShootWithTableCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.logging.RobotHealthLogger;
-import frc.robot.shooting.AllianceSide;
-import frc.robot.shooting.ShotSetpoint;
-import frc.robot.shooting.ShotTable;
-import frc.robot.subsystems.ClientSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.GroundIntakeSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
-public class RobotContainer {
+/** Constructs the robot subsystems, operator bindings, and autonomous chooser. */
+public class RobotContainer implements AutoCloseable {
     private final double maxSpeedMetersPerSecond =
             TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     private final double maxAngularRateRadiansPerSecond =
-            RotationsPerSecond.of(0.95).in(RadiansPerSecond);
+            Constants.DriveConstants.MAX_ANGULAR_RATE_RADIANS_PER_SECOND;
 
-    private final SwerveRequest.FieldCentric driveClosed = new SwerveRequest.FieldCentric()
-            .withDeadband(maxSpeedMetersPerSecond * 0.07)
-            .withRotationalDeadband(maxAngularRateRadiansPerSecond * 0.05)
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.Position);
-    private final SwerveRequest.Idle idleRequest = new SwerveRequest.Idle();
+    private final SwerveRequest.FieldCentric driveRequest =
+            new SwerveRequest.FieldCentric()
+                    .withDeadband(
+                            maxSpeedMetersPerSecond
+                                    * Constants.OperatorConstants.TRANSLATION_DEADBAND)
+                    .withRotationalDeadband(
+                            maxAngularRateRadiansPerSecond
+                                    * Constants.OperatorConstants.ROTATION_DEADBAND)
+                    .withDriveRequestType(DriveRequestType.Velocity)
+                    .withSteerRequestType(SteerRequestType.Position);
+    private final SwerveRequest.SwerveDriveBrake brakeRequest =
+            new SwerveRequest.SwerveDriveBrake();
 
-    private final Telemetry logger = new Telemetry(maxSpeedMetersPerSecond);
-    private final CommandXboxController joystick =
-            new CommandXboxController(Constants.OperatorConstants.kDriverControllerPort);
-    private final ShooterSubsystem shooter = new ShooterSubsystem();
-    private final FeederSubsystem feeder = new FeederSubsystem();
-    private final GroundIntakeSubsystem groundIntake = new GroundIntakeSubsystem();
+    private final CommandXboxController driverController = new CommandXboxController(
+            Constants.OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final Command doNothingCommand = Commands.none().withName("Do Nothing");
+
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
-    private final ClientSubsystem client = new ClientSubsystem(drivetrain);
-    private final ComplexCommands complexCommand =
-            new ComplexCommands(drivetrain, feeder, groundIntake);
-    private final Command doNothingCommand = Commands.none().withName("Do Nothing");
+    private final LEDSubsystem led = new LEDSubsystem();
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        RobotController.setBrownoutVoltage(6.5);
-        configureNamedCommands();
-        autoChooser = buildAutoChooser();
-        SmartDashboard.putData("Auto Mode", autoChooser);
         configureBindings();
-    }
+        autoChooser = buildAutoChooser();
 
-    private void configureNamedCommands() {
-        NamedCommands.registerCommand("Intake", complexCommand.groundIntakePrepareCommand());
-        NamedCommands.registerCommand(
-                "ShootTower",
-                new ShootWithTableCommand(
-                        shooter,
-                        feeder,
-                        ShotTable::tower,
-                        () -> true)
-                    .withTimeout(3.0));
-        NamedCommands.registerCommand(
-                "StopAll",
-                Commands.runOnce(this::safeStopMechanisms, shooter, feeder, groundIntake, drivetrain));
-    }
+        // This SendableChooser is the one approved /SmartDashboard namespace exception.
+        SmartDashboard.putData(Constants.TelemetryConstants.AUTO_CHOOSER_KEY, autoChooser);
 
-    private SendableChooser<Command> buildAutoChooser() {
-        SendableChooser<Command> chooser = AutoBuilder.isConfigured()
-                ? AutoBuilder.buildAutoChooser("Do Nothing")
-                : new SendableChooser<>();
-        chooser.setDefaultOption("Do Nothing (Safe)", doNothingCommand);
-        return chooser;
+        // SysId is intentionally not bound by default. Lift the wheels and review the docs first.
+        // configureSysIdBindings();
     }
 
     private void configureBindings() {
-        drivetrain.setDefaultCommand(
-            drivetrain.applyRequest(() ->
-                driveClosed
-                    .withVelocityX(
-                        -joystick.getLeftY()
-                            * maxSpeedMetersPerSecond
-                            * Constants.OperatorConstants.speedRate)
-                    .withVelocityY(
-                        -joystick.getLeftX()
-                            * maxSpeedMetersPerSecond
-                            * Constants.OperatorConstants.speedRate)
-                    .withRotationalRate(
-                        -joystick.getRightX()
-                            * maxAngularRateRadiansPerSecond
-                            * Constants.OperatorConstants.angularSpeedRate)
-            )
-        );
+        drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> driveRequest
+                .withVelocityX(
+                        -driverController.getLeftY()
+                                * maxSpeedMetersPerSecond
+                                * Constants.OperatorConstants.DRIVE_SPEED_SCALE)
+                .withVelocityY(
+                        -driverController.getLeftX()
+                                * maxSpeedMetersPerSecond
+                                * Constants.OperatorConstants.DRIVE_SPEED_SCALE)
+                .withRotationalRate(
+                        -driverController.getRightX()
+                                * maxAngularRateRadiansPerSecond
+                                * Constants.OperatorConstants.TURN_SPEED_SCALE)));
 
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idleRequest).ignoringDisable(true)
-        );
-
-        drivetrain.registerTelemetry(logger::telemeterize);
-
-        joystick.start().onTrue(
-            Commands.sequence(
-                complexCommand.groundIntakeResetCommand(),
-                groundIntake.setPitchNormPositionCommand(0.07)
-            )
-        );
-
-        Command mainShot = Commands
-            .either(
-                makeHubShootCommand(),
-                makePassShootCommand(),
-                this::isHubShootingRegion
-            )
-            .onlyIf(() -> {
-                boolean known = DriverStation.getAlliance().isPresent();
-                if (!known) {
-                    SmartDashboard.putString("Shooting/BlockedReason", "Alliance unknown");
-                }
-                return known;
-            });
-        joystick.rightTrigger()
-            .whileTrue(mainShot)
-            .onFalse(complexCommand.groundIntakeResetCommand());
-
-        joystick.rightBumper().whileTrue(
-            Commands.sequence(
-                complexCommand.groundIntakeResetCommand(),
-                Commands.either(
-                    complexCommand.passBump(false),
-                    complexCommand.passBump(true),
-                    this::useOpponentRoute
-                )
-            )
-        );
-
-        joystick.leftTrigger()
-            .whileTrue(complexCommand.groundIntakePrepareCommand())
-            .onFalse(complexCommand.groundIntakeResetCommand());
-
-        joystick.povUp()
-            .whileTrue(makeFallbackShootCommand(ShotTable.zeroPitchFallback()))
-            .onFalse(complexCommand.groundIntakeResetCommand());
-
-        joystick.povDown()
-            .whileTrue(makeFallbackShootCommand(ShotTable.tower()))
-            .onFalse(complexCommand.groundIntakeResetCommand());
-
-        joystick.povRight()
-            .onTrue(complexCommand.groundIntakeAntiCommand())
-            .onFalse(complexCommand.groundIntakeResetCommand());
-
-        joystick.a().whileTrue(
-            new IntakeNextToSideCommand(
-                drivetrain,
-                groundIntake,
-                joystick::getLeftX,
-                true
-            )
-        );
-
-        joystick.b().whileTrue(
-            Commands.either(
-                new IntakeNextToHubCommand(
-                    drivetrain,
-                    groundIntake,
-                    joystick::getLeftY,
-                    true
-                ),
-                new IntakeNextToWallCommand(
-                    drivetrain,
-                    groundIntake,
-                    joystick::getLeftY,
-                    true
-                ),
-                () -> {
-                    double x = drivetrain.getState().Pose.getX();
-                    return x > Constants.FieldConstants.hubPassBlueBoundaryXMeters
-                        && x < Constants.FieldConstants.hubPassRedBoundaryXMeters;
-                }
-            )
-        );
-
-        joystick.x().whileTrue(
-            Commands.either(
-                new IntakeNextToHubCommand(
-                    drivetrain,
-                    groundIntake,
-                    joystick::getLeftY,
-                    false
-                ),
-                new IntakeNextToWallCommand(
-                    drivetrain,
-                    groundIntake,
-                    joystick::getLeftY,
-                    false
-                ),
-                () -> {
-                    double x = drivetrain.getState().Pose.getX();
-                    return x > Constants.FieldConstants.hubPassBlueBoundaryXMeters
-                        && x < Constants.FieldConstants.hubPassRedBoundaryXMeters;
-                }
-            )
-        );
-
-        joystick.y().whileTrue(
-            Commands.sequence(
-                Commands.runOnce(
-                    () -> {
-                        shooter.setIdle();
-                        feeder.stop();
-                    },
-                    shooter,
-                    feeder
-                ),
-                Commands.either(
-                    complexCommand.passTrench(false),
-                    complexCommand.passTrench(true),
-                    this::useOpponentRoute
-                )
-            )
-        );
+        driverController.start().onTrue(
+                Commands.runOnce(drivetrain::seedFieldCentric, drivetrain)
+                        .withName("ResetDriverHeading"));
+        driverController.x().whileTrue(
+                drivetrain.applyRequest(() -> brakeRequest).withName("SwerveXLock"));
     }
 
-    private Command makeHubShootCommand() {
-        return Commands.sequence(
-            complexCommand.groundIntakeResetCommand(),
-            Commands.parallel(
-                new RealTimeAimDrive(drivetrain),
-                new ShootWithTableCommand(
-                    shooter,
-                    feeder,
-                    () -> ShotTable.hub(drivetrain.getDistanceToHub()),
-                    () -> drivetrain.getSomAngleDiff() <= 3.0
-                ),
-                complexCommand.groundIntakeAssistCommand().repeatedly()
-            )
-        );
+    /**
+     * Example SysId bindings. Never call this until the robot is secured with all wheels off the
+     * ground and the selected routine is reviewed.
+     */
+    @SuppressWarnings("unused")
+    private void configureSysIdBindings() {
+        driverController.povUp().whileTrue(
+                drivetrain.translationSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        driverController.povDown().whileTrue(
+                drivetrain.translationSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        driverController.povRight().whileTrue(
+                drivetrain.translationSysIdDynamic(SysIdRoutine.Direction.kForward));
+        driverController.povLeft().whileTrue(
+                drivetrain.translationSysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        // The steer and rotation routines remain available on CommandSwerveDrivetrain. Bind only
+        // one routine at a time so an operator cannot select the wrong characterization by accident.
     }
 
-    private Command makePassShootCommand() {
-        return Commands.sequence(
-            complexCommand.groundIntakeResetCommand(),
-            Commands.parallel(
-                new PassBallCommand(drivetrain, shooter, feeder),
-                complexCommand.groundIntakeAssistCommand().repeatedly()
-            )
-        );
-    }
-
-    private Command makeFallbackShootCommand(ShotSetpoint setpoint) {
-        return Commands.sequence(
-            complexCommand.groundIntakeResetCommand(),
-            Commands.parallel(
-                Commands.run(drivetrain::setBrakeRequest, drivetrain),
-                new ShootWithTableCommand(
-                    shooter,
-                    feeder,
-                    () -> setpoint,
-                    () -> true,
-                    true
-                )
-            )
-        );
-    }
-
-    private boolean isHubShootingRegion() {
-        return DriverStation.getAlliance()
-            .map(alliance -> {
-                AllianceSide side = alliance == Alliance.Red ? AllianceSide.RED : AllianceSide.BLUE;
-                return ShotTable.isHubRegion(side, drivetrain.getState().Pose.getX());
-            })
-            .orElse(false);
-    }
-
-    private boolean useOpponentRoute() {
-        return DriverStation.getAlliance()
-            .map(alliance -> {
-                double xMeters = drivetrain.getState().Pose.getX();
-                double midfieldMeters = Constants.FieldConstants.fieldLengthMeters / 2.0;
-                return alliance == Alliance.Red
-                    ? xMeters >= midfieldMeters
-                    : xMeters <= midfieldMeters;
-            })
-            .orElse(false);
+    private SendableChooser<Command> buildAutoChooser() {
+        SendableChooser<Command> chooser = new SendableChooser<>();
+        try {
+            if (AutoBuilder.isConfigured()) {
+                chooser = AutoBuilder.buildAutoChooser("Do Nothing");
+            }
+        } catch (RuntimeException exception) {
+            DriverStation.reportError(
+                    "PathPlanner auto chooser failed; using Do Nothing: "
+                            + exception.getMessage(),
+                    exception.getStackTrace());
+        }
+        chooser.setDefaultOption("Do Nothing", doNothingCommand);
+        return chooser;
     }
 
     public Command getAutonomousCommand() {
         Command selected = autoChooser.getSelected();
-        return selected != null ? selected : doNothingCommand;
+        return selected == null ? doNothingCommand : selected;
     }
 
-    public void updateDriverPerspective() {
-        drivetrain.updateDriverPerspective();
+    public void setLedState(LEDSubsystem.State state) {
+        led.setState(state);
     }
 
-    public void onAutonomousExit() {
-        safeStopMechanisms();
+    public void setLedFault(boolean active) {
+        led.setFault(active);
     }
 
-    public void onTeleopInit() {
-        drivetrain.setDriveBrakeNeutralMode();
-        groundIntake.setTeleopRollerCurrentLimit();
-        drivetrain.setControl(idleRequest);
-    }
-
-    public void safeStopMechanisms() {
-        feeder.stop();
-        shooter.setIdle();
-        groundIntake.stop();
-        drivetrain.setControl(idleRequest);
-    }
-
-    /** Registers every active subsystem and exposes manual disabled-test controls. */
-    public void registerHealthLogging(RobotHealthLogger healthLogger) {
-        if (healthLogger == null) {
-            return;
-        }
-        drivetrain.registerHealthLogging(healthLogger);
-        shooter.registerHealthLogging(healthLogger);
-        feeder.registerHealthLogging(healthLogger);
-        groundIntake.registerHealthLogging(healthLogger);
-        vision.registerHealthLogging(healthLogger);
-        client.registerHealthLogging(healthLogger);
-
-        SmartDashboard.putString("Health/ManualSessionName", "Manual");
-        SmartDashboard.putData(
-                "Health/Start Manual Session",
-                Commands.runOnce(
-                                () -> healthLogger.startTestSession(
-                                        SmartDashboard.getString(
-                                                "Health/ManualSessionName",
-                                                "Manual")))
-                        .ignoringDisable(true));
-        SmartDashboard.putData(
-                "Health/Stop Manual Session",
-                Commands.runOnce(healthLogger::stopTestSession)
-                        .ignoringDisable(true));
-        SmartDashboard.putData(
-                "Health/Mark Event",
-                Commands.runOnce(
-                                () -> healthLogger.markEvent(
-                                        "Operator",
-                                        "Manual dashboard marker"))
-                        .ignoringDisable(true));
+    @Override
+    public void close() {
+        led.close();
     }
 }

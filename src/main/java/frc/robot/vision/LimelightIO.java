@@ -52,10 +52,7 @@ public final class LimelightIO {
                 new double[] {yawDegrees, 0.0, 0.0, 0.0, 0.0, 0.0});
     }
 
-    public Optional<PoseEstimate> getMegaTag1Estimate() {
-        return readPoseEstimate("botpose_wpiblue");
-    }
-
+    /** Reads MegaTag2 in the WPILib blue-alliance field coordinate system. */
     public Optional<PoseEstimate> getMegaTag2Estimate() {
         return readPoseEstimate("botpose_orb_wpiblue");
     }

@@ -4,153 +4,143 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-import frc.robot.logging.HealthConfig;
-import frc.robot.logging.PdhChannelMap;
-import frc.robot.logging.RobotHealthLogger;
+import frc.robot.subsystems.LEDSubsystem;
 
+/** Owns WPILib lifecycle, logging, system power telemetry, and autonomous scheduling. */
 public class Robot extends TimedRobot {
-    private static final double kSchedulerOverrunMs = 20.0;
-    private static final int kPowerDistributionCanId = 1;
+    private static final double BROWNOUT_VOLTAGE_VOLTS = 7.0;
+    private static final int SYSTEM_TELEMETRY_PERIOD_LOOPS = 5; // 20 ms loop -> 10 Hz.
 
+    private RobotContainer robotContainer;
     private Command autonomousCommand;
-    private final RobotHealthLogger healthLogger =
-            new RobotHealthLogger(
-                    HealthConfig.builder()
-                            .powerDistribution(
-                                    kPowerDistributionCanId,
-                                    PowerDistribution.ModuleType.kRev,
-                                    PdhChannelMap.unknown(24))
-                            .build());
-    private final RobotContainer robotContainer = new RobotContainer();
-    private final Field2d simField = new Field2d();
-    private int schedulerOverrunCount = 0;
-    private double schedulerLoopMsMax = 0.0;
-    private double lastEpochPrintSeconds = -1.0;
-    private double previousRobotPeriodicMs = Double.NaN;
+    private PowerDistribution powerDistribution;
+
+    private DoublePublisher batteryVoltagePublisher;
+    private DoublePublisher totalCurrentPublisher;
+    private DoublePublisher brownoutVoltagePublisher;
+    private BooleanPublisher brownedOutPublisher;
+    private StringPublisher modePublisher;
+    private int telemetryLoopCounter;
 
     @Override
     public void robotInit() {
-        robotContainer.registerHealthLogging(healthLogger);
-        healthLogger.startTestSession("RobotBoot");
-        healthLogger.markEvent("Robot", "Robot initialization complete");
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog(), true);
+        RobotController.setBrownoutVoltage(BROWNOUT_VOLTAGE_VOLTS);
+
+        powerDistribution = new PowerDistribution(
+                Constants.CanConstants.REV_PDH_ID,
+                PowerDistribution.ModuleType.kRev);
+        initializeSystemTelemetry();
+        robotContainer = new RobotContainer();
     }
 
     @Override
     public void robotPeriodic() {
-        CommandScheduler scheduler = CommandScheduler.getInstance();
-        double loopStartSeconds = Timer.getFPGATimestamp();
-
-        robotContainer.updateDriverPerspective();
-        scheduler.run();
-
-        double loopEndSeconds = Timer.getFPGATimestamp();
-        double schedulerLoopMs = (loopEndSeconds - loopStartSeconds) * 1000.0;
-        schedulerLoopMsMax = Math.max(schedulerLoopMsMax, schedulerLoopMs);
-
-        SmartDashboard.putNumber("SchedulerLoopMs", schedulerLoopMs);
-        SmartDashboard.putNumber("SchedulerLoopMsMax", schedulerLoopMsMax);
-        SmartDashboard.putNumber("SchedulerLoopOverrunThresholdMs", kSchedulerOverrunMs);
-        SmartDashboard.putBoolean("SchedulerLoopOverrun", schedulerLoopMs > kSchedulerOverrunMs);
-
-        if (schedulerLoopMs > kSchedulerOverrunMs) {
-            schedulerOverrunCount++;
-            if (lastEpochPrintSeconds < 0.0 || (loopEndSeconds - lastEpochPrintSeconds) > 0.5) {
-                scheduler.printWatchdogEpochs();
-                lastEpochPrintSeconds = loopEndSeconds;
-            }
+        CommandScheduler.getInstance().run();
+        if (telemetryLoopCounter++ % SYSTEM_TELEMETRY_PERIOD_LOOPS == 0) {
+            publishSystemTelemetry();
         }
-        SmartDashboard.putNumber("SchedulerLoopOverrunCount", schedulerOverrunCount);
-
-        healthLogger.periodic(previousRobotPeriodicMs);
-        previousRobotPeriodicMs = (Timer.getFPGATimestamp() - loopStartSeconds) * 1000.0;
     }
 
     @Override
     public void disabledInit() {
-        healthLogger.markEvent("RobotMode", "DisabledInit");
-        healthLogger.stopTestSession();
+        robotContainer.setLedState(LEDSubsystem.State.DISABLED);
     }
 
     @Override
-    public void disabledPeriodic() {}
-
-    @Override
-    public void disabledExit() {}
-
-    @Override
     public void autonomousInit() {
-        beginHealthSession("Autonomous");
+        robotContainer.setLedState(LEDSubsystem.State.AUTONOMOUS);
         autonomousCommand = robotContainer.getAutonomousCommand();
-
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(autonomousCommand);
         }
     }
 
     @Override
-    public void autonomousPeriodic() {}
-
-    @Override
-    public void autonomousExit() {
-        robotContainer.onAutonomousExit();
-    }
-
-    @Override
     public void teleopInit() {
-        beginHealthSession("Teleop");
-        robotContainer.onTeleopInit();
+        robotContainer.setLedState(LEDSubsystem.State.TELEOP);
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(autonomousCommand);
+            autonomousCommand = null;
         }
     }
 
     @Override
-    public void teleopPeriodic() {}
-
-    @Override
-    public void teleopExit() {}
-
-    @Override
     public void testInit() {
-        beginHealthSession("Test");
         CommandScheduler.getInstance().cancelAll();
-    }
-
-    @Override
-    public void testPeriodic() {}
-
-    @Override
-    public void testExit() {}
-
-    @Override
-    public void simulationInit() {
-        SmartDashboard.putData("Simulation Field", simField);
-    }
-
-    @Override
-    public void simulationPeriodic() {
-        simField.setRobotPose(robotContainer.drivetrain.getState().Pose);
+        robotContainer.setLedState(LEDSubsystem.State.TEST);
     }
 
     @Override
     public void close() {
-        healthLogger.close();
+        if (robotContainer != null) {
+            robotContainer.close();
+        }
+        if (powerDistribution != null) {
+            powerDistribution.close();
+        }
+        closePublishers();
         super.close();
     }
 
-    private void beginHealthSession(String mode) {
-        if (healthLogger.isSessionActive()) {
-            healthLogger.markEvent("RobotMode", mode + "Init");
-        } else {
-            healthLogger.startTestSession(mode);
+    private void initializeSystemTelemetry() {
+        NetworkTable table = NetworkTableInstance.getDefault()
+                .getTable("FRC8011")
+                .getSubTable("Robot");
+        batteryVoltagePublisher = table.getDoubleTopic("BatteryVoltageV").publish();
+        totalCurrentPublisher = table.getDoubleTopic("PDHTotalCurrentA").publish();
+        brownoutVoltagePublisher = table.getDoubleTopic("BrownoutVoltageV").publish();
+        brownedOutPublisher = table.getBooleanTopic("BrownedOut").publish();
+        modePublisher = table.getStringTopic("Mode").publish();
+    }
+
+    private void publishSystemTelemetry() {
+        boolean brownedOut = RobotController.isBrownedOut();
+        batteryVoltagePublisher.set(RobotController.getBatteryVoltage());
+        totalCurrentPublisher.set(powerDistribution.getTotalCurrent());
+        brownoutVoltagePublisher.set(BROWNOUT_VOLTAGE_VOLTS);
+        brownedOutPublisher.set(brownedOut);
+        modePublisher.set(currentMode());
+        robotContainer.setLedFault(brownedOut);
+    }
+
+    private static String currentMode() {
+        if (DriverStation.isDisabled()) {
+            return "Disabled";
+        }
+        if (DriverStation.isAutonomous()) {
+            return "Autonomous";
+        }
+        if (DriverStation.isTeleop()) {
+            return "Teleop";
+        }
+        if (DriverStation.isTest()) {
+            return "Test";
+        }
+        return "Unknown";
+    }
+
+    private void closePublishers() {
+        if (batteryVoltagePublisher != null) {
+            batteryVoltagePublisher.close();
+            totalCurrentPublisher.close();
+            brownoutVoltagePublisher.close();
+            brownedOutPublisher.close();
+            modePublisher.close();
         }
     }
 }

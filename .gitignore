@@ -176,6 +176,13 @@ simgui.json
 # Simulation data log directory
 logs/
 
+# Robot/runtime data logs and local simulator state
+/log/
+*.wpilog
+*.hoot
+simgui-ds.json
+/--help/
+
 # Local Claude/Codex-style tool settings
 .claude/*.local.json
 

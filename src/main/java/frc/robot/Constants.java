@@ -6,85 +6,72 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 
+/** Project-owned constants. Keep generated drivetrain values in {@code TunerConstants}. */
 public final class Constants {
     public static final class CanConstants {
-        public static final CANBus rioCanBus = new CANBus("rio");
+        public static final CANBus RIO_CAN_BUS = new CANBus("rio");
+        public static final int REV_PDH_ID = 1;
+        public static final int CANDLE_ID = 26;
 
         private CanConstants() {}
     }
 
     public static final class OperatorConstants {
-        public static final int kDriverControllerPort = 0;
-        public static final double speedRate = 0.75;
-        public static final double angularSpeedRate = 0.95;
+        public static final int DRIVER_CONTROLLER_PORT = 0;
+        public static final double DRIVE_SPEED_SCALE = 0.75;
+        public static final double TURN_SPEED_SCALE = 0.95;
+        public static final double TRANSLATION_DEADBAND = 0.07;
+        public static final double ROTATION_DEADBAND = 0.05;
 
         private OperatorConstants() {}
     }
 
-    public static final class FieldConstants {
-        public static final double fieldLengthMeters = 16.54;
-        public static final double fieldWidthMeters = 8.07;
-        public static final double hubPassBlueBoundaryXMeters = 5.0;
-        public static final double hubPassRedBoundaryXMeters =
-                fieldLengthMeters - hubPassBlueBoundaryXMeters;
+    public static final class DriveConstants {
+        public static final double MAX_ANGULAR_RATE_RADIANS_PER_SECOND = Math.PI * 1.9;
 
-        private FieldConstants() {}
-    }
-
-    public static final class DriveAimingConstants {
-        public static final double blueHubXMeters = 4.625594;
-        public static final double blueHubYMeters = 4.034536;
-        public static final double redHubXMeters = 11.915394;
-        public static final double redHubYMeters = 4.034536;
-
-        public static final double maxDriveAimingOmegaRadPerSec = 3.5;
-        public static final double driveAimingAngleToleranceDeg = 0.5;
-
-        private DriveAimingConstants() {}
+        private DriveConstants() {}
     }
 
     public static final class VisionConstants {
-        public static final String[] limelightNames = {
+        public static final String[] LIMELIGHT_NAMES = {
             "limelight-left",
             "limelight-back",
             "limelight-right"
         };
 
+        // Tune these from real logs. They are deliberately centralized for pit review.
+        public static final double MAX_ANGULAR_VELOCITY_DEGREES_PER_SECOND = 100.0;
+        public static final double MIN_AVERAGE_DISTANCE_METERS = 0.26;
+        public static final double MAX_AVERAGE_DISTANCE_METERS = 4.50;
+        public static final double XY_STANDARD_DEVIATION_COEFFICIENT = 0.01;
+        public static final double DISTANCE_STANDARD_DEVIATION_EXPONENT = 1.2;
+        public static final double HEADING_STANDARD_DEVIATION_RADIANS = 10_000_000.0;
+
         private VisionConstants() {}
     }
 
-    public static final class FeederConstants {
-        public static final int backwardFeederMotorId = 17;
-        public static final int upwardFeederMotorId = 18;
+    public static final class ExampleConstants {
+        /** Keep false until the example CAN ID, bus, limits, ratios, and gains are reviewed. */
+        public static final boolean ENABLE_EXAMPLE_SUBSYSTEM = false;
 
-        private FeederConstants() {}
+        // Placeholder teaching values. They are not safe defaults for a real mechanism.
+        public static final int MOTOR_CAN_ID = 40;
+        public static final String MOTOR_CAN_BUS = "rio";
+
+        private ExampleConstants() {}
     }
 
-    public static final class ShooterConstants {
-        public static final int shooterLeftDownMotorId = 12;
-        public static final int shooterLeftUpMotorId = 13;
-        public static final int shooterRightUpMotorId = 14;
-        public static final int shooterRightDownMotorId = 15;
-        public static final int shooterPitchMotorId = 16;
+    public static final class TelemetryConstants {
+        public static final String ROOT = "/FRC8011";
+        public static final String ROBOT = ROOT + "/Robot";
+        public static final String DRIVE = ROOT + "/Drive";
+        public static final String VISION = ROOT + "/Vision";
+        public static final String LED = ROOT + "/LED";
+        public static final String EXAMPLE = ROOT + "/Example";
+        public static final String EXAMPLE_TUNING = ROOT + "/Tuning/Example";
+        public static final String AUTO_CHOOSER_KEY = "FRC8011/Auto/Chooser";
 
-        public static final double maxPitchAngleDeg = 34.65;
-        public static final double minPitchAngleDeg = 0.0;
-        public static final double pitchMotorMaxPositionRot = 12.005;
-
-        private ShooterConstants() {}
-    }
-
-    public static final class GroundIntakeConstants {
-        public static final int intakeRollerLeftMotorId = 19;
-        public static final int intakeRollerRightMotorId = 20;
-        public static final int intakePivotMotorId = 21;
-
-        public static final double assistPitchCurrentThresholdAmps = 17.0;
-        public static final double assistCooldownSeconds = 1.2;
-        public static final double intakePitchMotorMaxPositionRot = 7;//8.2
-        public static final double pitchNormPosition = 0.923;
-
-        private GroundIntakeConstants() {}
+        private TelemetryConstants() {}
     }
 
     private Constants() {}
