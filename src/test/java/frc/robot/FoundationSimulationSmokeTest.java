@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,12 +29,17 @@ class FoundationSimulationSmokeTest {
 
             assertTrue(topicExists("/FRC8011/Robot/BatteryVoltageV"));
             assertTrue(topicExists("/FRC8011/Drive/Pose"));
-            assertTrue(topicExists("/FRC8011/Vision/limelight-left/Accepted"));
-            assertTrue(topicExists("/FRC8011/Vision/limelight-back/Accepted"));
-            assertTrue(topicExists("/FRC8011/Vision/limelight-right/Accepted"));
-            assertTrue(topicExists("/FRC8011/LED/State"));
             assertTrue(topicExists("/SmartDashboard/FRC8011/Auto/Chooser/.type"));
+            assertArrayEquals(
+                    new String[] {"Do Nothing", "Baby Auto"},
+                    NetworkTableInstance.getDefault()
+                            .getStringArrayTopic(
+                                    "/SmartDashboard/FRC8011/Auto/Chooser/options")
+                            .subscribe(new String[0])
+                            .get());
 
+            assertFalse(topicExists("/FRC8011/Vision/limelight-left/Accepted"));
+            assertFalse(topicExists("/FRC8011/LED/State"));
             assertFalse(topicExists("/FRC8011/Example/PositionRot"));
         } finally {
             CommandScheduler.getInstance().cancelAll();

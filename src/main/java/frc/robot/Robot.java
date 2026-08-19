@@ -17,8 +17,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-import frc.robot.subsystems.LEDSubsystem;
-
 /** Owns WPILib lifecycle, logging, system power telemetry, and autonomous scheduling. */
 public class Robot extends TimedRobot {
     private static final double BROWNOUT_VOLTAGE_VOLTS = 7.0;
@@ -58,12 +56,12 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        robotContainer.setLedState(LEDSubsystem.State.DISABLED);
+        robotContainer.stopAll();
     }
 
     @Override
     public void autonomousInit() {
-        robotContainer.setLedState(LEDSubsystem.State.AUTONOMOUS);
+        robotContainer.stopAll();
         autonomousCommand = robotContainer.getAutonomousCommand();
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(autonomousCommand);
@@ -72,17 +70,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        robotContainer.setLedState(LEDSubsystem.State.TELEOP);
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(autonomousCommand);
             autonomousCommand = null;
         }
+        robotContainer.stopAll();
     }
 
     @Override
     public void testInit() {
         CommandScheduler.getInstance().cancelAll();
-        robotContainer.setLedState(LEDSubsystem.State.TEST);
+        robotContainer.stopAll();
     }
 
     @Override
@@ -115,7 +113,6 @@ public class Robot extends TimedRobot {
         brownoutVoltagePublisher.set(BROWNOUT_VOLTAGE_VOLTS);
         brownedOutPublisher.set(brownedOut);
         modePublisher.set(currentMode());
-        robotContainer.setLedFault(brownedOut);
     }
 
     private static String currentMode() {

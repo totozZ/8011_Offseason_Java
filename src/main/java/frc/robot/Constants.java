@@ -32,6 +32,26 @@ public final class Constants {
         private DriveConstants() {}
     }
 
+    /** Teacher-owned limits and official 2026 KitBot roller settings. */
+    public static final class BabyAutoConstants {
+        public static final double MAX_TRANSLATION_METERS_PER_SECOND = 1.0;
+        public static final double MAX_ROTATION_DEGREES_PER_SECOND = 90.0;
+        public static final double MAX_AUTO_SECONDS = 15.0;
+        public static final double SHOOTER_SPIN_UP_SECONDS = 1.0;
+
+        public static final int INTAKE_LAUNCHER_MOTOR_CAN_ID = 5;
+        public static final int FEEDER_MOTOR_CAN_ID = 6;
+        public static final int MOTOR_CURRENT_LIMIT_AMPS = 60;
+
+        public static final double INTAKE_FEEDER_VOLTS = -12.0;
+        public static final double INTAKE_LAUNCHER_VOLTS = 10.0;
+        public static final double SPIN_UP_FEEDER_VOLTS = -6.0;
+        public static final double LAUNCH_FEEDER_VOLTS = 9.0;
+        public static final double LAUNCH_LAUNCHER_VOLTS = 10.6;
+
+        private BabyAutoConstants() {}
+    }
+
     public static final class VisionConstants {
         public static final String[] LIMELIGHT_NAMES = {
             "limelight-left",

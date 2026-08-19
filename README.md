@@ -1,36 +1,33 @@
-# FRC 8011 Java Foundation
+# FRC 8011 BabyAuto Classroom Branch
 
-这是 FRC 8011 的 2026 Java Command-Based 基础工程。它只保留可复用的底层能力：
+这是面向 90 分钟自动程序活动的 WPILib 2026 Java Command-Based 工程。运行时只启用：
 
-- CTRE Phoenix 6 swerve 与当前现役底盘参数；
-- 三台 Limelight 的 MegaTag2 平移融合；
-- PathPlanner 自动与安全的 `Do Nothing` 默认项；
-- rio CANdle 状态灯；
-- 默认关闭的 `ExampleSubsystem` / `ExampleCommand` Phoenix 6 教学样例；
-- NT4 typed topics、Elastic、AdvantageScope 和 WPILib DataLog。
+- CTRE Phoenix 6 Swerve 与当前 `TunerConstants.java`；
+- 官方 2026 KitBot 两电机吸球/射球机构；
+- BabyAuto 限速命令接口、`Do Nothing` / `Baby Auto` chooser；
+- Swerve 手动驾驶、系统电源遥测和 DataLog。
+
+学生只修改
+[`src/main/java/frc/robot/auto/Auto.java`](src/main/java/frc/robot/auto/Auto.java)。坐标系、单位、
+`sequence` / `parallel`、电机 `.speed()` / `.stop()`、完整示例和真机安全提醒都写在该文件中。
 
 ## 构建
 
-GradleRIO 2026 必须使用 WPILib 自带 JDK 17。Windows PowerShell 示例：
+GradleRIO 2026 必须使用 WPILib 自带 JDK 17：
 
 ```powershell
 $env:JAVA_HOME = 'C:\Users\Public\wpilib\2026\jdk'
 .\gradlew.bat clean test build --no-daemon
 ```
 
-系统默认 JDK 26 与当前 GradleRIO 不兼容。不要用“能启动 Gradle”代替完整的 `clean test build`。
+## 教师准备
 
-## 使用前必读
+- 使用 REV Hardware Client 更新两台 SPARK MAX 固件，并设置 intake/launcher 为 rio CAN ID 5、feeder 为
+  rio CAN ID 6；两台控制器连接有刷电机。
+- 更换 Swerve 时，用 Tuner X 生成文件完整替换
+  [`TunerConstants.java`](src/main/java/frc/robot/generated/TunerConstants.java)，不要局部复制参数。
+- `Do Nothing` 始终是默认自动；部署后必须在 Dashboard 明确选择 `Baby Auto`。
+- 第一次运行必须架空车轮和机构，验证方向与停止行为后，再到清空的场地进行低速测试。
 
-- 团队代码规范、NT4 数据字典和硬件流程见
-  [docs/JAVA_CODE_STANDARD.zh-CN.md](docs/JAVA_CODE_STANDARD.zh-CN.md)。
-- 运行时底盘硬件真值是
-  [TunerConstants.java](src/main/java/frc/robot/generated/TunerConstants.java)。
-- [PathPlanner settings](src/main/deploy/pathplanner/settings.json) 只描述自动轨迹物理模型，其中质量、转动惯量、
-  最高速度和摩擦系数仍需真机复测。
-- [归档 Tuner JSON](docs/archive/tuner-project.DO_NOT_USE.json) 与现役底盘不一致，禁止用它重新生成代码。
-- `ExampleSubsystem` 默认关闭。启用前必须填写真实 CAN bus/ID，并重新计算齿比、软限位、PID/前馈和电流限制。
-- SysId 绑定默认不启用；只有固定机器人并架空全部车轮后才可临时打开。
-
-部署或合并到比赛代码前，按规范中的真机清单检查 CANivore、Pigeon 2、四个模块、三台 Limelight、
-CANdle、PathPlanner 朝向和 7.0 V brownout 遥测。
+Vision、CANdle、ExampleSubsystem 和 PathPlanner 自动不会在本分支的运行入口中构造或显示；其基础代码仍保留，
+便于以后从 `java-base` 对照或复用。

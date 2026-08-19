@@ -6,13 +6,9 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import java.util.Optional;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
-import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -22,11 +18,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import frc.robot.auto.Auto;
+import frc.robot.babyauto.BabyAuto;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.LEDSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.KitBotFuelSubsystem;
 
 /** Constructs the robot subsystems, operator bindings, and autonomous chooser. */
 public class RobotContainer implements AutoCloseable {
@@ -54,14 +50,8 @@ public class RobotContainer implements AutoCloseable {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private final Telemetry telemetry = new Telemetry();
-    private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
-    private final LEDSubsystem led = new LEDSubsystem();
-    private final Optional<ExampleSubsystem> exampleSubsystem =
-            Constants.ExampleConstants.ENABLE_EXAMPLE_SUBSYSTEM
-                    ? Optional.of(new ExampleSubsystem(
-                            Constants.ExampleConstants.MOTOR_CAN_ID,
-                            Constants.ExampleConstants.MOTOR_CAN_BUS))
-                    : Optional.empty();
+    private final KitBotFuelSubsystem fuel = new KitBotFuelSubsystem();
+    private final BabyAuto babyAuto = new BabyAuto(drivetrain, fuel);
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
@@ -119,17 +109,16 @@ public class RobotContainer implements AutoCloseable {
 
     private SendableChooser<Command> buildAutoChooser() {
         SendableChooser<Command> chooser = new SendableChooser<>();
+        chooser.setDefaultOption("Do Nothing", doNothingCommand);
         try {
-            if (AutoBuilder.isConfigured()) {
-                chooser = AutoBuilder.buildAutoChooser("Do Nothing");
-            }
+            Command studentAuto = babyAuto.protect(Auto.build(babyAuto)).withName("Baby Auto");
+            chooser.addOption("Baby Auto", studentAuto);
         } catch (RuntimeException exception) {
             DriverStation.reportError(
-                    "PathPlanner auto chooser failed; using Do Nothing: "
+                    "Baby Auto build failed; using Do Nothing: "
                             + exception.getMessage(),
                     exception.getStackTrace());
         }
-        chooser.setDefaultOption("Do Nothing", doNothingCommand);
         return chooser;
     }
 
@@ -138,24 +127,16 @@ public class RobotContainer implements AutoCloseable {
         return selected == null ? doNothingCommand : selected;
     }
 
-    public void setLedState(LEDSubsystem.State state) {
-        led.setState(state);
-    }
-
-    public void setLedFault(boolean active) {
-        led.setFault(active);
-    }
-
-    public Optional<ExampleSubsystem> getExampleSubsystem() {
-        return exampleSubsystem;
+    /** Immediately removes all activity-controlled outputs. */
+    public void stopAll() {
+        babyAuto.stopAll();
     }
 
     @Override
     public void close() {
-        exampleSubsystem.ifPresent(ExampleSubsystem::close);
+        stopAll();
+        fuel.close();
         telemetry.close();
-        vision.close();
-        led.close();
         drivetrain.close();
     }
 }
