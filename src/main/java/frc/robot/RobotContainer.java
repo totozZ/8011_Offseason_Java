@@ -20,14 +20,16 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.auto.Auto;
 import frc.robot.babyauto.BabyAuto;
-import frc.robot.generated.TunerConstants;
+import frc.robot.config.DrivetrainProfile;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.KitBotFuelSubsystem;
 
 /** Constructs the robot subsystems, operator bindings, and autonomous chooser. */
 public class RobotContainer implements AutoCloseable {
+    private static final DrivetrainProfile DRIVETRAIN_PROFILE =
+            Constants.DriveConstants.ACTIVE_PROFILE;
     private final double maxSpeedMetersPerSecond =
-            TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+            DRIVETRAIN_PROFILE.speedAt12Volts().in(MetersPerSecond);
     private final double maxAngularRateRadiansPerSecond =
             Constants.DriveConstants.MAX_ANGULAR_RATE_RADIANS_PER_SECOND;
 
@@ -48,7 +50,7 @@ public class RobotContainer implements AutoCloseable {
             Constants.OperatorConstants.DRIVER_CONTROLLER_PORT);
     private final Command doNothingCommand = Commands.none().withName("Do Nothing");
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    public final CommandSwerveDrivetrain drivetrain = DRIVETRAIN_PROFILE.createDrivetrain();
     private final Telemetry telemetry = new Telemetry();
     private final KitBotFuelSubsystem fuel = new KitBotFuelSubsystem();
     private final BabyAuto babyAuto = new BabyAuto(drivetrain, fuel);

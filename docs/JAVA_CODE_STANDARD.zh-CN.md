@@ -6,18 +6,23 @@
 
 ## 1. 代码和硬件真值
 
-以下三个文件的职责不同，不得相互替代：
+底盘现在有两个可编译期选择的硬件 profile，开关集中在
+`Constants.DriveConstants.ACTIVE_PROFILE`：
 
-1. `src/main/java/frc/robot/generated/TunerConstants.java` 是运行时 swerve 硬件配置真值。
-2. Tuner X 导出的 JSON 是生成存档。当前 `docs/archive/tuner-project.DO_NOT_USE.json` 与现役底盘不一致，
+1. `NORMAL` 使用 `src/main/java/frc/robot/generated/TunerConstants.java`。它暂时沿用本项目原有配置，普通底盘
+   完成新一轮 Tuner X 标定后应整体替换此文件。
+2. `SOCCER_BOT` 使用 `src/main/java/frc/robot/config/SoccerBotDrivetrainConstants.java`。它保存从
+   `C:\Users\95833\Desktop\sum` 迁入的当前生效参数和左前驱动单独反转修正。
+3. Tuner X 导出的 JSON 是生成存档。当前 `docs/archive/tuner-project.DO_NOT_USE.json` 与普通底盘不一致，
    只能用于历史追踪，禁止重新生成代码。
-3. `src/main/deploy/pathplanner/settings.json` 是 PathPlanner 的自动轨迹物理模型，不配置 CAN 设备。
+4. `src/main/deploy/pathplanner/settings.json` 是 PathPlanner 的自动轨迹物理模型，不配置 CAN 设备。目前它只与
+   `NORMAL` 匹配；`SOCCER_BOT` 未标定对应模型前不得运行 PathPlanner 自动。
 
 更换底盘或模块时，必须重新完成 Tuner X 向导和架空验证，并成对替换“新导出的 JSON”与整个
 `TunerConstants.java`。生成文件不得局部重排或套用项目格式化；参考
 [CTRE Tuner X swerve 生成流程](https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/generating-running-project.html)。
 
-现役底盘锁定项：
+当前 `NORMAL` 占位配置锁定项：
 
 - CAN bus：`CANivore`；Pigeon 2：ID 33。
 - Front Left：drive 2、steer 1、CANcoder 3。
@@ -28,7 +33,7 @@
   `3.5714285714285716`，轮半径 `2.008 in`。
 - drive supply/stator 限流 40 A/90 A，steer supply/stator 限流 20 A/60 A，均启用。
 
-编码器偏移、模块反向和模块位置由 `TunerConstants` 及自动测试锁定，不在文档中复制第二份可编辑真值。
+编码器偏移、模块反向和模块位置由各 profile 的配置类及自动测试锁定，不在文档中复制第二份可编辑真值。
 
 ## 2. 工程职责边界
 
@@ -36,7 +41,7 @@
 - `RobotContainer`：构造 subsystem、设置驾驶绑定、创建自动 chooser。不得放周期机构状态机。
 - `Subsystem`：拥有硬件、传感器刷新、控制接口、局部安全状态和本 subsystem 的 NT 发布者。
 - `Command`：组织动作时序和 requirements；被中断时必须让输出进入明确的安全状态。
-- `Constants`：保存团队维护的常量。Tuner X 生成值只留在 `TunerConstants`。
+- `Constants`：保存团队维护的常量和唯一底盘 profile 开关。Tuner X 生成文件仍须整体替换，禁止手改。
 - `Telemetry`：只发布 swerve typed topics，不拥有底盘控制逻辑。
 - `vision/LimelightIO`：只读写 Limelight 厂商表并解析数据；是否接受测量由 `VisionSubsystem` 决定。
 
@@ -192,8 +197,8 @@ FOC request 还取决于设备支持与 CTRE 授权；未确认前优先使用 V
 
 ## 8. Swerve、PathPlanner 和 SysId
 
-PathPlanner 当前使用非 FOC `krakenX60` 模型、40 A supply limit、与 TunerConstants 一致的轮半径/drive ratio 和
-模块位置。下列模型值保留自当前基线，但都必须通过真机加速度、滑移和轨迹误差日志复测：
+PathPlanner 当前只对应 `NORMAL`，使用非 FOC `krakenX60` 模型、40 A supply limit、与 `TunerConstants`
+一致的轮半径/drive ratio 和模块位置。下列模型值保留自当前基线，但都必须通过真机加速度、滑移和轨迹误差日志复测：
 
 - 质量 55 kg；转动惯量 6.883 kg·m²；
 - 最高速度 4.1 m/s；轮胎 COF 1.2；

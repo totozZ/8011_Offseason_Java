@@ -6,6 +6,8 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 
+import frc.robot.config.DrivetrainProfile;
+
 /** Project-owned constants. Keep generated drivetrain values in {@code TunerConstants}. */
 public final class Constants {
     public static final class CanConstants {
@@ -27,6 +29,17 @@ public final class Constants {
     }
 
     public static final class DriveConstants {
+        /**
+         * The one-line drivetrain switch. Use NORMAL or SOCCER_BOT, then rebuild and deploy.
+         *
+         * <p>NORMAL intentionally remains selected until the operator explicitly chooses the
+         * SoccerBot hardware.
+         */
+
+        //两套底盘配置，NORMAL和SOCCER_BOT
+        // public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.SOCCER_BOT;
+        public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.NORMAL;
+
         public static final double MAX_ANGULAR_RATE_RADIANS_PER_SECOND = Math.PI * 1.9;
 
         private DriveConstants() {}
