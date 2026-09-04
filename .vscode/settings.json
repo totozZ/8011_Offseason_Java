@@ -1,4 +1,17 @@
 {
+  "java.jdt.ls.java.home": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+  "java.import.gradle.java.home": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+      "default": true
+    }
+  ],
+  "terminal.integrated.env.windows": {
+    "JAVA_HOME": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+    "PATH": "C:\\Users\\Public\\wpilib\\2026\\jdk\\bin;${env:PATH}"
+  },
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.server.launchMode": "Standard",
   "files.exclude": {
