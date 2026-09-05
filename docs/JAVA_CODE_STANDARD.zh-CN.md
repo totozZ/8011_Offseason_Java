@@ -16,7 +16,8 @@
 3. Tuner X 导出的 JSON 是生成存档。当前 `docs/archive/tuner-project.DO_NOT_USE.json` 与普通底盘不一致，
    只能用于历史追踪，禁止重新生成代码。
 4. `src/main/deploy/pathplanner/settings.json` 是 PathPlanner 的自动轨迹物理模型，不配置 CAN 设备。目前它只与
-   `NORMAL` 匹配；`SOCCER_BOT` 未标定对应模型前不得运行 PathPlanner 自动。
+   `NORMAL` 匹配；课堂入口不配置 AutoBuilder。两套底盘统一 RobotCentric，BabyAuto 按时间运行，不依赖 Pigeon。
+   恢复 PathPlanner 前必须具备可靠航向/定位，并标定所选底盘的物理模型。
 
 更换底盘或模块时，必须重新完成 Tuner X 向导和架空验证，并成对替换“新导出的 JSON”与整个
 `TunerConstants.java`。生成文件不得局部重排或套用项目格式化；参考

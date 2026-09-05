@@ -4,39 +4,43 @@
 
 package frc.robot.subsystems;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
-import com.revrobotics.config.BaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants;
 
 import org.junit.jupiter.api.Test;
 
 class KitBotFuelSubsystemTest {
-    @Test
-    void officialCurrentLimitAndLauncherDirectionAreConfigured() throws Exception {
-        Map<Integer, Object> feederParameters = parameters(
-                KitBotFuelSubsystem.createFeederConfiguration());
-        Map<Integer, Object> launcherParameters = parameters(
-                KitBotFuelSubsystem.createLauncherConfiguration());
+    private static final double EPSILON = 1e-9;
 
-        assertTrue(feederParameters.containsValue(
-                Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS));
-        assertFalse(feederParameters.containsValue(Boolean.TRUE));
-        assertTrue(launcherParameters.containsValue(
-                Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS));
-        assertTrue(launcherParameters.containsValue(Boolean.TRUE));
+    @Test
+    void talonFxConfigurationMatchesReferenceDirectionAndSafetyLimit() {
+        var configuration = KitBotFuelSubsystem.createMotorConfiguration();
+
+        assertEquals(
+                InvertedValue.CounterClockwise_Positive,
+                configuration.MotorOutput.Inverted);
+        assertEquals(NeutralModeValue.Coast, configuration.MotorOutput.NeutralMode);
+        assertEquals(
+                Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS,
+                configuration.CurrentLimits.SupplyCurrentLimit,
+                EPSILON);
+        assertTrue(configuration.CurrentLimits.SupplyCurrentLimitEnable);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<Integer, Object> parameters(SparkMaxConfig configuration) throws Exception {
-        Field parameters = BaseConfig.class.getDeclaredField("parameters");
-        parameters.setAccessible(true);
-        return (Map<Integer, Object>) parameters.get(configuration);
+    @Test
+    void intakeAndShootDutyCyclesMatchSoccerBotReference() {
+        assertEquals(0.5,
+                Constants.BabyAutoConstants.INTAKE_MOTOR_INTAKE_DUTY_CYCLE, EPSILON);
+        assertEquals(0.7,
+                Constants.BabyAutoConstants.SHOOTER_MOTOR_INTAKE_DUTY_CYCLE, EPSILON);
+        assertEquals(0.5,
+                Constants.BabyAutoConstants.INTAKE_MOTOR_SHOOT_DUTY_CYCLE, EPSILON);
+        assertEquals(-0.7,
+                Constants.BabyAutoConstants.SHOOTER_MOTOR_SHOOT_DUTY_CYCLE, EPSILON);
     }
 }

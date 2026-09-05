@@ -6,8 +6,6 @@ package frc.robot.babyauto;
 
 import java.util.Objects;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -22,8 +20,8 @@ import frc.robot.subsystems.KitBotFuelSubsystem;
 public final class BabyAuto {
     private final DriveController driveController;
     private final FuelController fuelController;
-    private final Motor feederMotor;
-    private final Motor launcherMotor;
+    private final Motor intakeMotor;
+    private final Motor shooterMotor;
 
     public BabyAuto(
             CommandSwerveDrivetrain drivetrain,
@@ -34,8 +32,8 @@ public final class BabyAuto {
     BabyAuto(DriveController driveController, FuelController fuelController) {
         this.driveController = Objects.requireNonNull(driveController);
         this.fuelController = Objects.requireNonNull(fuelController);
-        feederMotor = new Motor(MotorRole.FEEDER);
-        launcherMotor = new Motor(MotorRole.LAUNCHER);
+        intakeMotor = new Motor(MotorRole.INTAKE);
+        shooterMotor = new Motor(MotorRole.SHOOTER);
     }
 
     /** Runs commands one after another. */
@@ -80,12 +78,12 @@ public final class BabyAuto {
                 .finallyDo(fuelController::stop);
     }
 
-    public Motor feeder() {
-        return feederMotor;
+    public Motor intake() {
+        return intakeMotor;
     }
 
-    public Motor launcher() {
-        return launcherMotor;
+    public Motor shooter() {
+        return shooterMotor;
     }
 
     /** Adds the final safety net used around the command returned by student code. */
@@ -180,16 +178,16 @@ public final class BabyAuto {
         /** Immediately sets and retains normalized output, clamped to -1 through +1. */
         public Command speed(double speed) {
             double limited = limitMotorSpeed(speed, role.displayName);
-            return role == MotorRole.FEEDER
-                    ? fuelController.setFeederSpeed(limited)
-                    : fuelController.setLauncherSpeed(limited);
+            return role == MotorRole.INTAKE
+                    ? fuelController.setIntakeSpeed(limited)
+                    : fuelController.setShooterSpeed(limited);
         }
 
         /** Immediately stops this motor. */
         public Command stop() {
-            return role == MotorRole.FEEDER
-                    ? fuelController.stopFeeder()
-                    : fuelController.stopLauncher();
+            return role == MotorRole.INTAKE
+                    ? fuelController.stopIntake()
+                    : fuelController.stopShooter();
         }
     }
 
@@ -265,8 +263,8 @@ public final class BabyAuto {
             double rotationDegreesPerSecond) {}
 
     private enum MotorRole {
-        FEEDER("feeder"),
-        LAUNCHER("launcher");
+        INTAKE("intake"),
+        SHOOTER("shooter");
 
         private final String displayName;
 
@@ -304,9 +302,7 @@ public final class BabyAuto {
         }
 
         private static SwerveRequest.RobotCentric createRequest() {
-            return new SwerveRequest.RobotCentric()
-                    .withDriveRequestType(DriveRequestType.Velocity)
-                    .withSteerRequestType(SteerRequestType.Position);
+            return CommandSwerveDrivetrain.createRobotCentricRequest();
         }
     }
 
@@ -324,32 +320,32 @@ public final class BabyAuto {
 
         @Override
         public Command holdSpinUp() {
-            return subsystem.holdSpinUpCommand();
+            return subsystem.holdShooterSpinUpCommand();
         }
 
         @Override
         public Command holdLaunch() {
-            return subsystem.holdLaunchCommand();
+            return subsystem.holdShootCommand();
         }
 
         @Override
-        public Command setFeederSpeed(double speed) {
-            return subsystem.setFeederSpeedCommand(speed);
+        public Command setIntakeSpeed(double speed) {
+            return subsystem.setIntakeSpeedCommand(speed);
         }
 
         @Override
-        public Command setLauncherSpeed(double speed) {
-            return subsystem.setLauncherSpeedCommand(speed);
+        public Command setShooterSpeed(double speed) {
+            return subsystem.setShooterSpeedCommand(speed);
         }
 
         @Override
-        public Command stopFeeder() {
-            return subsystem.stopFeederCommand();
+        public Command stopIntake() {
+            return subsystem.stopIntakeCommand();
         }
 
         @Override
-        public Command stopLauncher() {
-            return subsystem.stopLauncherCommand();
+        public Command stopShooter() {
+            return subsystem.stopShooterCommand();
         }
 
         @Override
@@ -375,13 +371,13 @@ interface FuelController {
 
     Command holdLaunch();
 
-    Command setFeederSpeed(double speed);
+    Command setIntakeSpeed(double speed);
 
-    Command setLauncherSpeed(double speed);
+    Command setShooterSpeed(double speed);
 
-    Command stopFeeder();
+    Command stopIntake();
 
-    Command stopLauncher();
+    Command stopShooter();
 
     void stop();
 }

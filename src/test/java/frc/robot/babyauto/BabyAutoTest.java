@@ -88,7 +88,7 @@ class BabyAutoTest {
         assertThrows(IllegalArgumentException.class, () -> BabyAuto.waitSeconds(-1.0));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> robot.feeder().speed(Double.NaN));
+                () -> robot.intake().speed(Double.NaN));
     }
 
     @Test
@@ -98,18 +98,18 @@ class BabyAutoTest {
         BabyAuto robot = new BabyAuto(drive, fuel);
 
         Command command = BabyAuto.sequence(
-                robot.feeder().speed(5.0),
+                robot.intake().speed(5.0),
                 BabyAuto.waitSeconds(5.0));
         scheduler.schedule(command);
         scheduler.run();
 
-        assertEquals(1.0, fuel.feederSpeed, EPSILON);
-        assertTrue(fuel.feederActive);
+        assertEquals(1.0, fuel.intakeSpeed, EPSILON);
+        assertTrue(fuel.intakeActive);
 
         command.cancel();
-        scheduler.schedule(robot.feeder().stop());
+        scheduler.schedule(robot.intake().stop());
         scheduler.run();
-        assertFalse(fuel.feederActive);
+        assertFalse(fuel.intakeActive);
     }
 
     @Test
@@ -168,20 +168,20 @@ class BabyAutoTest {
 
         Command command = robot.protect(BabyAuto.parallel(
                 BabyAuto.sequence(
-                        robot.feeder().speed(0.7),
+                        robot.intake().speed(0.7),
                         BabyAuto.waitSeconds(5.0)),
                 robot.drive().setVx(0.5).forSeconds(5.0)));
         scheduler.schedule(command);
         scheduler.run();
 
         assertTrue(drive.active);
-        assertTrue(fuel.feederActive);
+        assertTrue(fuel.intakeActive);
 
         command.cancel();
         assertFalse(drive.active);
         assertEquals(FuelState.STOPPED, fuel.state);
-        assertFalse(fuel.feederActive);
-        assertFalse(fuel.launcherActive);
+        assertFalse(fuel.intakeActive);
+        assertFalse(fuel.shooterActive);
     }
 
     @Test
@@ -262,9 +262,9 @@ class BabyAutoTest {
     private static final class FakeFuelController implements FuelController {
         private final Subsystem subsystem = new Subsystem() {};
         private FuelState state = FuelState.STOPPED;
-        private boolean feederActive;
-        private boolean launcherActive;
-        private double feederSpeed;
+        private boolean intakeActive;
+        private boolean shooterActive;
+        private double intakeSpeed;
 
         @Override
         public Command holdIntake() {
@@ -282,39 +282,39 @@ class BabyAutoTest {
         }
 
         @Override
-        public Command setFeederSpeed(double speed) {
+        public Command setIntakeSpeed(double speed) {
             return Commands.runOnce(() -> {
-                feederSpeed = speed;
-                feederActive = speed != 0.0;
+                intakeSpeed = speed;
+                intakeActive = speed != 0.0;
             }, subsystem);
         }
 
         @Override
-        public Command setLauncherSpeed(double speed) {
-            return Commands.runOnce(() -> launcherActive = speed != 0.0, subsystem);
+        public Command setShooterSpeed(double speed) {
+            return Commands.runOnce(() -> shooterActive = speed != 0.0, subsystem);
         }
 
         @Override
-        public Command stopFeeder() {
-            return Commands.runOnce(() -> feederActive = false, subsystem);
+        public Command stopIntake() {
+            return Commands.runOnce(() -> intakeActive = false, subsystem);
         }
 
         @Override
-        public Command stopLauncher() {
-            return Commands.runOnce(() -> launcherActive = false, subsystem);
+        public Command stopShooter() {
+            return Commands.runOnce(() -> shooterActive = false, subsystem);
         }
 
         @Override
         public void stop() {
             state = FuelState.STOPPED;
-            feederActive = false;
-            launcherActive = false;
+            intakeActive = false;
+            shooterActive = false;
         }
 
         private void setState(FuelState state) {
             this.state = state;
-            feederActive = true;
-            launcherActive = true;
+            intakeActive = true;
+            shooterActive = true;
         }
     }
 

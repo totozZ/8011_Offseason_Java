@@ -4,12 +4,15 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.REVLibError;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -18,118 +21,112 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 
-/** Owns the two brushed SPARK MAX motors on the official 2026 KitBot fuel mechanism. */
+/** Owns the CAN 20 intake and CAN 21 shooter TalonFX motors. */
 public class KitBotFuelSubsystem extends SubsystemBase implements AutoCloseable {
-    private final SparkMax feederMotor = new SparkMax(
-            Constants.BabyAutoConstants.FEEDER_MOTOR_CAN_ID,
-            MotorType.kBrushed);
-    private final SparkMax launcherMotor = new SparkMax(
-            Constants.BabyAutoConstants.INTAKE_LAUNCHER_MOTOR_CAN_ID,
-            MotorType.kBrushed);
+    private final TalonFX intakeMotor = new TalonFX(
+            Constants.BabyAutoConstants.INTAKE_MOTOR_CAN_ID,
+            Constants.CanConstants.RIO_CAN_BUS);
+    private final TalonFX shooterMotor = new TalonFX(
+            Constants.BabyAutoConstants.SHOOTER_MOTOR_CAN_ID,
+            Constants.CanConstants.RIO_CAN_BUS);
+    private final DutyCycleOut intakeRequest = new DutyCycleOut(0.0).withEnableFOC(false);
+    private final DutyCycleOut shooterRequest = new DutyCycleOut(0.0).withEnableFOC(false);
+    private final CoastOut coastRequest = new CoastOut();
 
     public KitBotFuelSubsystem() {
-        reportConfiguration(
-                "feeder",
-                feederMotor.configure(
-                        createFeederConfiguration(),
-                        ResetMode.kResetSafeParameters,
-                        PersistMode.kPersistParameters));
-        reportConfiguration(
-                "intake/launcher",
-                launcherMotor.configure(
-                        createLauncherConfiguration(),
-                        ResetMode.kResetSafeParameters,
-                        PersistMode.kPersistParameters));
+        TalonFXConfiguration configuration = createMotorConfiguration();
+        reportConfiguration("intake", intakeMotor.getConfigurator().apply(configuration));
+        reportConfiguration("shooter", shooterMotor.getConfigurator().apply(configuration));
     }
 
-    /** Immediately sets and retains normalized feeder output in the range -1 to +1. */
-    public void setFeederSpeed(double speed) {
-        feederMotor.set(clampNormalizedSpeed(speed));
-    }
-
-    /** Immediately sets and retains normalized launcher output in the range -1 to +1. */
-    public void setLauncherSpeed(double speed) {
-        launcherMotor.set(clampNormalizedSpeed(speed));
-    }
-
-    /** Continuously applies the official KitBot intake voltage pair. */
+    /** Runs both motors in the intake direction used by the reference SoccerBot project. */
     public Command holdIntakeCommand() {
+        return run(() -> setOutputs(
+                Constants.BabyAutoConstants.INTAKE_MOTOR_INTAKE_DUTY_CYCLE,
+                Constants.BabyAutoConstants.SHOOTER_MOTOR_INTAKE_DUTY_CYCLE))
+                .finallyDo(this::stop);
+    }
+
+    /** Spins up only the shooter motor before an automatic shot. */
+    public Command holdShooterSpinUpCommand() {
         return run(() -> {
-            feederMotor.setVoltage(Constants.BabyAutoConstants.INTAKE_FEEDER_VOLTS);
-            launcherMotor.setVoltage(Constants.BabyAutoConstants.INTAKE_LAUNCHER_VOLTS);
-        });
+            intakeMotor.setControl(coastRequest);
+            setShooterSpeed(Constants.BabyAutoConstants.SHOOTER_MOTOR_SHOOT_DUTY_CYCLE);
+        }).finallyDo(this::stop);
     }
 
-    /** Continuously spins up the launcher while holding fuel away from it. */
-    public Command holdSpinUpCommand() {
-        return run(() -> {
-            feederMotor.setVoltage(Constants.BabyAutoConstants.SPIN_UP_FEEDER_VOLTS);
-            launcherMotor.setVoltage(Constants.BabyAutoConstants.LAUNCH_LAUNCHER_VOLTS);
-        });
+    /** Runs both motors in the shoot direction used by the reference SoccerBot project. */
+    public Command holdShootCommand() {
+        return run(() -> setOutputs(
+                Constants.BabyAutoConstants.INTAKE_MOTOR_SHOOT_DUTY_CYCLE,
+                Constants.BabyAutoConstants.SHOOTER_MOTOR_SHOOT_DUTY_CYCLE))
+                .finallyDo(this::stop);
     }
 
-    /** Continuously feeds fuel into the running launcher. */
-    public Command holdLaunchCommand() {
-        return run(() -> {
-            feederMotor.setVoltage(Constants.BabyAutoConstants.LAUNCH_FEEDER_VOLTS);
-            launcherMotor.setVoltage(Constants.BabyAutoConstants.LAUNCH_LAUNCHER_VOLTS);
-        });
+    public void setIntakeSpeed(double dutyCycle) {
+        intakeMotor.setControl(intakeRequest.withOutput(clampNormalizedSpeed(dutyCycle)));
     }
 
-    public Command setFeederSpeedCommand(double speed) {
-        return runOnce(() -> setFeederSpeed(speed));
+    public void setShooterSpeed(double dutyCycle) {
+        shooterMotor.setControl(shooterRequest.withOutput(clampNormalizedSpeed(dutyCycle)));
     }
 
-    public Command setLauncherSpeedCommand(double speed) {
-        return runOnce(() -> setLauncherSpeed(speed));
+    public Command setIntakeSpeedCommand(double dutyCycle) {
+        return runOnce(() -> setIntakeSpeed(dutyCycle));
     }
 
-    public Command stopFeederCommand() {
-        return runOnce(feederMotor::stopMotor);
+    public Command setShooterSpeedCommand(double dutyCycle) {
+        return runOnce(() -> setShooterSpeed(dutyCycle));
     }
 
-    public Command stopLauncherCommand() {
-        return runOnce(launcherMotor::stopMotor);
+    public Command stopIntakeCommand() {
+        return runOnce(() -> intakeMotor.setControl(coastRequest));
     }
 
-    /** Removes output from both fuel motors. */
+    public Command stopShooterCommand() {
+        return runOnce(() -> shooterMotor.setControl(coastRequest));
+    }
+
+    /** Coasts both mechanism motors. */
     public void stop() {
-        feederMotor.stopMotor();
-        launcherMotor.stopMotor();
+        intakeMotor.setControl(coastRequest);
+        shooterMotor.setControl(coastRequest);
     }
 
     @Override
     public void close() {
         stop();
-        feederMotor.close();
-        launcherMotor.close();
+        intakeMotor.close();
+        shooterMotor.close();
     }
 
-    static SparkMaxConfig createFeederConfiguration() {
-        SparkMaxConfig configuration = new SparkMaxConfig();
-        configuration.smartCurrentLimit(Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS);
-        return configuration;
+    static TalonFXConfiguration createMotorConfiguration() {
+        return new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
+                        .withNeutralMode(NeutralModeValue.Coast))
+                .withCurrentLimits(new CurrentLimitsConfigs()
+                        .withSupplyCurrentLimit(
+                                Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS)
+                        .withSupplyCurrentLimitEnable(true));
     }
 
-    static SparkMaxConfig createLauncherConfiguration() {
-        SparkMaxConfig configuration = new SparkMaxConfig();
-        configuration
-                .inverted(true)
-                .smartCurrentLimit(Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS);
-        return configuration;
+    private void setOutputs(double intakeDutyCycle, double shooterDutyCycle) {
+        setIntakeSpeed(intakeDutyCycle);
+        setShooterSpeed(shooterDutyCycle);
     }
 
-    private static double clampNormalizedSpeed(double speed) {
-        if (!Double.isFinite(speed)) {
-            throw new IllegalArgumentException("Motor speed must be finite");
+    private static double clampNormalizedSpeed(double dutyCycle) {
+        if (!Double.isFinite(dutyCycle)) {
+            throw new IllegalArgumentException("Motor duty cycle must be finite");
         }
-        return MathUtil.clamp(speed, -1.0, 1.0);
+        return MathUtil.clamp(dutyCycle, -1.0, 1.0);
     }
 
-    private static void reportConfiguration(String motorName, REVLibError status) {
-        if (status != REVLibError.kOk) {
+    private static void reportConfiguration(String motorName, StatusCode status) {
+        if (!status.isOK()) {
             DriverStation.reportError(
-                    "KitBot " + motorName + " SPARK MAX configuration failed: " + status,
+                    "KitBot " + motorName + " TalonFX configuration failed: " + status,
                     false);
         }
     }

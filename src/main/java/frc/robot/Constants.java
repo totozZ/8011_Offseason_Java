@@ -8,14 +8,18 @@ import com.ctre.phoenix6.CANBus;
 
 import frc.robot.config.DrivetrainProfile;
 
-/** Project-owned constants. Keep generated drivetrain values in {@code TunerConstants}. */
+/**
+ * Project-owned constants. Keep generated drivetrain values in
+ * {@code TunerConstants}.
+ */
 public final class Constants {
     public static final class CanConstants {
         public static final CANBus RIO_CAN_BUS = new CANBus("rio");
         public static final int REV_PDH_ID = 1;
         public static final int CANDLE_ID = 26;
 
-        private CanConstants() {}
+        private CanConstants() {
+        }
     }
 
     public static final class OperatorConstants {
@@ -25,51 +29,65 @@ public final class Constants {
         public static final double TRANSLATION_DEADBAND = 0.07;
         public static final double ROTATION_DEADBAND = 0.05;
 
-        private OperatorConstants() {}
+        private OperatorConstants() {
+        }
     }
 
     public static final class DriveConstants {
         /**
-         * The one-line drivetrain switch. Use NORMAL or SOCCER_BOT, then rebuild and deploy.
+         * The one-line drivetrain switch. Use NORMAL or SOCCER_BOT, then rebuild and
+         * deploy.
          *
-         * <p>NORMAL intentionally remains selected until the operator explicitly chooses the
+         * <p>
+         * NORMAL intentionally remains selected until the operator explicitly chooses
+         * the
          * SoccerBot hardware.
          */
 
-        //两套底盘配置，NORMAL和SOCCER_BOT
-        // public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.SOCCER_BOT;
-        public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.NORMAL;
+        // 两套底盘配置，NORMAL和SOCCER_BOT
+        public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.SOCCER_BOT;
+        // public static final DrivetrainProfile ACTIVE_PROFILE =
+        // DrivetrainProfile.NORMAL;
+
+        /**
+         * Both robots use the slower profile's free speed as the common joystick
+         * reference.
+         */
+        public static final double COMMON_SPEED_METERS_PER_SECOND = Math.min(
+                DrivetrainProfile.NORMAL.speedAt12Volts().baseUnitMagnitude(),
+                DrivetrainProfile.SOCCER_BOT.speedAt12Volts().baseUnitMagnitude());
 
         public static final double MAX_ANGULAR_RATE_RADIANS_PER_SECOND = Math.PI * 1.9;
 
-        private DriveConstants() {}
+        private DriveConstants() {
+        }
     }
 
-    /** Teacher-owned limits and official 2026 KitBot roller settings. */
+    /** Teacher-owned limits and the two-motor intake/shooter settings from SoccerBot. */
     public static final class BabyAutoConstants {
         public static final double MAX_TRANSLATION_METERS_PER_SECOND = 1.0;
         public static final double MAX_ROTATION_DEGREES_PER_SECOND = 90.0;
         public static final double MAX_AUTO_SECONDS = 15.0;
         public static final double SHOOTER_SPIN_UP_SECONDS = 1.0;
 
-        public static final int INTAKE_LAUNCHER_MOTOR_CAN_ID = 5;
-        public static final int FEEDER_MOTOR_CAN_ID = 6;
+        public static final int INTAKE_MOTOR_CAN_ID = 20;
+        public static final int SHOOTER_MOTOR_CAN_ID = 21;
         public static final int MOTOR_CURRENT_LIMIT_AMPS = 60;
 
-        public static final double INTAKE_FEEDER_VOLTS = -12.0;
-        public static final double INTAKE_LAUNCHER_VOLTS = 10.0;
-        public static final double SPIN_UP_FEEDER_VOLTS = -6.0;
-        public static final double LAUNCH_FEEDER_VOLTS = 9.0;
-        public static final double LAUNCH_LAUNCHER_VOLTS = 10.6;
+        public static final double INTAKE_MOTOR_INTAKE_DUTY_CYCLE = 0.5;
+        public static final double SHOOTER_MOTOR_INTAKE_DUTY_CYCLE = 0.7;
+        public static final double INTAKE_MOTOR_SHOOT_DUTY_CYCLE = 0.5;
+        public static final double SHOOTER_MOTOR_SHOOT_DUTY_CYCLE = -0.7;
 
-        private BabyAutoConstants() {}
+        private BabyAutoConstants() {
+        }
     }
 
     public static final class VisionConstants {
         public static final String[] LIMELIGHT_NAMES = {
-            "limelight-left",
-            "limelight-back",
-            "limelight-right"
+                "limelight-left",
+                "limelight-back",
+                "limelight-right"
         };
 
         // Tune these from real logs. They are deliberately centralized for pit review.
@@ -80,18 +98,23 @@ public final class Constants {
         public static final double DISTANCE_STANDARD_DEVIATION_EXPONENT = 1.2;
         public static final double HEADING_STANDARD_DEVIATION_RADIANS = 10_000_000.0;
 
-        private VisionConstants() {}
+        private VisionConstants() {
+        }
     }
 
     public static final class ExampleConstants {
-        /** Keep false until the example CAN ID, bus, limits, ratios, and gains are reviewed. */
+        /**
+         * Keep false until the example CAN ID, bus, limits, ratios, and gains are
+         * reviewed.
+         */
         public static final boolean ENABLE_EXAMPLE_SUBSYSTEM = false;
 
         // Placeholder teaching values. They are not safe defaults for a real mechanism.
         public static final int MOTOR_CAN_ID = 40;
         public static final String MOTOR_CAN_BUS = "rio";
 
-        private ExampleConstants() {}
+        private ExampleConstants() {
+        }
     }
 
     public static final class TelemetryConstants {
@@ -104,8 +127,10 @@ public final class Constants {
         public static final String EXAMPLE_TUNING = ROOT + "/Tuning/Example";
         public static final String AUTO_CHOOSER_KEY = "FRC8011/Auto/Chooser";
 
-        private TelemetryConstants() {}
+        private TelemetryConstants() {
+        }
     }
 
-    private Constants() {}
+    private Constants() {
+    }
 }

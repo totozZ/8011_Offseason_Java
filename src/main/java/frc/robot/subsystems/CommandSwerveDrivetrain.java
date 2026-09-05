@@ -14,19 +14,10 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -43,13 +34,8 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double SIM_LOOP_PERIOD_SECONDS = 0.004;
-    private static final Rotation2d BLUE_PERSPECTIVE = Rotation2d.kZero;
-    private static final Rotation2d RED_PERSPECTIVE = Rotation2d.k180deg;
+    private final SwerveRequest.Idle idleRequest = new SwerveRequest.Idle();
 
-    private final SwerveRequest.ApplyRobotSpeeds pathRequest =
-            new SwerveRequest.ApplyRobotSpeeds()
-                    .withDriveRequestType(DriveRequestType.Velocity)
-                    .withSteerRequestType(SteerRequestType.Position);
     private final SwerveRequest.SysIdSwerveTranslation translationCharacterization =
             new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains steerCharacterization =
@@ -94,7 +80,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Notifier simulationNotifier;
     private double lastSimulationTimeSeconds;
-    private boolean hasAppliedOperatorPerspective;
 
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -126,9 +111,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         finishConstruction();
     }
 
-    /** Returns a command that continuously applies the supplied request. */
+    /** Continuously applies the supplied request and removes motor output when the command ends. */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> setControl(requestSupplier.get()));
+        return run(() -> setControl(requestSupplier.get())).finallyDo(() -> setControl(idleRequest));
     }
 
     public Command translationSysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -155,55 +140,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return rotationSysId.dynamic(direction);
     }
 
-    @Override
-    public void periodic() {
-        if (!hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            updateDriverPerspective();
-        }
-    }
-
-    /** Applies the alliance-relative driver perspective when alliance data is available. */
-    public void updateDriverPerspective() {
-        DriverStation.getAlliance().ifPresent(alliance -> {
-            setOperatorPerspectiveForward(
-                    alliance == Alliance.Red ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
-            hasAppliedOperatorPerspective = true;
-        });
+    /** Shared control mode for both hardware profiles, teleop, and timed BabyAuto actions. */
+    public static SwerveRequest.RobotCentric createRobotCentricRequest() {
+        return new SwerveRequest.RobotCentric()
+                .withDriveRequestType(DriveRequestType.Velocity)
+                .withSteerRequestType(SteerRequestType.Position);
     }
 
     private void finishConstruction() {
-        configureAutoBuilder();
+        // No heading reset, alliance perspective, or pose-based AutoBuilder in this classroom branch.
+        // RobotCentric and X-lock use module feedback, not Pigeon heading or valid odometry.
         if (Utils.isSimulation()) {
             startSimulationThread();
-        }
-    }
-
-    private void configureAutoBuilder() {
-        try {
-            RobotConfig robotConfig = RobotConfig.fromGUISettings();
-            AutoBuilder.configure(
-                    () -> getState().Pose,
-                    this::resetPose,
-                    () -> getState().Speeds,
-                    (speeds, feedforwards) -> setControl(
-                            pathRequest
-                                    .withSpeeds(ChassisSpeeds.discretize(speeds, 0.02))
-                                    .withWheelForceFeedforwardsX(
-                                            feedforwards.robotRelativeForcesX())
-                                    .withWheelForceFeedforwardsY(
-                                            feedforwards.robotRelativeForcesY())),
-                    new PPHolonomicDriveController(
-                            new PIDConstants(5.0, 0.0, 0.0),
-                            new PIDConstants(8.0, 0.0, 0.0)),
-                    robotConfig,
-                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-                    this);
-        } catch (Exception exception) {
-            DriverStation.reportError(
-                    "PathPlanner AutoBuilder configuration failed; autonomous will fall back "
-                            + "to Do Nothing: "
-                            + exception.getMessage(),
-                    exception.getStackTrace());
         }
     }
 

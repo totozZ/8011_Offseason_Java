@@ -54,8 +54,8 @@ class HardwareConstantsTest {
     void classroomHardwareAndSafetyLimitsAreLocked() {
         assertEquals("rio", Constants.CanConstants.RIO_CAN_BUS.getName());
         assertEquals(1, Constants.CanConstants.REV_PDH_ID);
-        assertEquals(5, Constants.BabyAutoConstants.INTAKE_LAUNCHER_MOTOR_CAN_ID);
-        assertEquals(6, Constants.BabyAutoConstants.FEEDER_MOTOR_CAN_ID);
+        assertEquals(20, Constants.BabyAutoConstants.INTAKE_MOTOR_CAN_ID);
+        assertEquals(21, Constants.BabyAutoConstants.SHOOTER_MOTOR_CAN_ID);
         assertEquals(60, Constants.BabyAutoConstants.MOTOR_CURRENT_LIMIT_AMPS);
         assertEquals(1.0, Constants.BabyAutoConstants.MAX_TRANSLATION_METERS_PER_SECOND);
         assertEquals(90.0, Constants.BabyAutoConstants.MAX_ROTATION_DEGREES_PER_SECOND);

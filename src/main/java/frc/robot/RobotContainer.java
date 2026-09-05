@@ -4,10 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -21,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.auto.Auto;
 import frc.robot.babyauto.BabyAuto;
 import frc.robot.config.DrivetrainProfile;
+import frc.robot.config.DriverControls;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.KitBotFuelSubsystem;
 
@@ -28,21 +25,8 @@ import frc.robot.subsystems.KitBotFuelSubsystem;
 public class RobotContainer implements AutoCloseable {
     private static final DrivetrainProfile DRIVETRAIN_PROFILE =
             Constants.DriveConstants.ACTIVE_PROFILE;
-    private final double maxSpeedMetersPerSecond =
-            DRIVETRAIN_PROFILE.speedAt12Volts().in(MetersPerSecond);
-    private final double maxAngularRateRadiansPerSecond =
-            Constants.DriveConstants.MAX_ANGULAR_RATE_RADIANS_PER_SECOND;
-
-    private final SwerveRequest.FieldCentric driveRequest =
-            new SwerveRequest.FieldCentric()
-                    .withDeadband(
-                            maxSpeedMetersPerSecond
-                                    * Constants.OperatorConstants.TRANSLATION_DEADBAND)
-                    .withRotationalDeadband(
-                            maxAngularRateRadiansPerSecond
-                                    * Constants.OperatorConstants.ROTATION_DEADBAND)
-                    .withDriveRequestType(DriveRequestType.Velocity)
-                    .withSteerRequestType(SteerRequestType.Position);
+    private final SwerveRequest.RobotCentric driveRequest =
+            CommandSwerveDrivetrain.createRobotCentricRequest();
     private final SwerveRequest.SwerveDriveBrake brakeRequest =
             new SwerveRequest.SwerveDriveBrake();
 
@@ -52,7 +36,7 @@ public class RobotContainer implements AutoCloseable {
 
     public final CommandSwerveDrivetrain drivetrain = DRIVETRAIN_PROFILE.createDrivetrain();
     private final Telemetry telemetry = new Telemetry();
-    private final KitBotFuelSubsystem fuel = new KitBotFuelSubsystem();
+    final KitBotFuelSubsystem fuel = new KitBotFuelSubsystem();
     private final BabyAuto babyAuto = new BabyAuto(drivetrain, fuel);
     private final SendableChooser<Command> autoChooser;
 
@@ -69,25 +53,32 @@ public class RobotContainer implements AutoCloseable {
     }
 
     private void configureBindings() {
-        drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> driveRequest
-                .withVelocityX(
-                        -driverController.getLeftY()
-                                * maxSpeedMetersPerSecond
-                                * Constants.OperatorConstants.DRIVE_SPEED_SCALE)
-                .withVelocityY(
-                        -driverController.getLeftX()
-                                * maxSpeedMetersPerSecond
-                                * Constants.OperatorConstants.DRIVE_SPEED_SCALE)
-                .withRotationalRate(
-                        -driverController.getRightX()
-                                * maxAngularRateRadiansPerSecond
-                                * Constants.OperatorConstants.TURN_SPEED_SCALE)));
+        drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> {
+            // A default command can also run during autonomous waits or Do Nothing.
+            if (!DriverStation.isTeleopEnabled()) {
+                return driveRequest.withVelocityX(0.0).withVelocityY(0.0).withRotationalRate(0.0);
+            }
+            var speeds = DriverControls.toRobotSpeeds(
+                    -driverController.getLeftY(),
+                    -driverController.getLeftX(),
+                    -driverController.getRightX());
+            return driveRequest.withVelocityX(speeds.vxMetersPerSecond)
+                    .withVelocityY(speeds.vyMetersPerSecond)
+                    .withRotationalRate(speeds.omegaRadiansPerSecond);
+        }));
 
-        driverController.start().onTrue(
-                Commands.runOnce(drivetrain::seedFieldCentric, drivetrain)
-                        .withName("ResetDriverHeading"));
-        driverController.x().whileTrue(
+        driverController.x().and(DriverStation::isTeleopEnabled).whileTrue(
                 drivetrain.applyRequest(() -> brakeRequest).withName("SwerveXLock"));
+
+        // Right trigger has priority if both triggers are held. Releasing it while the left
+        // trigger remains held restarts intake automatically.
+        var shootTrigger = driverController.rightTrigger()
+                .and(DriverStation::isTeleopEnabled);
+        driverController.leftTrigger()
+                .and(driverController.rightTrigger().negate())
+                .and(DriverStation::isTeleopEnabled)
+                .whileTrue(fuel.holdIntakeCommand().withName("ManualIntake"));
+        shootTrigger.whileTrue(fuel.holdShootCommand().withName("ManualShoot"));
     }
 
     /**
