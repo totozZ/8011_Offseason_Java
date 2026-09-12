@@ -15,7 +15,11 @@ class DriverControlsTest {
         assertEquals(straight.vxMetersPerSecond,
                 Math.hypot(diagonal.vxMetersPerSecond, diagonal.vyMetersPerSecond), 1e-9);
         assertEquals(diagonal.vxMetersPerSecond, -diagonal.vyMetersPerSecond, 1e-9);
-        assertEquals(4.59 * 0.75, straight.vxMetersPerSecond, 1e-9);
+        // The hardware free speed itself is locked in SoccerBotDrivetrainConstantsTest; here we
+        // only check that full stick travel maps to the common limit times the drive scale.
+        assertEquals(Constants.DriveConstants.COMMON_SPEED_METERS_PER_SECOND
+                * Constants.OperatorConstants.DRIVE_SPEED_SCALE,
+                straight.vxMetersPerSecond, 1e-9);
         for (var profile : DrivetrainProfile.values()) {
             assertTrue(Constants.DriveConstants.COMMON_SPEED_METERS_PER_SECOND
                     <= profile.speedAt12Volts().baseUnitMagnitude());

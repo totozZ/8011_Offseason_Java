@@ -45,9 +45,8 @@ public final class Constants {
          */
 
         // 两套底盘配置，NORMAL和SOCCER_BOT
-        public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.SOCCER_BOT;
-        // public static final DrivetrainProfile ACTIVE_PROFILE =
-        // DrivetrainProfile.NORMAL;
+        // public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.SOCCER_BOT;
+        public static final DrivetrainProfile ACTIVE_PROFILE = DrivetrainProfile.NORMAL;
 
         /**
          * Both robots use the slower profile's free speed as the common joystick
