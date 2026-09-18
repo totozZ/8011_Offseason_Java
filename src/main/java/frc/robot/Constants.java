@@ -66,6 +66,7 @@ public final class Constants {
         public static final String ROBOT = ROOT + "/Robot";
         public static final String DRIVE = ROOT + "/Drive";
         public static final String VISION = ROOT + "/Vision";
+        public static final String PHOTON_TEST = VISION + "/PhotonTest";
         public static final String LED = ROOT + "/LED";
         public static final String EXAMPLE = ROOT + "/Example";
         public static final String EXAMPLE_TUNING = ROOT + "/Tuning/Example";

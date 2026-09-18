@@ -31,6 +31,13 @@ class FoundationSimulationSmokeTest {
             assertTrue(topicExists("/FRC8011/Vision/limelight-left/Accepted"));
             assertTrue(topicExists("/FRC8011/Vision/limelight-back/Accepted"));
             assertTrue(topicExists("/FRC8011/Vision/limelight-right/Accepted"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/Enabled"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/CameraConnected"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/HasTarget"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/TagId"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/TargetCount"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/ResultAgeMs"));
+            assertTrue(topicExists("/FRC8011/Vision/PhotonTest/Status"));
             assertTrue(topicExists("/FRC8011/LED/State"));
             assertTrue(topicExists("/SmartDashboard/FRC8011/Auto/Chooser/.type"));
 

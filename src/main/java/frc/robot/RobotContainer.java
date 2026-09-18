@@ -26,6 +26,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PhotonVisionTestSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 /** Constructs the robot subsystems, operator bindings, and autonomous chooser. */
@@ -55,6 +56,7 @@ public class RobotContainer implements AutoCloseable {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private final Telemetry telemetry = new Telemetry();
     private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+    private final PhotonVisionTestSubsystem photonVisionTest = new PhotonVisionTestSubsystem();
     private final LEDSubsystem led = new LEDSubsystem();
     private final Optional<ExampleSubsystem> exampleSubsystem =
             Constants.ExampleConstants.ENABLE_EXAMPLE_SUBSYSTEM
@@ -154,6 +156,7 @@ public class RobotContainer implements AutoCloseable {
     public void close() {
         exampleSubsystem.ifPresent(ExampleSubsystem::close);
         telemetry.close();
+        photonVisionTest.close();
         vision.close();
         led.close();
         drivetrain.close();

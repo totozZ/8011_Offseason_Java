@@ -126,6 +126,13 @@ Limelight 的 `/limelight-left`、`/limelight-back`、`/limelight-right` 以及 
 | `/FRC8011/Vision/<camera>/LatencyMs` | double | robot loop | Limelight pipeline 延迟，毫秒 |
 | `/FRC8011/Vision/<camera>/Pose` | `Pose2d` struct | robot loop | MegaTag2 原始平面姿态 |
 | `/FRC8011/Vision/<camera>/FailureCount` | integer | robot loop | 捕获的相机处理异常累计值 |
+| `/FRC8011/Vision/PhotonTest/Enabled` | boolean entry | 事件/每周期读取 | 默认 false；电脑端启用 PhotonVision 链路测试 |
+| `/FRC8011/Vision/PhotonTest/CameraConnected` | boolean | robot loop | `9281cam1` PhotonLib 连接状态 |
+| `/FRC8011/Vision/PhotonTest/HasTarget` | boolean | robot loop | 未超时的最新结果是否含 AprilTag |
+| `/FRC8011/Vision/PhotonTest/TagId` | integer | robot loop | best AprilTag ID；无目标时为 -1 |
+| `/FRC8011/Vision/PhotonTest/TargetCount` | integer | robot loop | 未超时的最新结果内 AprilTag 数量 |
+| `/FRC8011/Vision/PhotonTest/ResultAgeMs` | double | robot loop | 距最新收帧的毫秒数；没有可接受结果时为 -1 |
+| `/FRC8011/Vision/PhotonTest/Status` | string | robot loop | `Disabled`、`CameraDisconnected`、`NoTarget` 或 `YES` |
 | `/FRC8011/LED/State` | string | 状态变化时 | 有效 LED 状态或 `SOLID` |
 | `/FRC8011/Example/PositionRot` | double | subsystem loop | 示例机构位置，机构转数 |
 | `/FRC8011/Example/VelocityRps` | double | subsystem loop | 示例机构速度，机构转/秒 |

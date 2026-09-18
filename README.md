@@ -4,6 +4,7 @@
 
 - CTRE Phoenix 6 swerve 与当前现役底盘参数；
 - 三台 Limelight 的 MegaTag2 平移融合；
+- 默认关闭、独立于 Limelight 的 `9281cam1` PhotonVision 实机链路测试；
 - PathPlanner 自动与安全的 `Do Nothing` 默认项；
 - rio CANdle 状态灯；
 - 默认关闭的 `ExampleSubsystem` / `ExampleCommand` Phoenix 6 教学样例；

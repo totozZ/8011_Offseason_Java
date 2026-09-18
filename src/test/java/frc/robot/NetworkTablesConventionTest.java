@@ -25,6 +25,7 @@ class NetworkTablesConventionTest {
                 Constants.TelemetryConstants.ROBOT,
                 Constants.TelemetryConstants.DRIVE,
                 Constants.TelemetryConstants.VISION,
+                Constants.TelemetryConstants.PHOTON_TEST,
                 Constants.TelemetryConstants.LED,
                 Constants.TelemetryConstants.EXAMPLE,
                 Constants.TelemetryConstants.EXAMPLE_TUNING);
@@ -68,6 +69,16 @@ class NetworkTablesConventionTest {
                 MAIN_JAVA.resolve(Path.of("frc", "robot", "vision", "LimelightIO.java")));
         assertTrue(limelightIo.contains("botpose_orb_wpiblue"));
         assertFalse(limelightIo.contains("botpose_wpiblue"));
+    }
+
+    @Test
+    void photonTestUsesOneUnreadResultCallAndCannotFeedOdometry() throws IOException {
+        String photonTest = Files.readString(MAIN_JAVA.resolve(
+                Path.of("frc", "robot", "subsystems", "PhotonVisionTestSubsystem.java")));
+
+        assertTrue(photonTest.contains("new PhotonCamera(\"9281cam1\")"));
+        assertEquals(1, countOccurrences(photonTest, ".getAllUnreadResults()"));
+        assertFalse(photonTest.contains("addVisionMeasurement"));
     }
 
     private static List<Path> javaSources() throws IOException {

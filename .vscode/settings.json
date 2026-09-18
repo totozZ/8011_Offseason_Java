@@ -1,6 +1,14 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.server.launchMode": "Standard",
+  "java.import.gradle.java.home": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "C:\\Users\\Public\\wpilib\\2026\\jdk",
+      "default": true
+    }
+  ],
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
