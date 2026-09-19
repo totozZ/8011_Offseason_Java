@@ -38,6 +38,7 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
     private final IntegerPublisher tagIdPublisher;
     private final IntegerPublisher targetCountPublisher;
     private final DoublePublisher resultAgePublisher;
+    private final DoublePublisher distancePublisher;
     private final StringPublisher statusPublisher;
 
     public PhotonVisionTestSubsystem() {
@@ -51,10 +52,11 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
         tagIdPublisher = table.getIntegerTopic("TagId").publish();
         targetCountPublisher = table.getIntegerTopic("TargetCount").publish();
         resultAgePublisher = table.getDoubleTopic("ResultAgeMs").publish();
+        distancePublisher = table.getDoubleTopic("DistanceMeters").publish();
         statusPublisher = table.getStringTopic("Status").publish();
 
         enabledEntry.setDefault(false);
-        publish(new State(false, false, -1, 0, -1.0, "Disabled"));
+        publish(new State(false, false, -1, 0, -1.0, "Disabled", -1.0));
     }
 
     @Override
@@ -79,6 +81,7 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
         tagIdPublisher.set(state.tagId());
         targetCountPublisher.set(state.targetCount());
         resultAgePublisher.set(state.resultAgeMilliseconds());
+        distancePublisher.set(state.distanceMeters());
         statusPublisher.set(state.status());
     }
 
@@ -93,7 +96,10 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
                 aprilTagCount++;
             }
         }
-        return new PhotonFrame(bestTagId, aprilTagCount);
+        double distanceMeters = bestTagId >= 0
+                ? result.getBestTarget().getBestCameraToTarget().getTranslation().getNorm()
+                : -1.0;
+        return new PhotonFrame(bestTagId, aprilTagCount, distanceMeters);
     }
 
     @Override
@@ -105,10 +111,15 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
         tagIdPublisher.close();
         targetCountPublisher.close();
         resultAgePublisher.close();
+        distancePublisher.close();
         statusPublisher.close();
     }
 
-    record PhotonFrame(int bestTagId, int aprilTagCount) {}
+    record PhotonFrame(int bestTagId, int aprilTagCount, double distanceMeters) {
+        PhotonFrame(int bestTagId, int aprilTagCount) {
+            this(bestTagId, aprilTagCount, -1.0);
+        }
+    }
 
     record State(
             boolean cameraConnected,
@@ -116,7 +127,8 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
             int tagId,
             int targetCount,
             double resultAgeMilliseconds,
-            String status) {}
+            String status,
+            double distanceMeters) {}
 
     static final class ResultTracker {
         private final double timeoutSeconds;
@@ -137,11 +149,11 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
                 double nowSeconds) {
             if (!enabled) {
                 clearLastResult();
-                return new State(cameraConnected, false, -1, 0, -1.0, "Disabled");
+                return new State(cameraConnected, false, -1, 0, -1.0, "Disabled", -1.0);
             }
             if (!cameraConnected) {
                 clearLastResult();
-                return new State(false, false, -1, 0, -1.0, "CameraDisconnected");
+                return new State(false, false, -1, 0, -1.0, "CameraDisconnected", -1.0);
             }
 
             if (newestFrame != null) {
@@ -157,10 +169,10 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
                     : -1.0;
 
             if (lastFrame == null || resultAgeSeconds > timeoutSeconds) {
-                return new State(true, false, -1, 0, resultAgeMilliseconds, "NoTarget");
+                return new State(true, false, -1, 0, resultAgeMilliseconds, "NoTarget", -1.0);
             }
             if (lastFrame.aprilTagCount() <= 0 || lastFrame.bestTagId() < 0) {
-                return new State(true, false, -1, 0, resultAgeMilliseconds, "NoTarget");
+                return new State(true, false, -1, 0, resultAgeMilliseconds, "NoTarget", -1.0);
             }
             return new State(
                     true,
@@ -168,7 +180,9 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
                     lastFrame.bestTagId(),
                     lastFrame.aprilTagCount(),
                     resultAgeMilliseconds,
-                    "YES");
+                    "YES",
+                    Double.isFinite(lastFrame.distanceMeters()) && lastFrame.distanceMeters() >= 0.0
+                            ? lastFrame.distanceMeters() : -1.0);
         }
 
         private void clearLastResult() {

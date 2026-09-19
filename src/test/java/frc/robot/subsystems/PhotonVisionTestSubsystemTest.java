@@ -63,22 +63,24 @@ class PhotonVisionTestSubsystemTest {
     void aprilTagFrameReportsYesBestTagAndCount() {
         ResultTracker tracker = new ResultTracker(TIMEOUT_SECONDS);
 
-        State state = tracker.update(true, true, new PhotonFrame(11, 2), 40.0);
+        State state = tracker.update(true, true, new PhotonFrame(11, 2, 2.5), 40.0);
 
         assertTrue(state.hasTarget());
         assertEquals(11, state.tagId());
         assertEquals(2, state.targetCount());
+        assertEquals(2.5, state.distanceMeters(), EPSILON);
         assertEquals("YES", state.status());
     }
 
     @Test
     void staleAprilTagResultTimesOut() {
         ResultTracker tracker = new ResultTracker(TIMEOUT_SECONDS);
-        tracker.update(true, true, new PhotonFrame(3, 1), 50.0);
+        tracker.update(true, true, new PhotonFrame(3, 1, 2.5), 50.0);
 
         State stale = tracker.update(true, true, null, 50.0 + TIMEOUT_SECONDS + 0.001);
 
         assertFalse(stale.hasTarget());
+        assertEquals(-1.0, stale.distanceMeters(), EPSILON);
         assertEquals(-1, stale.tagId());
         assertEquals(0, stale.targetCount());
         assertEquals(501.0, stale.resultAgeMilliseconds(), EPSILON);

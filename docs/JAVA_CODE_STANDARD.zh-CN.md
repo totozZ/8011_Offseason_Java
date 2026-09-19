@@ -132,6 +132,7 @@ Limelight 的 `/limelight-left`、`/limelight-back`、`/limelight-right` 以及 
 | `/FRC8011/Vision/PhotonTest/TagId` | integer | robot loop | best AprilTag ID；无目标时为 -1 |
 | `/FRC8011/Vision/PhotonTest/TargetCount` | integer | robot loop | 未超时的最新结果内 AprilTag 数量 |
 | `/FRC8011/Vision/PhotonTest/ResultAgeMs` | double | robot loop | 距最新收帧的毫秒数；没有可接受结果时为 -1 |
+| `/FRC8011/Vision/PhotonTest/DistanceMeters` | double | robot loop | ?? Tag ?????????????????????????????????? -1 |
 | `/FRC8011/Vision/PhotonTest/Status` | string | robot loop | `Disabled`、`CameraDisconnected`、`NoTarget` 或 `YES` |
 | `/FRC8011/LED/State` | string | 状态变化时 | 有效 LED 状态或 `SOLID` |
 | `/FRC8011/Example/PositionRot` | double | subsystem loop | 示例机构位置，机构转数 |
