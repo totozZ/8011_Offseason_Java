@@ -21,15 +21,19 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 /**
- * Minimal, telemetry-only PhotonVision hardware-link test for camera {@code 9281cam1}.
+ * Minimal, telemetry-only PhotonVision hardware-link test for camera
+ * {@code 9281cam1}.
  *
- * <p>This subsystem deliberately does not estimate robot pose, feed drivetrain odometry, or
- * control hardware. It remains independent of the production Limelight vision subsystem.
+ * <p>
+ * This subsystem deliberately does not estimate robot pose, feed drivetrain
+ * odometry, or
+ * control hardware. It remains independent of the production Limelight vision
+ * subsystem.
  */
 public final class PhotonVisionTestSubsystem extends SubsystemBase implements AutoCloseable {
     static final double RESULT_TIMEOUT_SECONDS = 0.50;
 
-    private final PhotonCamera camera = new PhotonCamera("9281cam1");
+    private final PhotonCamera camera = new PhotonCamera("9281cam2");
     private final ResultTracker resultTracker = new ResultTracker(RESULT_TIMEOUT_SECONDS);
 
     private final BooleanEntry enabledEntry;
@@ -61,7 +65,8 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
 
     @Override
     public void periodic() {
-        // PhotonLib drains a FIFO here; this must remain the only call in each robot cycle.
+        // PhotonLib drains a FIFO here; this must remain the only call in each robot
+        // cycle.
         List<PhotonPipelineResult> unreadResults = camera.getAllUnreadResults();
         PhotonFrame newestFrame = unreadResults.isEmpty()
                 ? null
@@ -128,7 +133,8 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
             int targetCount,
             double resultAgeMilliseconds,
             String status,
-            double distanceMeters) {}
+            double distanceMeters) {
+    }
 
     static final class ResultTracker {
         private final double timeoutSeconds;
@@ -182,7 +188,8 @@ public final class PhotonVisionTestSubsystem extends SubsystemBase implements Au
                     resultAgeMilliseconds,
                     "YES",
                     Double.isFinite(lastFrame.distanceMeters()) && lastFrame.distanceMeters() >= 0.0
-                            ? lastFrame.distanceMeters() : -1.0);
+                            ? lastFrame.distanceMeters()
+                            : -1.0);
         }
 
         private void clearLastResult() {

@@ -76,7 +76,7 @@ class NetworkTablesConventionTest {
         String photonTest = Files.readString(MAIN_JAVA.resolve(
                 Path.of("frc", "robot", "subsystems", "PhotonVisionTestSubsystem.java")));
 
-        assertTrue(photonTest.contains("new PhotonCamera(\"9281cam1\")"));
+        assertTrue(photonTest.contains("new PhotonCamera(\"9281cam2\")"));
         assertEquals(1, countOccurrences(photonTest, ".getAllUnreadResults()"));
         assertFalse(photonTest.contains("addVisionMeasurement"));
     }
